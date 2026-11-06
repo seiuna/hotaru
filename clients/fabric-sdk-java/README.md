@@ -1,34 +1,52 @@
-# MC Auth Platform - Fabric Java SDK
+﻿# Skymatrix auth library (Java 21)
 
-Dependency-free Java 21 client for the Skymatrix MC Auth Platform, built for a **Fabric client mod**.
-It performs the vanilla Minecraft "join" handshake against Mojang, then exchanges the result with the
-MC Auth server for an Ed25519 JWT plus a rotating refresh token.
+Dependency-free **Java 21** library for the Skymatrix MC Auth Platform. It performs the Minecraft
+"join" handshake against Mojang, then exchanges the result with the auth server for an Ed25519 JWT plus
+a rotating refresh token.
+
+**No Minecraft dependency.** The library never imports Minecraft, Fabric, launcher or mod-loader
+classes 鈥?it has nothing to do with how the game works. You provide one method that returns the
+player's access token, and the library resolves the rest:
+
+```java
+AccessTokenProvider provider = () -> mySessionStore.accessToken();
+TokenResponse tokens = client.authenticate(provider);   // UUID + username come from Mojang
+```
+
+If you already know the UUID and username, implement `SessionProvider` instead (it extends
+`AccessTokenProvider`) and save one HTTPS round trip. Fabric is just one host 鈥?the example integration
+lives in `examples/fabric-mod/` and is deliberately outside this build.
 
 ```
 clients/fabric-sdk-java
 |-- README.md
-|-- fabric-example/
-|   `-- SkymatrixAuthClient.java.example   documented Fabric adapter (NOT compiled - see below)
+|-- build.gradle                        standalone / Fabric build snippet
 `-- src/
     |-- main/java/com/skymatrix/mcauth/
-    |   |-- McAuthClient.java              HTTP client, builder, timeouts
-    |   |-- ChallengeResponse.java         challenge DTO
-    |   |-- TokenResponse.java             token pair + profile + scopes
-    |   |-- TokenProfile.java              uuid + username
-    |   |-- McAuthException.java           HTTP status + error.code + retryable + details
-    |   |-- ApiErrorCode.java              the server's stable error codes
-    |   |-- MinecraftServerHash.java       the vanilla signed-hex server hash
-    |   |-- HandshakeCrypto.java           SecureRandom secret + RSA/PKCS#1 v1.5 encryption
-    |   |-- SessionProvider.java           accessToken() / playerUuid() / username()
-    |   |-- Main.java                      runnable demo (offline by default)
-    |   `-- json/Json.java                 hand-written JSON reader/writer (no Jackson/Gson)
+    |   |-- AccessTokenProvider.java     the only interface a host must implement
+    |   |-- SessionProvider.java         optional: token + uuid + username
+    |   |-- MinecraftProfileResolver.java resolves identity from Mojang (token-only logins)
+    |   |-- PlayerProfile.java           uuid + username reported by Mojang
+    |   |-- McAuthClient.java            handshake, refresh, logout, timeouts
+    |   |-- ChallengeResponse.java       challenge DTO
+    |   |-- TokenResponse.java           token pair + profile + scopes
+    |   |-- TokenProfile.java            uuid + username
+    |   |-- McAuthException.java         HTTP status + error.code + retryable + details
+    |   |-- ApiErrorCode.java            the server's stable error codes
+    |   |-- MinecraftServerHash.java     the vanilla signed-hex server hash
+    |   |-- HandshakeCrypto.java         SecureRandom secret + RSA/PKCS#1 v1.5 encryption
+    |   |-- Main.java                    runnable demo (offline by default)
+    |   `-- json/Json.java               hand-written JSON reader/writer (no Jackson/Gson)
     `-- test/java/com/skymatrix/mcauth/
-        |-- ServerHashSelfTest.java        algorithm + crypto + JSON + error-map checks
-        `-- EndToEndSelfTest.java          full flow against a local mock server
+        |-- ServerHashSelfTest.java      algorithm + crypto + JSON + error-map checks
+        |-- EndToEndSelfTest.java        full flow against a local mock server
+        |-- bridge/BridgeSelfTest.java   loopback bridge contract (CORS/PNA/approval/limits)
+        `-- bridge/ProfileResolverSelfTest.java  token-only identity resolution
 ```
 
-Nothing outside the JDK is required: no Jackson, Gson, OkHttp, Guava or Apache Commons. The only
-non-`java.*` package used is `com.sun.net.httpserver` in the *test* mock, which ships with the JDK.
+Target: **JDK 21** (`javac --release 21`). Nothing outside the JDK is required: no Jackson, Gson,
+OkHttp, Guava or Apache Commons. The only non-`java.*` package used is `com.sun.net.httpserver`, which
+ships with the JDK and is used by the local bridge and the test mocks.
 
 ---
 
@@ -41,9 +59,15 @@ McAuthClient client = McAuthClient.builder("https://auth.skymatrix.example")
         .build();
 
 // Run on a background thread: the call blocks on HTTP.
-TokenResponse tokens = client.authenticate(accessToken, playerUuid, username);
-// ...or pull the three values from a Fabric session:
+
+// 1. Token only 鈥?the library asks Mojang who the player is.
+TokenResponse tokens = client.authenticate(() -> session.accessToken());
+
+// 2. Identity already known 鈥?one fewer HTTPS call.
 TokenResponse tokens = client.authenticate(mySessionProvider);
+
+// 3. Fully explicit.
+TokenResponse tokens = client.authenticate(accessToken, playerUuid, username);
 
 System.out.println(tokens.profile().username());   // from Mojang, via the server
 System.out.println(tokens.scopes());               // computed by the server from MongoDB
@@ -55,7 +79,10 @@ TokenResponse rotated = client.refresh(tokens.refreshToken());
 client.logout(rotated.accessToken());
 ```
 
-`McAuthClient` is immutable and thread-safe. It is meant to live for the whole game session.
+`McAuthClient` is immutable and thread-safe. It is meant to live for the whole session.
+
+`client.resolveProfile(accessToken)` is also public: use it to answer "is this token still valid, and
+whose is it?" without logging in.
 
 ---
 
@@ -202,8 +229,8 @@ public interface SessionProvider {
 }
 ```
 
-The Fabric implementation reads `MinecraftClient.getInstance().getSession()`; see
-`fabric-example/SkymatrixAuthClient.java.example`.
+Implementations are trivial: read the token from wherever your host keeps it. A Fabric example lives
+in `examples/fabric-mod/SkymatrixAuthClient.java.example` (outside this library, never compiled here).
 
 ### `MinecraftServerHash` / `HandshakeCrypto`
 
@@ -328,12 +355,7 @@ sourceSets {
    already redacted, but a getter is not.
 4. `logout` before the player switches accounts, and treat `REFRESH_REUSED` as "log in again".
 
-### The Fabric adapter is intentionally not compiled here
-
-`fabric-example/SkymatrixAuthClient.java.example` contains the `MinecraftClient.getInstance()
-.getSession()` implementation behind `@Environment(EnvType.CLIENT)`. It is not compiled by the
-standalone build because Minecraft/Fabric classes are not on this classpath and mixing them in would
-make the SDK impossible to build without a game installation. Copy it into your mod's client source
+''s client source
 set and adjust the package.
 
 ---

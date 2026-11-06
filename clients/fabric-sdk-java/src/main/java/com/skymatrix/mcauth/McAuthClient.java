@@ -18,8 +18,10 @@ import java.util.regex.Pattern;
 /**
  * Dependency-free client for the MC Auth Platform's Minecraft authentication flow.
  *
- * <p>Typical Fabric usage — one call, on a background thread, with the session the launcher already
- * gave the game:
+ * <p>Typical usage — one call, on a background thread, with a token your application already has. The
+ * library has <strong>no Minecraft or Fabric dependency</strong>: you implement {@link AccessTokenProvider}
+ * (one method) and it resolves the identity itself, or {@link SessionProvider} if you already know the
+ * UUID and username.
  *
  * <pre>{@code
  * McAuthClient client = McAuthClient.builder("https://auth.skymatrix.example")
@@ -27,7 +29,7 @@ import java.util.regex.Pattern;
  *         .requestTimeout(Duration.ofSeconds(10))
  *         .build();
  *
- * TokenResponse tokens = client.authenticate(sessionProvider);   // accessToken + uuid + username
+ * TokenResponse tokens = client.authenticate(() -> sessionStore.accessToken());   // token only
  * // later, without a new Mojang join:
  * TokenResponse rotated = client.refresh(tokens.refreshToken());
  * // on logout:
@@ -57,7 +59,7 @@ import java.util.regex.Pattern;
  * client passes is used locally for the join payload only.
  *
  * <p><strong>Threading.</strong> Methods block on the HTTP exchange and are safe to call from any
- * thread, but must never run on the Minecraft render thread — use a
+ * thread, but must never run on a game/UI thread — use a
  * {@code CompletableFuture.supplyAsync(...)} on your own executor. Instances are immutable and
  * thread-safe.
  *
@@ -98,6 +100,7 @@ public final class McAuthClient {
     private final String verifyPath;
     private final String refreshPath;
     private final String logoutPath;
+    private final MinecraftProfileResolver profileResolver;
 
     private McAuthClient(Builder builder) {
         this.baseUri = normalizeBaseUri(builder.baseUrl);
@@ -107,6 +110,9 @@ public final class McAuthClient {
         this.refreshPath = requirePath(builder.refreshPath, "refreshPath");
         this.logoutPath = requirePath(builder.logoutPath, "logoutPath");
         this.mojangJoinUri = normalizeMojangJoinUri(builder.mojangSessionServer);
+        this.profileResolver = builder.profileResolver != null
+                ? builder.profileResolver
+                : new MinecraftProfileResolver();
         this.random = Objects.requireNonNull(builder.random, "random");
         this.http = builder.httpClient != null
                 ? builder.httpClient
@@ -197,13 +203,45 @@ public final class McAuthClient {
     }
 
     /**
-     * Convenience overload for Fabric: pulls the token, UUID and username from a {@link SessionProvider}.
+     * Convenience overload for host applications that already know the identity (e.g. a game client
+     * reading its own session): pulls the token, UUID and username from a {@link SessionProvider}.
      *
      * @see #authenticate(String, String, String)
      */
     public TokenResponse authenticate(SessionProvider session) throws McAuthException, InterruptedException {
         Objects.requireNonNull(session, "session");
         return authenticate(session.accessToken(), session.playerUuid(), session.username());
+    }
+
+    /**
+     * Token-only login: the caller supplies nothing but the access token, and the library resolves the
+     * UUID and username from Mojang's profile endpoint first.
+     *
+     * <p>Prefer {@link #authenticate(SessionProvider)} when the identity is already known — it saves one
+     * HTTPS round trip. When the provider happens to be a {@code SessionProvider}, this method delegates
+     * to that overload automatically.
+     *
+     * @throws McAuthException {@code UNAUTHORIZED} if Mojang rejects the token, {@code TRANSPORT_ERROR}
+     *     (retryable) if the profile endpoint is unreachable
+     */
+    public TokenResponse authenticate(AccessTokenProvider provider)
+            throws McAuthException, InterruptedException {
+        Objects.requireNonNull(provider, "provider");
+        if (provider instanceof SessionProvider session) {
+            return authenticate(session);
+        }
+        PlayerProfile profile = resolveProfile(provider.accessToken());
+        return authenticate(provider.accessToken(), profile.uuid(), profile.username());
+    }
+
+    /**
+     * Asks Mojang who the given access token belongs to, without performing a login.
+     *
+     * <p>Useful for "is this token still valid?" checks in a launcher UI.
+     */
+    public PlayerProfile resolveProfile(String accessToken) throws McAuthException, InterruptedException {
+        requireNonBlank(accessToken, "accessToken");
+        return profileResolver.resolve(accessToken);
     }
 
     /**
@@ -461,6 +499,7 @@ public final class McAuthClient {
         private String logoutPath = DEFAULT_LOGOUT_PATH;
         private HttpClient httpClient;
         private SecureRandom random = new SecureRandom();
+        private MinecraftProfileResolver profileResolver;
 
         private Builder(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -517,6 +556,21 @@ public final class McAuthClient {
         /** Replaces the random source used for the shared secret (tests only). */
         public Builder secureRandom(SecureRandom random) {
             this.random = Objects.requireNonNull(random, "random");
+            return this;
+        }
+
+        /**
+         * Overrides the Mojang profile endpoint used by token-only logins
+         * (default {@value MinecraftProfileResolver#DEFAULT_ENDPOINT}).
+         */
+        public Builder profileEndpoint(String url) {
+            this.profileResolver = new MinecraftProfileResolver(url);
+            return this;
+        }
+
+        /** Replaces the whole profile resolver (shared client, custom timeouts, tests). */
+        public Builder profileResolver(MinecraftProfileResolver resolver) {
+            this.profileResolver = Objects.requireNonNull(resolver, "profileResolver");
             return this;
         }
 

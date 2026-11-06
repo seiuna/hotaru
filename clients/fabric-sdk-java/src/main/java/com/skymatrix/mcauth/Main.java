@@ -6,7 +6,7 @@ import java.time.Duration;
  * Runnable demo for the SDK.
  *
  * <p>With no arguments it prints the whole flow using placeholder values and performs
- * <strong>no network I/O at all</strong> — this is what a build or CI run sees. Real calls happen only
+ * <strong>no network I/O at all</strong> 鈥?this is what a build or CI run sees. Real calls happen only
  * when endpoints and credentials are passed explicitly:
  *
  * <pre>
@@ -95,9 +95,9 @@ public final class Main {
         System.out.println("         \"scopes\":[\"skymatrix:profile\",\"skymatrix:resource\"]}");
         System.out.println();
 
-        System.out.println("6. In a Fabric mod the call site is one line");
-        System.out.println("     @Environment(EnvType.CLIENT)");
-        System.out.println("     TokenResponse tokens = client.authenticate(new FabricSessionProvider());");
+        System.out.println("6. The call site is one line - implement AccessTokenProvider (one method)");
+        System.out.println("     AccessTokenProvider provider = () -> session.accessToken();");
+        System.out.println("     TokenResponse tokens = client.authenticate(provider);");
         System.out.println("     // later, without another Mojang join:");
         System.out.println("     TokenResponse rotated = client.refresh(tokens.refreshToken());");
         System.out.println();

@@ -8,7 +8,7 @@ import com.skymatrix.mcauth.TokenResponse;
  * <p>In a Fabric mod this is typically:
  *
  * <pre>{@code
- * TokenMinter minter = () -> authClient.authenticate(new FabricSessionProvider());
+ * TokenMinter minter = () -> authClient.authenticate(() -> session.accessToken());
  * }</pre>
  *
  * <p>Each call performs a full join/hasJoined round trip (the challenge is single-use), so the bridge

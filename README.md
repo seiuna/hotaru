@@ -196,7 +196,8 @@ skymatrix-servers/
 │   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
 │   └── api/                          # @skymatrix/api — leftover monorepo scaffold, not deployed
-├── clients/fabric-sdk-java/          # dependency-free Java client for the handshake
+├── clients/fabric-sdk-java/          # Java 21 auth library — no Minecraft dependency
+├── examples/fabric-mod/              # Fabric wiring examples (not compiled by the library)
 ├── packages/
 │   ├── shared-types/                 # SCOPES, ERROR_CODES, token claims, view types
 │   └── api-contract/                 # Zod schemas for every request/response
