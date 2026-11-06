@@ -6,6 +6,10 @@ import {
   adminListUsersResponseSchema,
   adminRevokeSessionSchema,
   adminSetPermissionsSchema,
+  adminStatsResponseSchema,
+  adminUserDetailResponseSchema,
+  adminUserSessionsQuerySchema,
+  adminUserSessionsResponseSchema,
   auditListQuerySchema,
   errorResponseSchema,
   objectIdSchema,
@@ -23,8 +27,11 @@ import {
   adminUnbanResponseSchema,
 } from './schemas.js';
 import {
+  adminStats,
   banUser,
+  getUserDetail,
   listAuditLogs,
+  listUserSessions,
   listUsers,
   redisRevocationStore,
   replacePermissions,
@@ -189,6 +196,73 @@ export async function registerAdminRoutes(app: FastifyInstance, ctx: AppContext)
       const sessionId = idParam(request.params, 'Session');
       const body = adminRevokeSessionSchema.parse(request.body ?? {});
       return revokeSession(deps, actorOf(request), sessionId, body.reason ?? null);
+    },
+  );
+
+  app.get(
+    '/api/v1/admin/users/:id',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'One user with their permission grants',
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: toJsonSchema(adminUserDetailResponseSchema),
+          401: errorResponses[401],
+          403: errorResponses[403],
+          404: errorResponses[404],
+        },
+      },
+      preHandler: guard,
+    },
+    async (request) => getUserDetail(idParam(request.params, 'User')),
+  );
+
+  app.get(
+    '/api/v1/admin/stats',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'Dashboard counters (users, active sessions, grants, 24h audit events)',
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: toJsonSchema(adminStatsResponseSchema),
+          401: errorResponses[401],
+          403: errorResponses[403],
+        },
+      },
+      preHandler: guard,
+    },
+    async () => adminStats(),
+  );
+
+  app.get(
+    '/api/v1/admin/users/:id/sessions',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'Sessions of one user, newest first',
+        security: [{ bearerAuth: [] }],
+        querystring: toJsonSchema(adminUserSessionsQuerySchema),
+        response: {
+          200: toJsonSchema(adminUserSessionsResponseSchema),
+          400: errorResponses[400],
+          401: errorResponses[401],
+          403: errorResponses[403],
+          404: errorResponses[404],
+        },
+      },
+      preHandler: guard,
+    },
+    async (request) => {
+      const userId = idParam(request.params, 'User');
+      const query = adminUserSessionsQuerySchema.parse(request.query);
+      return listUserSessions({
+        userId,
+        limit: query.limit,
+        offset: query.offset,
+        includeRevoked: query.includeRevoked,
+      });
     },
   );
 

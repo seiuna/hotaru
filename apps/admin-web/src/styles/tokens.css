@@ -1,0 +1,41 @@
+/* Cozy Breeze — sky blue palette (skill palette A), with a slightly deeper
+ * "strong" blue reserved for buttons so white label text keeps >= 4.5:1. */
+:root {
+  --bg: #f6faff;
+  --bg-alt: #eaf5ff;
+  --surface: #ffffff;
+  --surface-soft: #fbfdff;
+  --primary: #4d9de0;
+  --primary-strong: #267dbf;
+  --primary-strong-hover: #1e6ba6;
+  --primary-soft: #d9eeff;
+  --secondary: #77cdba;
+  --secondary-soft: #e2f6ef;
+  --ink: #233b50;
+  --muted: #637d90;
+  --border: #dcebf4;
+  --border-strong: #c5dfef;
+  --danger: #c4485c;
+  --danger-soft: #fdeef0;
+  --warning: #a9722a;
+  --warning-soft: #fdf3e3;
+
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 10px 28px rgba(55, 109, 148, 0.08);
+  --shadow-raised: 0 16px 36px rgba(55, 109, 148, 0.14);
+  --shadow-soft: 0 2px 8px rgba(55, 109, 148, 0.06);
+
+  --sidebar-width: 248px;
+  --content-max: 1180px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 200ms;
+
+  --font-sans: 'Inter', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, 'Cascadia Mono', Consolas,
+    monospace;
+}

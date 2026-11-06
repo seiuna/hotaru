@@ -64,3 +64,41 @@
 	@docs path /docs /docs/*
 	respond @docs 404
 }
+
+# ---------------------------------------------------------------------------
+# Admin console. Same-origin by design: the SPA calls /api on this host, so it
+# needs no CORS grant and no absolute API origin baked into the bundle.
+# ---------------------------------------------------------------------------
+{$ADMIN_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# API calls from the console go to the auth server, never directly to Mongo/Redis.
+	handle /api/* {
+		reverse_proxy auth-server:3000 {
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# Everything else is the static SPA.
+	handle {
+		reverse_proxy admin-web:80
+	}
+
+	log {
+		output file /data/admin-access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+		format json
+		level INFO
+	}
+}

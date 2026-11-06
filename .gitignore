@@ -20,6 +20,8 @@ pnpm-debug.log*
 !.env.example
 !.env.real.example
 tools/e2e/.env.real
+# Minted real tokens (tools/e2e/mint-token.mjs output) — never commit.
+tools/e2e/.token.json
 
 # editor / os
 .vscode/*

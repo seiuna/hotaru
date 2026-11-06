@@ -241,6 +241,36 @@ Not built yet (deliberate scope gaps):
 - The `skymatrix:resource` / `skymatrix:ircserver` scopes are issued but their downstream services are
   outside this repository.
 
+## Admin console (Vue 3 + Naive UI)
+
+`apps/admin-web` is a Vue 3 + Naive UI SPA for operating the platform: bento dashboard, user search,
+per-user permission editing with live diff, ban/unban, session revocation and the audit log. It talks
+only to the documented admin API.
+
+```bash
+pnpm --filter @skymatrix/admin-web dev     # http://localhost:5173 (proxies /api to :3000)
+pnpm --filter @skymatrix/admin-web build   # vue-tsc + vite build -> dist/
+pnpm --filter @skymatrix/admin-web test    # 20 unit tests
+```
+
+**Login is a token paste, not a password.** The only proof of a premium account is the Mojang
+handshake, and only the game client can obtain that token, so the console accepts the `accessToken`
+minted by the Fabric client, validates it against `/users/me` + `/users/me/permissions`, and refuses
+accounts without `admin:users`. The token lives in `sessionStorage` only; closing the tab signs you out.
+A `/login#token=…&next=/path` fragment bootstrap exists for handing a token over from a terminal (the
+fragment never reaches a server and is stripped from history).
+
+Visual language follows the `cozy-breeze-ui` skill: sky-blue/mint palette, faint dot texture, bento
+grid, soft 16px cards, pill tags, restrained motion, keyboard-visible focus, and real empty/loading/
+error states. Design tokens live in `apps/admin-web/src/styles/tokens.css` and are mirrored into Naive
+UI via `src/theme.ts`.
+
+Deployment: `deploy/Dockerfile.admin-web` (nginx, SPA fallback) is wired into `deploy/compose.yaml` as
+`admin-web`; Caddy serves it on `ADMIN_DOMAIN` (default `admin.$AUTH_DOMAIN`) and routes `/api/*` on
+that host to the auth server, so the bundle keeps a relative `/api` and needs no CORS grant.
+
+See [docs/admin-web.md](docs/admin-web.md) for the full rationale, screens, and known limits.
+
 ## Repository extras
 
 - **`tools/e2e/smoke.mjs`** — the end-to-end harness behind the "47/47 checks" claim. It starts a fake

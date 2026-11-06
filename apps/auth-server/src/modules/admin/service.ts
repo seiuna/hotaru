@@ -458,8 +458,101 @@ export async function revokeSession(
   return { session: toSessionView({ ...session, revokedAt: session.revokedAt ?? now }) };
 }
 
-/** Newest-first audit log with exact-match filters. */
-export async function listAuditLogs(params: ListAuditLogsParams): Promise<{
+/**
+ * One user plus their grants, for the detail screen. Kept as a single call so the
+ * UI cannot render a user whose permissions silently failed to load.
+ */
+export async function getUserDetail(userId: string): Promise<{
+  user: UserView;
+  permissions: PermissionView[];
+  scopes: Scope[];
+}> {
+  const user = await UserModel.findById(userId).lean();
+  if (!user) throw Errors.notFound('User');
+
+  const permissions = await loadPermissionViews(userId);
+  return { user: toUserView(user), permissions, scopes: effectiveScopes(permissions) };
+}
+
+export interface ListUserSessionsParams {  userId: string;
+  limit: number;
+  offset: number;
+  includeRevoked: boolean;
+}
+
+export interface ListUserSessionsResult {
+  sessions: SessionView[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Sessions of one user, newest first. The admin UI needs this to explain *why* a
+ * token stopped working and to revoke a single device without banning the
+ * account; revoked history is opt-in so the default view shows live sessions.
+ */
+export async function listUserSessions(
+  params: ListUserSessionsParams,
+): Promise<ListUserSessionsResult> {
+  const user = await UserModel.findById(params.userId).lean();
+  if (!user) throw Errors.notFound('User');
+
+  const filter: FilterQuery<{ userId: string }> = { userId: params.userId };
+  if (!params.includeRevoked) filter.revokedAt = null;
+
+  const [total, docs] = await Promise.all([
+    SessionModel.countDocuments(filter),
+    SessionModel.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(params.offset)
+      .limit(params.limit)
+      .lean(),
+  ]);
+
+  return {
+    sessions: docs.map((doc) => toSessionView(doc)),
+    total,
+    limit: params.limit,
+    offset: params.offset,
+  };
+}
+
+export interface AdminStats {
+  users: { total: number; active: number; banned: number };
+  sessions: { active: number };
+  permissions: { total: number };
+  audit: { last24h: number };
+  generatedAt: string;
+}
+
+/**
+ * Dashboard counters. These are cheap `countDocuments` calls with indexes behind
+ * every filter (`status`, `revokedAt`+`expiresAt`, `createdAt`), so the dashboard
+ * does not need a materialised stats collection.
+ */
+export async function adminStats(now: Date = new Date()): Promise<AdminStats> {
+  const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const [total, active, banned, activeSessions, permissionCount, last24h] = await Promise.all([
+    UserModel.countDocuments({}),
+    UserModel.countDocuments({ status: 'active' }),
+    UserModel.countDocuments({ status: 'banned' }),
+    SessionModel.countDocuments({ revokedAt: null, expiresAt: { $gt: now } }),
+    PermissionModel.countDocuments({}),
+    AuditLogModel.countDocuments({ createdAt: { $gte: dayAgo } }),
+  ]);
+
+  return {
+    users: { total, active, banned },
+    sessions: { active: activeSessions },
+    permissions: { total: permissionCount },
+    audit: { last24h },
+    generatedAt: now.toISOString(),
+  };
+}
+
+/** Newest-first audit log with exact-match filters. */export async function listAuditLogs(params: ListAuditLogsParams): Promise<{
   logs: AuditLogView[];
   total: number;
   limit: number;

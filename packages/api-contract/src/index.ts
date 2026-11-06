@@ -102,6 +102,7 @@ export const userViewSchema = z.object({
   createdAt: z.string(),
   lastLoginAt: z.string().nullable(),
 });
+export type UserView = z.infer<typeof userViewSchema>;
 
 export const permissionViewSchema = z.object({
   scope: scopeSchema,
@@ -109,17 +110,20 @@ export const permissionViewSchema = z.object({
   expiresAt: z.string().nullable(),
   grantedBy: z.string().nullable(),
 });
+export type PermissionView = z.infer<typeof permissionViewSchema>;
 
 export const meResponseSchema = z.object({
   user: userViewSchema,
   scopes: z.array(scopeSchema),
 });
+export type MeResponse = z.infer<typeof meResponseSchema>;
 
 export const permissionsResponseSchema = z.object({
   permissions: z.array(permissionViewSchema),
   /** Effective scopes: granted, unexpired, and allowed. */
   scopes: z.array(scopeSchema),
 });
+export type PermissionsResponse = z.infer<typeof permissionsResponseSchema>;
 
 /* ------------------------------------------------------------------ */
 /* Admin                                                               */
@@ -138,6 +142,7 @@ export const adminListUsersResponseSchema = z.object({
   limit: z.number().int().positive(),
   offset: z.number().int().nonnegative(),
 });
+export type AdminListUsersResponse = z.infer<typeof adminListUsersResponseSchema>;
 
 export const permissionGrantSchema = z.object({
   scope: scopeSchema,
@@ -164,6 +169,83 @@ export const auditListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 });
+
+/** One login session, as shown in the admin UI. */
+export const sessionViewSchema = z.object({
+  id: objectIdSchema,
+  createdAt: z.string(),
+  expiresAt: z.string(),
+  revokedAt: z.string().nullable(),
+  ip: z.string().nullable(),
+  userAgent: z.string().nullable(),
+});
+export type SessionView = z.infer<typeof sessionViewSchema>;
+
+export const adminUserSessionsResponseSchema = z.object({
+  sessions: z.array(sessionViewSchema),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+});
+export type AdminUserSessionsResponse = z.infer<typeof adminUserSessionsResponseSchema>;
+
+/** Dashboard counters. Cheap aggregate queries, no per-row secrets. */
+export const adminStatsResponseSchema = z.object({
+  users: z.object({
+    total: z.number().int().nonnegative(),
+    active: z.number().int().nonnegative(),
+    banned: z.number().int().nonnegative(),
+  }),
+  sessions: z.object({
+    active: z.number().int().nonnegative(),
+  }),
+  permissions: z.object({
+    total: z.number().int().nonnegative(),
+  }),
+  audit: z.object({
+    last24h: z.number().int().nonnegative(),
+  }),
+  generatedAt: z.string(),
+});
+export type AdminStatsResponse = z.infer<typeof adminStatsResponseSchema>;
+
+export const adminUserSessionsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  includeRevoked: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+});
+
+/** Everything the user-detail screen needs in one round trip. */
+export const adminUserDetailResponseSchema = z.object({
+  user: userViewSchema,
+  permissions: z.array(permissionViewSchema),
+  scopes: z.array(scopeSchema),
+});
+export type AdminUserDetailResponse = z.infer<typeof adminUserDetailResponseSchema>;
+
+export const auditLogViewSchema = z.object({
+  id: objectIdSchema,
+  event: z.string(),
+  actorId: z.string().nullable(),
+  actorType: z.enum(['user', 'admin', 'system']),
+  targetType: z.string().nullable(),
+  targetId: z.string().nullable(),
+  ip: z.string().nullable(),
+  metadata: z.record(z.unknown()).nullable(),
+  createdAt: z.string(),
+});
+export type AuditLogView = z.infer<typeof auditLogViewSchema>;
+
+export const auditLogListResponseSchema = z.object({
+  logs: z.array(auditLogViewSchema),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive(),
+  offset: z.number().int().nonnegative(),
+});
+export type AuditLogListResponse = z.infer<typeof auditLogListResponseSchema>;
 
 export const healthLiveResponseSchema = z.object({
   status: z.literal('ok'),

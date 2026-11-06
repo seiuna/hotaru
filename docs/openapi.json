@@ -2253,6 +2253,864 @@
         }
       }
     },
+    "/api/v1/admin/users/{id}": {
+      "get": {
+        "summary": "One user with their permission grants",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "minecraftUuid": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "lastLoginAt": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "minecraftUuid",
+                        "username",
+                        "status",
+                        "createdAt",
+                        "lastLoginAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "scope": {
+                            "type": "string",
+                            "enum": [
+                              "skymatrix:profile",
+                              "skymatrix:resource",
+                              "skymatrix:ircserver",
+                              "skymatrix:license",
+                              "admin:users"
+                            ]
+                          },
+                          "grantedAt": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "grantedBy": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "scope",
+                          "grantedAt",
+                          "expiresAt",
+                          "grantedBy"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "skymatrix:profile",
+                          "skymatrix:resource",
+                          "skymatrix:ircserver",
+                          "skymatrix:license",
+                          "admin:users"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "user",
+                    "permissions",
+                    "scopes"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/stats": {
+      "get": {
+        "summary": "Dashboard counters (users, active sessions, grants, 24h audit events)",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "active": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "banned": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "total",
+                        "active",
+                        "banned"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sessions": {
+                      "type": "object",
+                      "properties": {
+                        "active": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "active"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "permissions": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "total"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "audit": {
+                      "type": "object",
+                      "properties": {
+                        "last24h": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "last24h"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "generatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "users",
+                    "sessions",
+                    "permissions",
+                    "audit",
+                    "generatedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/sessions": {
+      "get": {
+        "summary": "Sessions of one user, newest first",
+        "tags": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "default": "false"
+            },
+            "in": "query",
+            "name": "includeRevoked",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{24}$"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": "string"
+                          },
+                          "revokedAt": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "ip": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "userAgent": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "expiresAt",
+                          "revokedAt",
+                          "ip",
+                          "userAgent"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "sessions",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/audit-logs": {
       "get": {
         "summary": "Audit log, newest first, filtered by event and actor",
