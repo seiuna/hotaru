@@ -109,6 +109,16 @@ export function attachWebSocket(app: FastifyInstance, deps: WebSocketDeps): WebS
   };
 
   app.server.on('upgrade', (request, socket, head) => {
+    // Node emits 'upgrade' for ANY Upgrade header, including HTTP/2's h2c upgrade
+    // that java.net.http sends by default over cleartext HTTP. Only WebSocket
+    // upgrades are ours; destroying the socket for anything else is honest, while
+    // answering 404 'Unknown WebSocket endpoint' to a REST client is not.
+    const upgrade = String(request.headers.upgrade ?? '').toLowerCase();
+    if (upgrade !== 'websocket') {
+      app.log.debug({ upgrade, url: request.url }, 'ignoring non-websocket upgrade');
+      socket.destroy();
+      return;
+    }
     void onUpgrade(request, socket, head);
   });
 

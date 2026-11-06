@@ -57,6 +57,45 @@ clients/fabric-irc-sdk
 | `ping()` | Application-level keepalive (`PONG` back) |
 | `close()` | Closes the socket, stops reconnecting, fails pending sends |
 
+## REST client (groups, presence, filters)
+
+Real-time traffic uses the socket; everything that *configures* it is a plain HTTPS call with the same
+JWT. `IrcRestClient` wraps those, so a mod never hand-builds URLs or parses the error envelope:
+
+```java
+IrcRestClient api = IrcRestClient.builder("wss://irc.example.com")   // ws(s) or http(s)
+        .tokenProvider(() -> session.accessToken())
+        .build();
+
+IrcRestClient.Group group = api.groups().create("周末小队", "PRIVATE", 20);
+api.groups().list();
+api.groups().get(group.id());
+api.groups().update(group.id(), "新名字", null, 30);
+api.groups().addMember(group.id(), friendUuid, "MEMBER");
+api.groups().setMemberRole(group.id(), friendUuid, "ADMIN");   // OWNER is not assignable
+api.groups().removeMember(group.id(), friendUuid);
+api.groups().delete(group.id());                              // OWNER only
+
+IrcRestClient.PresenceMe me = api.presence().me();
+IrcRestClient.PresenceView other = api.presence().of(uuid);   // self / shared-group only
+
+List<IrcRestClient.FilterRule> mine = api.filters().mine();
+api.filters().replaceMine(List.of(IrcRestClient.RuleSpec.deny("chat.typing")));
+api.filters().groupRules(groupId);
+api.filters().globalRules();                                  // admin only
+```
+
+Behaviour:
+
+- **Same auth as the socket.** One `TokenProvider`; a 401 triggers `onTokenRejected()` once and the
+  call is retried with the refreshed token.
+- **Typed errors.** Non-2xx becomes `ApiException` with the server's code
+  (`GROUP_ACCESS_DENIED`, `GROUP_NOT_FOUND`, `RATE_LIMITED`, …), `statusCode()`, `isNotFound()`,
+  `isForbidden()`.
+- **Blocking.** These calls block on HTTP — run them off the render thread.
+- **HTTP/1.1 pinned.** Over cleartext HTTP the JDK would otherwise attempt an `h2c` upgrade, which is
+  not a WebSocket upgrade and confuses upgrade-aware servers (found while testing against our relay).
+
 ## Behaviour worth knowing
 
 - **ACK semantics.** `sendAsync` resolves on the *final* ACK: `delivered` (the server enqueued the frame
@@ -83,6 +122,7 @@ Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName } | Set-Con
 javac --release 21 -Xlint:all -d out "@sources.txt"
 java -cp out com.skymatrix.irc.IrcClientSelfTest        # 44 checks, offline
 java -cp out com.skymatrix.irc.Main                     # API demo, no network
+java -cp out com.skymatrix.irc.rest.IrcRestClientSelfTest  # 34 checks, offline REST
 
 # end-to-end against a running relay (see docs/irc-deployment.md)
 IRC_URL=ws://127.0.0.1:3001/v1/connect IRC_TOKEN=<jwt> \
