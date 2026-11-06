@@ -270,6 +270,26 @@ node tools/e2e/irc/smoke.mjs                     # 39 protocol checks end to end
 node tools/e2e/irc/load.mjs                      # 100-client load check with real percentiles
 ```
 
+**Java client SDK** — `clients/fabric-irc-sdk` (JDK 21 only, no Minecraft dependency): `IrcClient` hides
+the WebSocket, the envelope, ACK correlation, reconnects, de-duplication and token rejection. Wire it with
+two things — a `TokenProvider` (the MC Auth JWT) and an `Executor` (the game thread):
+
+```java
+IrcClient irc = IrcClient.builder("wss://irc.example.com")
+        .tokenProvider(() -> session.accessToken())
+        .dispatchExecutor(client::execute)
+        .build();
+irc.on("chat.message", message -> chat.show(message.text()));
+irc.sendDirect(targetUuid, "chat.message", Map.of("text", "hello"));
+```
+
+```bash
+cd clients/fabric-irc-sdk
+javac --release 21 -Xlint:all -d out "@sources.txt"
+java -cp out com.skymatrix.irc.IrcClientSelfTest   # 44 checks, offline
+# real relay: IRC_URL=... IRC_TOKEN=... java -cp out com.skymatrix.irc.IrcE2ESelfTest   (14 checks)
+```
+
 Protocol and operations: [docs/srp-v1.md](docs/srp-v1.md), [docs/irc-api.md](docs/irc-api.md),
 [docs/irc-database.md](docs/irc-database.md), [docs/irc-security.md](docs/irc-security.md),
 [docs/irc-deployment.md](docs/irc-deployment.md). Build contract for contributors:

@@ -458,3 +458,24 @@ Ports: MongoDB `27017`, Redis `16379` (this host cannot publish 6379 — do not
   creation runs at boot and is additive; an index *definition change* still needs
   a manual drop/recreate (see
   [irc-database.md §4.1](./irc-database.md#41-how-the-indexes-are-created)).
+
+## Pitfall found in practice: the JWT issuer must match the auth server
+
+The IRC server verifies `iss` against `JWT_ISSUER`, so it must be **byte-identical** to the value the auth
+server signs. `PUBLIC_BASE_URL` is what the auth server puts in `iss` (unless `JWT_ISSUER` overrides it),
+so mixing `http://127.0.0.1:3000` on one side with `http://localhost:3000` on the other makes every
+upgrade fail with `401 UNAUTHORIZED` even though the token is valid.
+
+Check it with:
+
+```bash
+# what the auth server signs
+curl -s http://127.0.0.1:3000/api/v1/health/ready >/dev/null && \
+  node -e "const t=require('./tools/e2e/.token.json').accessToken;console.log(JSON.parse(Buffer.from(t.split('.')[1],'base64url')).iss)"
+
+# what the IRC server expects
+echo $JWT_ISSUER
+```
+
+Both must print the same string. In compose, derive it from the same variable
+(`JWT_ISSUER: ${PUBLIC_BASE_URL}`) so they cannot drift.
