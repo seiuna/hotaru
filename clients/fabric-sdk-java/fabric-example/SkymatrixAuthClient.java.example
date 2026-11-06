@@ -1,0 +1,162 @@
+/*
+ * ============================================================================
+ *  DOCUMENTED EXAMPLE - DELIBERATELY NOT PART OF THE SDK BUILD
+ * ============================================================================
+ *
+ *  This file does not have a .java extension, so `javac -d out @sources.txt`
+ *  never sees it: Minecraft and Fabric classes are not on the standalone SDK
+ *  classpath, and this file must not be compiled there.
+ *
+ *  Drop it into a Fabric mod's client source set, adjust the package and the
+ *  MC Auth base URL, and it compiles against Fabric Loader + Minecraft.
+ *
+ *  Version note: the Session accessors below are the 1.20.2 - 1.21.1 shape
+ *  (`net.minecraft.client.util.Session`). On newer versions the class moved to
+ *  `net.minecraft.client.session.Session`; the getters are the same.
+ * ============================================================================
+ */
+package com.skymatrix.example.client;
+
+import com.skymatrix.mcauth.McAuthClient;
+import com.skymatrix.mcauth.McAuthException;
+import com.skymatrix.mcauth.SessionProvider;
+import com.skymatrix.mcauth.TokenResponse;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Session;
+
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+
+/**
+ * Client-only wiring for the MC Auth Platform.
+ *
+ * <p>Why {@code @Environment(EnvType.CLIENT)}: {@link MinecraftClient} does not exist on a dedicated
+ * server. Annotating the class keeps it out of the server environment and stops Fabric's split
+ * source sets from ever loading it there. Everything below is guarded by that annotation - do not
+ * call it from common code.
+ *
+ * <p>Why the async wrapper: {@link McAuthClient#authenticate(SessionProvider)} blocks on HTTP
+ * (challenge, Mojang join, verify). Calling it from {@code MinecraftClient.execute(...)} or from a
+ * screen's {@code render()} would freeze the game. Run it on an IO executor and hand the result back
+ * with {@code client.execute(...)}.
+ */
+@Environment(EnvType.CLIENT)
+public final class SkymatrixAuthClient implements ClientModInitializer {
+
+    /** One immutable, thread-safe client for the whole game session. */
+    private static final McAuthClient AUTH = McAuthClient.builder("https://auth.skymatrix.example")
+            .connectTimeout(Duration.ofSeconds(5))
+            .requestTimeout(Duration.ofSeconds(10))
+            .build();
+
+    /** The current token pair. In a real mod, persist refreshToken in the config, not the JWT. */
+    private static volatile TokenResponse tokens;
+
+    @Override
+    public void onInitializeClient() {
+        // Nothing network-heavy here: mod init runs during game startup.
+        // Kick the login off from a screen button instead (see loginAsync below).
+    }
+
+    /**
+     * Runs the full Mojang join + verify flow off the render thread.
+     *
+     * <pre>{@code
+     * SkymatrixAuthClient.loginAsync(Util.getIoWorkerExecutor())
+     *     .thenAccept(result -> MinecraftClient.getInstance().execute(() -> {
+     *         // back on the render thread: update UI
+     *     }))
+     *     .exceptionally(error -> {
+     *         McAuthException failure = (McAuthException) error.getCause();
+     *         // failure.errorCode() == "NOT_A_PREMIUM_SESSION" etc.
+     *         return null;
+     *     });
+     * }</pre>
+     */
+    public static CompletableFuture<TokenResponse> loginAsync(Executor background) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TokenResponse fresh = AUTH.authenticate(new FabricSessionProvider());
+                tokens = fresh;
+                return fresh;
+            } catch (McAuthException e) {
+                throw new CompletionException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
+            }
+        }, background);
+    }
+
+    /** Rotates the refresh token without another Mojang join (call after a game restart, too). */
+    public static CompletableFuture<TokenResponse> refreshAsync(Executor background) {
+        TokenResponse current = tokens;
+        if (current == null) {
+            return CompletableFuture.failedFuture(new IllegalStateException("log in first"));
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TokenResponse rotated = AUTH.refresh(current.refreshToken());
+                tokens = rotated;
+                return rotated;
+            } catch (McAuthException e) {
+                throw new CompletionException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
+            }
+        }, background);
+    }
+
+    /** Revokes the session server-side. Best effort: ignore failures when the user just quits. */
+    public static CompletableFuture<Void> logoutAsync(Executor background) {
+        TokenResponse current = tokens;
+        if (current == null) return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> {
+            try {
+                AUTH.logout(current.accessToken());
+            } catch (McAuthException ignored) {
+                // Already revoked or expired: nothing left to do.
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                tokens = null;
+            }
+        }, background);
+    }
+
+    public static TokenResponse tokens() {
+        return tokens;
+    }
+
+    /* ------------------------------------------------------------------ */
+
+    /** The launcher session, exposed as the three strings the SDK needs. */
+    @Environment(EnvType.CLIENT)
+    public static final class FabricSessionProvider implements SessionProvider {
+
+        @Override
+        public String accessToken() {
+            Session session = MinecraftClient.getInstance().getSession();
+            return session.getAccessToken();
+        }
+
+        @Override
+        public String playerUuid() {
+            Session session = MinecraftClient.getInstance().getSession();
+            // getUuid() is already the undashed 32-hex form; the SDK accepts dashed or undashed.
+            return session.getUuid();
+        }
+
+        @Override
+        public String username() {
+            Session session = MinecraftClient.getInstance().getSession();
+            return session.getUsername();
+        }
+    }
+}

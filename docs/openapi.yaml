@@ -1,0 +1,1850 @@
+openapi: "3.1.0"
+info:
+  title: "Skymatrix MC Auth Platform"
+  description: "Independent Minecraft premium authentication and authorization service. Verifies Mojang sessions via the join/hasJoined handshake and issues its own Ed25519 JWTs."
+  version: "0.1.0"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas: {}
+paths:
+  "/api/v1/auth/jwks":
+    get:
+      summary: "JSON Web Key Set for access-token verification"
+      tags:
+        - auth
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kty:
+                          type: string
+                        crv:
+                          type: string
+                        x:
+                          type: string
+                        use:
+                          type: string
+                        alg:
+                          type: string
+                        kid:
+                          type: string
+                      additionalProperties: true
+  "/api/v1/health/live":
+    get:
+      summary: "Liveness probe"
+      tags:
+        - health
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                  uptimeSeconds:
+                    type: integer
+                    minimum: 0
+                required:
+                  - status
+                  - uptimeSeconds
+                additionalProperties: false
+  "/api/v1/health/ready":
+    get:
+      summary: "Readiness probe (MongoDB + Redis)"
+      tags:
+        - health
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                      - degraded
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: string
+                      enum:
+                        - ok
+                        - fail
+                required:
+                  - status
+                  - checks
+                additionalProperties: false
+        "503":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                      - degraded
+                  checks:
+                    type: object
+                    additionalProperties:
+                      type: string
+                      enum:
+                        - ok
+                        - fail
+                required:
+                  - status
+                  - checks
+                additionalProperties: false
+  "/api/v1/auth/minecraft/challenge":
+    post:
+      summary: "Start the Minecraft premium handshake"
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 16
+                  pattern: "^[A-Za-z0-9_]+$"
+                client:
+                  type: string
+                  default: fabric
+                  enum:
+                    - fabric
+              required:
+                - username
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  challengeId:
+                    type: string
+                    format: uuid
+                  serverId:
+                    type: string
+                    minLength: 1
+                  publicKey:
+                    type: string
+                    minLength: 1
+                  verifyToken:
+                    type: string
+                    minLength: 1
+                  expiresIn:
+                    type: integer
+                    exclusiveMinimum: 0
+                required:
+                  - challengeId
+                  - serverId
+                  - publicKey
+                  - verifyToken
+                  - expiresIn
+                additionalProperties: false
+  "/api/v1/auth/minecraft/verify":
+    post:
+      summary: "Verify the encrypted handshake and issue tokens"
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                challengeId:
+                  type: string
+                  format: uuid
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 16
+                  pattern: "^[A-Za-z0-9_]+$"
+                encryptedSharedSecret:
+                  type: string
+                  minLength: 1
+                  maxLength: 2048
+                encryptedVerifyToken:
+                  type: string
+                  minLength: 1
+                  maxLength: 2048
+              required:
+                - challengeId
+                - username
+                - encryptedSharedSecret
+                - encryptedVerifyToken
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  tokenType:
+                    type: string
+                    enum:
+                      - Bearer
+                  expiresIn:
+                    type: integer
+                    exclusiveMinimum: 0
+                  profile:
+                    type: object
+                    properties:
+                      uuid:
+                        type: string
+                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                      username:
+                        type: string
+                    required:
+                      - uuid
+                      - username
+                    additionalProperties: false
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - "skymatrix:profile"
+                        - "skymatrix:resource"
+                        - "skymatrix:ircserver"
+                        - "skymatrix:license"
+                        - "admin:users"
+                required:
+                  - accessToken
+                  - refreshToken
+                  - tokenType
+                  - expiresIn
+                  - profile
+                  - scopes
+                additionalProperties: false
+  "/api/v1/auth/refresh":
+    post:
+      summary: "Rotate a refresh token and issue a new access token"
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  minLength: 20
+                  maxLength: 512
+              required:
+                - refreshToken
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  tokenType:
+                    type: string
+                    enum:
+                      - Bearer
+                  expiresIn:
+                    type: integer
+                    exclusiveMinimum: 0
+                  profile:
+                    type: object
+                    properties:
+                      uuid:
+                        type: string
+                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                      username:
+                        type: string
+                    required:
+                      - uuid
+                      - username
+                    additionalProperties: false
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - "skymatrix:profile"
+                        - "skymatrix:resource"
+                        - "skymatrix:ircserver"
+                        - "skymatrix:license"
+                        - "admin:users"
+                required:
+                  - accessToken
+                  - refreshToken
+                  - tokenType
+                  - expiresIn
+                  - profile
+                  - scopes
+                additionalProperties: false
+  "/api/v1/auth/logout":
+    post:
+      summary: "Revoke the current session (access + refresh tokens)"
+      tags:
+        - auth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Default Response"
+  "/api/v1/users/me":
+    get:
+      summary: "Profile of the authenticated user with their effective scopes"
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: "^[0-9a-f]{24}$"
+                      minecraftUuid:
+                        type: string
+                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                      username:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - banned
+                      createdAt:
+                        type: string
+                      lastLoginAt:
+                        type:
+                          - "null"
+                          - string
+                    required:
+                      - id
+                      - minecraftUuid
+                      - username
+                      - status
+                      - createdAt
+                      - lastLoginAt
+                    additionalProperties: false
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - "skymatrix:profile"
+                        - "skymatrix:resource"
+                        - "skymatrix:ircserver"
+                        - "skymatrix:license"
+                        - "admin:users"
+                required:
+                  - user
+                  - scopes
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/users/me/permissions":
+    get:
+      summary: "All permission grants of the authenticated user and their effective scopes"
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  permissions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        scope:
+                          type: string
+                          enum:
+                            - "skymatrix:profile"
+                            - "skymatrix:resource"
+                            - "skymatrix:ircserver"
+                            - "skymatrix:license"
+                            - "admin:users"
+                        grantedAt:
+                          type: string
+                        expiresAt:
+                          type:
+                            - "null"
+                            - string
+                        grantedBy:
+                          type:
+                            - "null"
+                            - string
+                      required:
+                        - scope
+                        - grantedAt
+                        - expiresAt
+                        - grantedBy
+                      additionalProperties: false
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - "skymatrix:profile"
+                        - "skymatrix:resource"
+                        - "skymatrix:ircserver"
+                        - "skymatrix:license"
+                        - "admin:users"
+                required:
+                  - permissions
+                  - scopes
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/users":
+    get:
+      summary: "Search users by username substring or Minecraft-UUID prefix"
+      tags:
+        - admin
+      parameters:
+        - schema:
+            type: string
+            maxLength: 64
+          in: query
+          name: query
+          required: false
+        - schema:
+            type: string
+            enum:
+              - active
+              - banned
+          in: query
+          name: status
+          required: false
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: integer
+            minimum: 0
+            default: 0
+          in: query
+          name: offset
+          required: false
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          pattern: "^[0-9a-f]{24}$"
+                        minecraftUuid:
+                          type: string
+                          pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        username:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - banned
+                        createdAt:
+                          type: string
+                        lastLoginAt:
+                          type:
+                            - "null"
+                            - string
+                      required:
+                        - id
+                        - minecraftUuid
+                        - username
+                        - status
+                        - createdAt
+                        - lastLoginAt
+                      additionalProperties: false
+                  total:
+                    type: integer
+                    minimum: 0
+                  limit:
+                    type: integer
+                    exclusiveMinimum: 0
+                  offset:
+                    type: integer
+                    minimum: 0
+                required:
+                  - users
+                  - total
+                  - limit
+                  - offset
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/users/{id}/permissions":
+    put:
+      summary: "Replace the permission grants of a user"
+      tags:
+        - admin
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      scope:
+                        type: string
+                        enum:
+                          - "skymatrix:profile"
+                          - "skymatrix:resource"
+                          - "skymatrix:ircserver"
+                          - "skymatrix:license"
+                          - "admin:users"
+                      expiresAt:
+                        anyOf:
+                          - type: string
+                            format: date-time
+                          - type: "null"
+                    required:
+                      - scope
+                    additionalProperties: false
+                  maxItems: 32
+              required:
+                - permissions
+              additionalProperties: false
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  permissions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        scope:
+                          type: string
+                          enum:
+                            - "skymatrix:profile"
+                            - "skymatrix:resource"
+                            - "skymatrix:ircserver"
+                            - "skymatrix:license"
+                            - "admin:users"
+                        grantedAt:
+                          type: string
+                        expiresAt:
+                          type:
+                            - "null"
+                            - string
+                        grantedBy:
+                          type:
+                            - "null"
+                            - string
+                      required:
+                        - scope
+                        - grantedAt
+                        - expiresAt
+                        - grantedBy
+                      additionalProperties: false
+                  scopes:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - "skymatrix:profile"
+                        - "skymatrix:resource"
+                        - "skymatrix:ircserver"
+                        - "skymatrix:license"
+                        - "admin:users"
+                required:
+                  - permissions
+                  - scopes
+                additionalProperties: false
+        "400":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "404":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/users/{id}/ban":
+    post:
+      summary: "Ban a user and revoke all of their active sessions"
+      tags:
+        - admin
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+              additionalProperties: false
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: "^[0-9a-f]{24}$"
+                      minecraftUuid:
+                        type: string
+                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                      username:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - banned
+                      createdAt:
+                        type: string
+                      lastLoginAt:
+                        type:
+                          - "null"
+                          - string
+                    required:
+                      - id
+                      - minecraftUuid
+                      - username
+                      - status
+                      - createdAt
+                      - lastLoginAt
+                    additionalProperties: false
+                  sessionsRevoked:
+                    type: integer
+                    minimum: 0
+                required:
+                  - user
+                  - sessionsRevoked
+                additionalProperties: false
+        "400":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "404":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/users/{id}/unban":
+    post:
+      summary: "Lift a ban (sessions revoked by the ban stay revoked)"
+      tags:
+        - admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: "^[0-9a-f]{24}$"
+                      minecraftUuid:
+                        type: string
+                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                      username:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - banned
+                      createdAt:
+                        type: string
+                      lastLoginAt:
+                        type:
+                          - "null"
+                          - string
+                    required:
+                      - id
+                      - minecraftUuid
+                      - username
+                      - status
+                      - createdAt
+                      - lastLoginAt
+                    additionalProperties: false
+                required:
+                  - user
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "404":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/sessions/{id}/revoke":
+    post:
+      summary: "Revoke a single session (MongoDB + Redis revocation key)"
+      tags:
+        - admin
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+              additionalProperties: false
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        pattern: "^[0-9a-f]{24}$"
+                      createdAt:
+                        type: string
+                      expiresAt:
+                        type: string
+                      revokedAt:
+                        type:
+                          - "null"
+                          - string
+                      ip:
+                        type:
+                          - "null"
+                          - string
+                      userAgent:
+                        type:
+                          - "null"
+                          - string
+                    required:
+                      - id
+                      - createdAt
+                      - expiresAt
+                      - revokedAt
+                      - ip
+                      - userAgent
+                    additionalProperties: false
+                required:
+                  - session
+                additionalProperties: false
+        "400":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "404":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+  "/api/v1/admin/audit-logs":
+    get:
+      summary: "Audit log, newest first, filtered by event and actor"
+      tags:
+        - admin
+      parameters:
+        - schema:
+            type: string
+            maxLength: 64
+          in: query
+          name: event
+          required: false
+        - schema:
+            type: string
+            pattern: "^[0-9a-f]{24}$"
+          in: query
+          name: actorId
+          required: false
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+          in: query
+          name: limit
+          required: false
+        - schema:
+            type: integer
+            minimum: 0
+            default: 0
+          in: query
+          name: offset
+          required: false
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          pattern: "^[0-9a-f]{24}$"
+                        event:
+                          type: string
+                        actorId:
+                          type:
+                            - "null"
+                            - string
+                        actorType:
+                          type: string
+                          enum:
+                            - user
+                            - admin
+                            - system
+                        targetType:
+                          type:
+                            - "null"
+                            - string
+                        targetId:
+                          type:
+                            - "null"
+                            - string
+                        ip:
+                          type:
+                            - "null"
+                            - string
+                        metadata:
+                          anyOf:
+                            - type: object
+                              additionalProperties: {}
+                            - type: "null"
+                        createdAt:
+                          type: string
+                      required:
+                        - id
+                        - event
+                        - actorId
+                        - actorType
+                        - targetType
+                        - targetId
+                        - ip
+                        - metadata
+                        - createdAt
+                      additionalProperties: false
+                  total:
+                    type: integer
+                    minimum: 0
+                  limit:
+                    type: integer
+                    exclusiveMinimum: 0
+                  offset:
+                    type: integer
+                    minimum: 0
+                required:
+                  - logs
+                  - total
+                  - limit
+                  - offset
+                additionalProperties: false
+        "400":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "401":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+        "403":
+          description: "Default Response"
+          content:
+            "application/json":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - INVALID_REQUEST
+                          - CHALLENGE_NOT_FOUND
+                          - CHALLENGE_EXPIRED
+                          - CHALLENGE_CONSUMED
+                          - NOT_A_PREMIUM_SESSION
+                          - MOJANG_UNAVAILABLE
+                          - RATE_LIMITED
+                          - UNAUTHORIZED
+                          - TOKEN_EXPIRED
+                          - SESSION_REVOKED
+                          - REFRESH_REUSED
+                          - USER_BANNED
+                          - FORBIDDEN
+                          - NOT_FOUND
+                          - INTERNAL
+                      message:
+                        type: string
+                      retryable:
+                        type: boolean
+                      details: {}
+                    required:
+                      - code
+                      - message
+                      - retryable
+                    additionalProperties: false
+                required:
+                  - error
+                additionalProperties: false
+servers:
+  - url: "https://auth.example.com"
+tags:
+  - name: auth
+    description: "Challenge/verify, refresh, logout, JWKS"
+  - name: users
+    description: "Self-service account data"
+  - name: admin
+    description: "Administration (requires admin:users scope)"
+  - name: health
+    description: "Liveness and readiness"

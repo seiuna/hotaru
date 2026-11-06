@@ -1,8 +1,8 @@
 {
   "name": "skymatrix-servers",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Skymatrix servers monorepo",
+  "description": "Skymatrix servers monorepo — MC Auth Platform (Minecraft premium authentication & authorization)",
   "type": "module",
   "packageManager": "pnpm@11.12.0",
   "engines": {
@@ -11,16 +11,25 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present build",
-    "dev": "pnpm --filter @skymatrix/api dev",
-    "start": "pnpm --filter @skymatrix/api start",
+    "dev": "pnpm --filter @skymatrix/auth-server dev",
+    "start": "pnpm --filter @skymatrix/auth-server start",
     "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "test:integration": "pnpm --filter @skymatrix/auth-server test:integration",
+    "lint": "pnpm -r --if-present lint",
     "clean": "pnpm -r --if-present clean",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "infra:up": "docker compose -f deploy/compose.yaml --env-file deploy/.env up -d mongo redis",
+    "infra:down": "docker compose -f deploy/compose.yaml --env-file deploy/.env down"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/node": "^24.0.0",
+    "eslint": "^9.0.0",
     "prettier": "^3.4.0",
-    "typescript": "^5.6.0"
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0"
   }
 }

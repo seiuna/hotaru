@@ -1,0 +1,5 @@
+# Build output of the standalone javac workflow
+out/
+sources.txt
+libs/
+*.class

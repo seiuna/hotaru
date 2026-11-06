@@ -4,6 +4,9 @@ node_modules/
 # build output
 dist/
 *.tsbuildinfo
+clients/**/out/
+*.class
+*.jar
 
 # logs
 logs/
@@ -22,6 +25,10 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# verification runs (see .agents/skills/verify-api)
+.verify/run/
+.verify/evidence/
 
 # test / tooling caches
 coverage/

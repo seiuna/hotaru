@@ -1,0 +1,66 @@
+# Caddy terminates TLS (automatic Let's Encrypt certificate) and proxies to the
+# auth server on the internal Docker network. The auth server itself never
+# listens on the public interface in this stack.
+
+{
+	email {$ACME_EMAIL}
+	# Keep upstream failures short: a hanging Mojang call must not pin a client.
+	# NOTE: Caddy's server timeout option names are read_body / read_header /
+	# write / idle — not read_timeout / write_timeout.
+	servers {
+		timeouts {
+			read_body 10s
+			read_header 10s
+			write 30s
+			idle 120s
+		}
+	}
+}
+
+{$AUTH_DOMAIN} {
+	encode zstd gzip
+
+	# Authentication payloads are tiny (a few KB). Refuse anything larger early.
+	request_body {
+		max_size 64KB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	# Never log Authorization / Cookie headers or query strings that could carry
+	# tokens. Only method, path, status and latency are recorded.
+	log {
+		output file /data/access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+		format json
+		level INFO
+	}
+
+	reverse_proxy auth-server:3000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		# Mojang hasJoined is slow by nature; allow the app's own timeout to fire
+		# before Caddy gives up.
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 15s
+		}
+	}
+
+	# Health endpoints are public but must never be cached.
+	@health path /api/v1/health/*
+	header @health Cache-Control "no-store"
+
+	# Drop the docs UI from the public deployment unless explicitly wanted.
+	@docs path /docs /docs/*
+	respond @docs 404
+}
