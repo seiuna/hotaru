@@ -135,6 +135,55 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@24.19.2)(jsdom@26.1.0)
 
+  apps/irc-server:
+    dependencies:
+      '@skymatrix/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@skymatrix/srp-protocol':
+        specifier: workspace:*
+        version: link:../../packages/srp-protocol
+      dotenv:
+        specifier: ^16.4.0
+        version: 16.6.1
+      fastify:
+        specifier: ^5.0.0
+        version: 5.12.8
+      ioredis:
+        specifier: ^5.4.0
+        version: 5.11.1
+      jose:
+        specifier: ^5.9.0
+        version: 5.10.0
+      mongoose:
+        specifier: ^8.8.0
+        version: 8.24.8
+      ws:
+        specifier: ^8.18.0
+        version: 8.22.1
+      zod:
+        specifier: ^3.25.0
+        version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.24.0
+        version: 3.25.2(zod@3.25.76)
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.19.2
+      '@types/ws':
+        specifier: ^8.5.0
+        version: 8.18.2
+      tsx:
+        specifier: ^4.19.0
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@24.19.2)(jsdom@26.1.0)
+
   packages/api-contract:
     dependencies:
       '@skymatrix/shared-types':
@@ -147,6 +196,19 @@ importers:
   packages/shared: {}
 
   packages/shared-types: {}
+
+  packages/srp-protocol:
+    dependencies:
+      zod:
+        specifier: ^3.25.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@24.19.2)(jsdom@26.1.0)
 
 packages:
 
@@ -796,6 +858,9 @@ packages:
 
   '@types/whatwg-url@11.0.5':
     resolution: {integrity: sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==}
+
+  '@types/ws@8.18.2':
+    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
   '@typescript-eslint/eslint-plugin@8.72.1':
     resolution: {integrity: sha512-5CokTWXpmbylfFabsbvHC0CAw3XLaGnoa+nFJX5FR592h/LoZsENUE6p/rg5xvkKrFEXz6pYmgI29AgXc2N3BQ==}
@@ -2618,6 +2683,10 @@ snapshots:
   '@types/whatwg-url@11.0.5':
     dependencies:
       '@types/webidl-conversions': 7.0.3
+
+  '@types/ws@8.18.2':
+    dependencies:
+      '@types/node': 24.19.2
 
   '@typescript-eslint/eslint-plugin@8.72.1(@typescript-eslint/parser@8.72.1(eslint@9.39.5)(typescript@5.9.3))(eslint@9.39.5)(typescript@5.9.3)':
     dependencies:

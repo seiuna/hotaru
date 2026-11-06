@@ -242,6 +242,39 @@ Not built yet (deliberate scope gaps):
 - The `skymatrix:resource` / `skymatrix:ircserver` scopes are issued but their downstream services are
   outside this repository.
 
+## IRC server (SRP v1)
+
+`apps/irc-server` is the real-time relay for the Skymatrix mod: WSS at `GET /v1/connect`, authenticated
+with the **same** Ed25519 JWT as the REST API (scope `skymatrix:ircserver`, session revocation checked
+against the shared Redis key), speaking the **SkyMatrix Relay Protocol v1** (`packages/srp-protocol`).
+
+```
+Fabric mod ──WSS /v1/connect (Bearer JWT)──► irc-server ──► Redis (presence, dedupe, cross-node)
+                                                  └──────► MongoDB (groups, filters, audit)
+```
+
+- **Routes**: DIRECT (player → player), GROUP (membership-checked), BROADCAST (needs
+  `skymatrix:irc:broadcast` or an admin UUID).
+- **Filters**: deny-first at three levels — global → group → per-recipient user — with only the patterns
+  `chat.message`, `chat.*` and `*`.
+- **Reliability**: two-phase ACK (`accepted` then `delivered`/`failed`), server-computed TTL, and
+  short-window dedupe keyed by *sender + message id* (replays are acknowledged but never re-fanned-out).
+- **Limits**: 20 msg/s (+40 burst) per connection, 10 msg/s for groups, 64 KiB payload, 128 KiB frame,
+  3 connections per account, 5 group creations per hour, slow sockets closed on backpressure.
+
+```bash
+pnpm --filter @skymatrix/irc-server dev          # :3001 (needs mongo + redis + auth-server for tokens)
+pnpm --filter @skymatrix/irc-server test         # 113 unit tests
+pnpm --filter @skymatrix/irc-server test:integration   # 74 integration tests (real Mongo/Redis/WS)
+node tools/e2e/irc/smoke.mjs                     # 39 protocol checks end to end (fake Mojang, self-contained)
+node tools/e2e/irc/load.mjs                      # 100-client load check with real percentiles
+```
+
+Protocol and operations: [docs/srp-v1.md](docs/srp-v1.md), [docs/irc-api.md](docs/irc-api.md),
+[docs/irc-database.md](docs/irc-database.md), [docs/irc-security.md](docs/irc-security.md),
+[docs/irc-deployment.md](docs/irc-deployment.md). Build contract for contributors:
+[docs/irc-contract.md](docs/irc-contract.md).
+
 ## Admin console (Vue 3 + Naive UI)
 
 `apps/admin-web` is a Vue 3 + Naive UI SPA for operating the platform: bento dashboard, user search,

@@ -114,6 +114,74 @@ services:
       retries: 5
       start_period: 20s
 
+  # SRP v1 IRC server: one WebSocket endpoint (/v1/connect) plus a small REST
+  # API for groups/filters/presence. Like the auth server it has no published
+  # ports — Caddy is the only way in, and the mongo/redis network is never
+  # exposed to the host.
+  irc-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.irc-server
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # The JWKS endpoint is the trust anchor for every token; booting before it
+      # is reachable would only produce upgrade failures.
+      auth-server:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3001
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/?authSource=admin
+      MONGODB_DB: ${MONGODB_IRC_DB:-skymatrix_irc}
+      # Additive index creation on boot. Unique constraints and the audit-log TTL
+      # are correctness requirements, so this stays on unless a migration job
+      # owns index management.
+      MONGODB_ENSURE_INDEXES: ${MONGODB_IRC_ENSURE_INDEXES:-true}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      # Same trust anchor and issuer as the auth server's own tokens.
+      AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://auth-server:3000/api/v1/auth/jwks}
+      JWT_ISSUER: ${PUBLIC_BASE_URL:?set in deploy/.env}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-skymatrix-api}
+      JWKS_CACHE_TTL_MS: ${JWKS_CACHE_TTL_MS:-600000}
+      INSTANCE_ID: ${INSTANCE_ID:-irc-01}
+      HEARTBEAT_INTERVAL_MS: ${HEARTBEAT_INTERVAL_MS:-30000}
+      PONG_TIMEOUT_MS: ${PONG_TIMEOUT_MS:-15000}
+      PRESENCE_TTL_MS: ${PRESENCE_TTL_MS:-90000}
+      MAX_CONNECTIONS_PER_USER: ${MAX_CONNECTIONS_PER_USER:-3}
+      MAX_CONNECTIONS_PER_IP: ${MAX_CONNECTIONS_PER_IP:-20}
+      MAX_CONNECTIONS_TOTAL: ${MAX_CONNECTIONS_TOTAL:-10000}
+      MESSAGE_RATE_PER_SEC: ${MESSAGE_RATE_PER_SEC:-20}
+      MESSAGE_BURST: ${MESSAGE_BURST:-40}
+      GROUP_MESSAGE_RATE_PER_SEC: ${GROUP_MESSAGE_RATE_PER_SEC:-10}
+      CREATE_GROUP_PER_HOUR: ${CREATE_GROUP_PER_HOUR:-5}
+      MAX_PAYLOAD_BYTES: ${MAX_PAYLOAD_BYTES:-65536}
+      MAX_FRAME_BYTES: ${MAX_FRAME_BYTES:-131072}
+      MAX_GROUP_MEMBERS: ${MAX_GROUP_MEMBERS:-100}
+      MAX_WS_BUFFERED_BYTES: ${MAX_WS_BUFFERED_BYTES:-1048576}
+      DEDUPE_TTL_MS: ${DEDUPE_TTL_MS:-120000}
+      ADMIN_UUIDS: ${IRC_ADMIN_UUIDS:-}
+      BROADCAST_ENABLED: ${BROADCAST_ENABLED:-true}
+      CORS_ORIGINS: ${IRC_CORS_ORIGINS:-}
+    networks:
+      - internal
+    # Deliberately no `ports:` — the WebSocket edge is Caddy, never the host.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   admin-web:
     build:
       context: ..
@@ -133,6 +201,8 @@ services:
     depends_on:
       auth-server:
         condition: service_started
+      irc-server:
+        condition: service_started
       admin-web:
         condition: service_started
     ports:
@@ -142,6 +212,7 @@ services:
     environment:
       AUTH_DOMAIN: ${AUTH_DOMAIN:?set in deploy/.env}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.${AUTH_DOMAIN}}
+      IRC_DOMAIN: ${IRC_DOMAIN:?set in deploy/.env}
       ACME_EMAIL: ${ACME_EMAIL:?set in deploy/.env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

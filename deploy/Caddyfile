@@ -102,3 +102,98 @@
 		level INFO
 	}
 }
+
+# ---------------------------------------------------------------------------
+# IRC / SRP v1 edge.
+#
+# One public host carries two very different transports:
+#
+#   wss://<IRC_DOMAIN>/v1/connect   long-lived WebSocket (hours), authenticated
+#                                  by an `Authorization: Bearer <JWT>` header on
+#                                  the upgrade request
+#   https://<IRC_DOMAIN>/v1/*       small JSON REST calls (groups, filters,
+#                                   presence) and the health probes
+#
+# The upstream (irc-server:3001) is not published on the host; this block is the
+# only way in.
+# ---------------------------------------------------------------------------
+{$IRC_DOMAIN} {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	# --- 1. WebSocket upgrade -------------------------------------------------
+	# `reverse_proxy` inspects `Connection: Upgrade` / `Upgrade: websocket` and
+	# switches to a raw bidirectional tunnel on its own; no `websocket` option is
+	# needed (and Caddy v2 has none). What it DOES need is permission to stay
+	# quiet: the timeouts below are the edge's half of SRP's liveness contract —
+	# the IRC server pings every 30s and terminates a silent peer, so Caddy must
+	# never be the reason a healthy idle session dies.
+	@connect path /v1/connect
+	# A hijacked (upgraded) connection is exempt from the global server
+	# read/write/idle timeouts below, but the upstream transport deadlines still
+	# apply to the tunnel, which is why they are raised here.
+	handle @connect {
+		reverse_proxy irc-server:3001 {
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			transport http {
+				dial_timeout 5s
+				# The upgrade response is immediate (READY is sent right after).
+				response_header_timeout 10s
+				read_timeout 1h
+				write_timeout 1h
+			}
+		}
+	}
+
+	# --- 2. REST + health -----------------------------------------------------
+	handle /v1/* {
+		encode zstd gzip
+		# Mirrors the server's own 128 KB body limit; refuse oversized bodies at
+		# the edge instead of buffering them.
+		request_body {
+			max_size 128KB
+		}
+		reverse_proxy irc-server:3001 {
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			transport http {
+				dial_timeout 5s
+				response_header_timeout 15s
+			}
+		}
+	}
+
+	handle /health/* {
+		header Cache-Control "no-store"
+		reverse_proxy irc-server:3001 {
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle {
+		respond 404
+	}
+
+	# Never log bearer tokens. Caddy's JSON access log redacts `Authorization` and
+	# `Cookie` values to "REDACTED" by default (verified against caddy:2-alpine);
+	# field-level `exclude` is only available on the global `log` option, not on a
+	# site `log` directive, so the default redaction is the mechanism here.
+	# Query strings ARE recorded, which is why SRP never accepts a token in the
+	# URL: the only query parameters in this API are non-secret list filters.
+	log {
+		output file /data/irc-access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+		format json
+		level INFO
+	}
+}

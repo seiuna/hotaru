@@ -1,0 +1,67 @@
+# syntax=docker/dockerfile:1
+
+# ---------------------------------------------------------------------------
+# IRC server (SRP v1) image.
+#
+# Mirrors deploy/Dockerfile (the auth server image) but only carries what the
+# IRC server needs: @skymatrix/srp-protocol, @skymatrix/shared-types and the
+# service itself. The WebSocket endpoint, the REST API and the health probes all
+# live in that one process, so there is exactly one binary and one port.
+# ---------------------------------------------------------------------------
+FROM node:24-alpine AS build
+# pnpm refuses to purge/reinstall node_modules without a TTY unless CI is set;
+# this also makes every pnpm prompt non-interactive during the image build.
+ENV CI=true
+RUN corepack enable && corepack prepare pnpm@11.12.0 --activate
+
+WORKDIR /app
+
+# Copy manifests first so the dependency layer caches independently of sources.
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
+COPY packages/shared-types/package.json packages/shared-types/
+COPY packages/srp-protocol/package.json packages/srp-protocol/
+COPY apps/irc-server/package.json apps/irc-server/
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/irc-server ./apps/irc-server
+
+RUN pnpm --filter @skymatrix/shared-types build \
+ && pnpm --filter @skymatrix/srp-protocol build \
+ && pnpm --filter @skymatrix/irc-server build
+
+# Re-install with production dependencies only. `pnpm prune --prod` is NOT usable
+# here: inside a workspace it leaves each package's node_modules without its
+# dependency symlinks, so the runtime image fails with ERR_MODULE_NOT_FOUND.
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
+# ---------------------------------------------------------------------------
+# Runtime stage: no toolchain, no sources, runs as an unprivileged user.
+# ---------------------------------------------------------------------------
+FROM node:24-alpine AS runtime
+
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3001
+
+WORKDIR /app
+
+RUN addgroup -S skymatrix && adduser -S skymatrix -G skymatrix
+
+COPY --from=build /app/node_modules ./node_modules
+# Copy each workspace package whole: its dependency symlinks live in its OWN
+# node_modules.
+COPY --from=build /app/packages ./packages
+COPY --from=build /app/apps/irc-server ./apps/irc-server
+
+USER skymatrix
+
+EXPOSE 3001
+
+# Readiness, not liveness: it touches MongoDB and Redis, so an orchestrator does
+# not send WebSocket upgrades to a node that cannot fan out.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3001)+'/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["node", "apps/irc-server/dist/server.js"]
