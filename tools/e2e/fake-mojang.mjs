@@ -80,7 +80,9 @@ export function startFakeMojang({ port = 8787, log = () => {} } = {}) {
         server.once('error', reject);
         server.listen(port, '127.0.0.1', resolve);
       });
-      return `http://127.0.0.1:${port}`;
+      const address = server.address();
+      const boundPort = typeof address === 'object' && address ? address.port : port;
+      return `http://127.0.0.1:${boundPort}`;
     },
     async close() {
       await new Promise((resolve) => server.close(resolve));
