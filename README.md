@@ -253,10 +253,12 @@ pnpm --filter @skymatrix/admin-web build   # vue-tsc + vite build -> dist/
 pnpm --filter @skymatrix/admin-web test    # 20 unit tests
 ```
 
-**Login is a token paste, not a password.** The only proof of a premium account is the Mojang
-handshake, and only the game client can obtain that token, so the console accepts the `accessToken`
-minted by the Fabric client, validates it against `/users/me` + `/users/me/permissions`, and refuses
-accounts without `admin:users`. The token lives in `sessionStorage` only; closing the tab signs you out.
+**Login goes through the game, not a password.** The console's default path calls a loopback HTTP bridge
+that the Fabric mod runs on `127.0.0.1:8765`: the page asks the mod for a token, the player confirms an
+in-game prompt, and the mod performs the real Mojang handshake. No token is ever copied by hand, and the
+mod refuses origins that are not on its explicit allowlist (see
+[docs/mod-login-bridge.md](docs/mod-login-bridge.md)). Pasting an `accessToken` manually still works as
+a fallback, and the token lives in `sessionStorage` only — closing the tab signs you out.
 A `/login#token=…&next=/path` fragment bootstrap exists for handing a token over from a terminal (the
 fragment never reaches a server and is stripped from history).
 

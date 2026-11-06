@@ -3,8 +3,16 @@ import { NButton, NInput, NSpin, useMessage } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '../api/client';
+import {
+  BridgeError,
+  DEFAULT_BRIDGE_PORT,
+  loginViaLocalBridge,
+  probeLocalBridge,
+} from '../services/localBridge';
 import { authState, loginWithToken } from '../stores/auth';
 import { decodeToken } from '../utils/jwt';
+
+const BRIDGE_PORT = DEFAULT_BRIDGE_PORT;
 
 const router = useRouter();
 const message = useMessage();
@@ -13,6 +21,28 @@ const token = ref('');
 const submitting = ref(false);
 const errorText = ref<string | null>(null);
 const helpOpen = ref(false);
+
+const bridgeBusy = ref(false);
+const bridgeMessage = ref<string | null>(null);
+const bridgeAvailable = ref<boolean | null>(null);
+
+/** Logs in through the mod's loopback bridge: no token to copy or paste. */
+async function useBridge(): Promise<void> {
+  if (bridgeBusy.value) return;
+  bridgeBusy.value = true;
+  bridgeMessage.value = null;
+  try {
+    const issued = await loginViaLocalBridge({ port: BRIDGE_PORT });
+    await loginWithToken(issued.accessToken);
+    message.success(`已通过本地游戏登录：${issued.profile.username}`);
+    await router.push({ name: 'dashboard' });
+  } catch (error) {
+    bridgeMessage.value = error instanceof BridgeError ? error.message : (error as Error).message;
+    if (error instanceof BridgeError && error.kind === 'unavailable') bridgeAvailable.value = false;
+  } finally {
+    bridgeBusy.value = false;
+  }
+}
 
 const decoded = computed(() => (token.value.trim() ? decodeToken(token.value.trim()) : null));
 const looksValid = computed(() => decoded.value !== null);
@@ -50,6 +80,8 @@ function safeNext(raw: string | null): string | null {
  * The fragment never reaches a server and is stripped from history immediately.
  */
 onMounted(async () => {
+  bridgeAvailable.value = await probeLocalBridge({ port: BRIDGE_PORT });
+
   const rawHash = window.location.hash.replace(/^#/, '');
   if (!rawHash) return;
 
@@ -111,13 +143,30 @@ onMounted(async () => {
 
       <section class="panel cozy-card rise rise-2">
         <header class="panel__head">
-          <h2>粘贴访问令牌</h2>
-          <p>在游戏内完成正版认证后，把 <code>accessToken</code> 复制到这里。</p>
+          <h2>登录控制台</h2>
+          <p>推荐直接通过本地游戏登录：浏览器无法自己完成正版握手，由模组代劳。</p>
         </header>
 
+        <div class="bridge">
+          <NButton type="primary" size="large" block :loading="bridgeBusy" @click="useBridge">
+            通过本地游戏登录
+          </NButton>
+          <p class="bridge__hint">
+            <template v-if="bridgeAvailable === true">
+              已检测到本地认证服务（127.0.0.1:{{ BRIDGE_PORT }}）。点击后请在游戏内确认。
+            </template>
+            <template v-else-if="bridgeAvailable === false">
+              未检测到本地认证服务（127.0.0.1:{{ BRIDGE_PORT }}）。请先启动游戏与 Skymatrix 模组，或使用下方令牌。
+            </template>
+            <template v-else>正在检测本地认证服务…</template>
+          </p>
+          <p v-if="bridgeMessage" class="alert" role="alert">{{ bridgeMessage }}</p>
+        </div>
+
+        <div class="or"><span>或粘贴访问令牌</span></div>
+
         <label class="field">
-          <span class="field__label">Access Token（JWT）</span>
-          <NInput
+          <span class="field__label">Access Token（JWT）</span>          <NInput
             v-model:value="token"
             type="textarea"
             placeholder="eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9…"
@@ -295,6 +344,33 @@ onMounted(async () => {
   color: var(--muted);
   font-size: 13.5px;
   margin-top: 4px;
+}
+
+.bridge {
+  display: grid;
+  gap: 8px;
+}
+
+.bridge__hint {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 
 .field {

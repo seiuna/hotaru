@@ -8,18 +8,33 @@ browser ──HTTPS──► Caddy ──/api/*──► auth-server ──► M
                      └────/*──────► nginx (SPA)
 ```
 
-## Why login is "paste a token" instead of a username/password form
+## Why login goes through the game
 
 The platform has no password store, by design: the only credential that proves a premium Minecraft
 account is the Mojang handshake, and that handshake needs the player's Minecraft access token — which
 only the game client holds. A browser cannot obtain it, and adding a web password would create a second
 authentication system with weaker properties than the one we just built.
 
-So the console accepts the **access token the game already mints**:
+So `/login` offers two paths, in this order:
 
-1. The player authenticates through the Fabric client (`clients/fabric-sdk-java`).
-2. They copy the `accessToken` from the result.
-3. They paste it into the console.
+### 1. Default: the local mod bridge
+
+The Fabric mod runs a loopback HTTP server (`apps`-independent, see `docs/mod-login-bridge.md`). Clicking
+**通过本地游戏登录**:
+
+1. probes `http://127.0.0.1:8765/v1/health` so the button reflects whether the game is actually running;
+2. `POST /v1/login` — the mod shows an in-game confirmation prompt;
+3. after the player confirms, the mod performs the Mojang handshake and returns the token pair;
+4. the console validates the token against `/users/me` + `/users/me/permissions` and refuses accounts
+   without `admin:users`.
+
+Nothing is copied by hand. Failures are explicit: mod not running, origin not on the mod's allowlist,
+player denied, prompt timed out, or the game's session expired.
+
+### 2. Fallback: paste an access token
+
+For machines without the mod (or when the bridge port is blocked), paste the `accessToken` minted by the
+Fabric client. The console validates it the same way.
 
 The console immediately validates it against `GET /users/me` and `GET /users/me/permissions`, refuses
 any account without `admin:users`, and keeps the token in **`sessionStorage`** only — closing the tab
