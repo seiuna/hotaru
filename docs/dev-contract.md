@@ -11,7 +11,7 @@ the exact interfaces to code against. Anything not listed here is someone else's
 | Audit service + health routes | `src/modules/audit`, `src/modules/health` | Lead |
 | Minecraft challenge/verify + token issuance/refresh/logout (`/api/v1/auth/*`) | `src/modules/minecraft-auth/**`, `src/modules/tokens/**` | auth-core |
 | Users + admin API + seed script | `src/modules/users/**`, `src/modules/admin/**`, `scripts/seed-admin.ts` | users-admin |
-| Fabric Java SDK | `clients/fabric-sdk-java/**` | java-sdk |
+| Fabric Java SDK | `clients/skymatrix-sdk-java/**` | java-sdk |
 | Deploy, docs, OpenAPI export | `deploy/**`, `docs/**`, `.env.example`, `README.md`, `scripts/export-openapi.ts` | deploy-docs |
 
 **Do not edit `package.json` files.** The Lead owns dependencies and installs. If you need one, message

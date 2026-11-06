@@ -4,12 +4,12 @@
 
 package com.example.skymatrix.client;
 
-import com.skymatrix.mcauth.McAuthClient;
-import com.skymatrix.mcauth.SessionProvider;
-import com.skymatrix.mcauth.TokenResponse;
-import com.skymatrix.mcauth.bridge.ApprovalGate;
-import com.skymatrix.mcauth.bridge.BridgeConfig;
-import com.skymatrix.mcauth.bridge.LocalAuthBridge;
+import cn.seiua.mcauth.McAuthClient;
+import cn.seiua.mcauth.SessionProvider;
+import cn.seiua.mcauth.TokenResponse;
+import cn.seiua.mcauth.bridge.ApprovalGate;
+import cn.seiua.mcauth.bridge.BridgeConfig;
+import cn.seiua.mcauth.bridge.LocalAuthBridge;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

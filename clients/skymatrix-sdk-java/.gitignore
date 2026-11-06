@@ -1,0 +1,4 @@
+out/
+dist/
+sources*.txt
+*.class

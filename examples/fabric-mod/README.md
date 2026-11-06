@@ -2,7 +2,7 @@
 
 These files show how a Fabric client mod wires the Skymatrix auth library and its loopback login bridge.
 They are **documentation, not part of the library**: the library itself has no Minecraft, Fabric or
-launcher dependency — its whole integration surface is `com.skymatrix.mcauth.AccessTokenProvider`, one
+launcher dependency — its whole integration surface is `cn.seiua.mcauth.AccessTokenProvider`, one
 method.
 
 | File | Shows |
@@ -25,4 +25,4 @@ TokenResponse tokens = authClient.authenticate(provider);
 
 If you already know the UUID and username, implement `SessionProvider` instead (it extends
 `AccessTokenProvider`) and the library skips one Mojang profile lookup. Nothing else about Minecraft
-leaks into the library: no `net.minecraft` import exists anywhere under `clients/fabric-sdk-java/src`.
+leaks into the library: no `net.minecraft` import exists anywhere under `clients/skymatrix-sdk-java/src`.

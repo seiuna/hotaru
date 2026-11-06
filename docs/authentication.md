@@ -21,7 +21,7 @@ Files: `src/modules/minecraft-auth/**` (handshake), `src/modules/tokens/**` (ses
 ## Sequence
 
 ```
- Fabric client (mod + fabric-sdk-java)      auth-server                    Redis        Mojang
+ Fabric client (mod + skymatrix-sdk-java)      auth-server                    Redis        Mojang
              │                                   │                          │            │
  (1) start login                              │                          │            │
              │── POST /api/v1/auth/minecraft/challenge ──────────────────►│            │

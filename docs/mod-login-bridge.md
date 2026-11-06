@@ -116,7 +116,7 @@ console says so instead of pretending the mod is missing.
 ## Local end-to-end check (no Minecraft needed)
 
 ```bash
-cd clients/fabric-sdk-java && javac -d out "@sources.txt"
+cd clients/skymatrix-sdk-java && javac -d out "@sources.txt"
 node tools/e2e/bridge-login.mjs
 ```
 

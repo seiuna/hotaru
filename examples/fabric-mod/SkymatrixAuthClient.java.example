@@ -15,12 +15,12 @@
  *  `net.minecraft.client.session.Session`; the getters are the same.
  * ============================================================================
  */
-package com.skymatrix.example.client;
+package cn.seiua.example.client;
 
-import com.skymatrix.mcauth.McAuthClient;
-import com.skymatrix.mcauth.McAuthException;
-import com.skymatrix.mcauth.SessionProvider;
-import com.skymatrix.mcauth.TokenResponse;
+import cn.seiua.mcauth.McAuthClient;
+import cn.seiua.mcauth.McAuthException;
+import cn.seiua.mcauth.SessionProvider;
+import cn.seiua.mcauth.TokenResponse;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

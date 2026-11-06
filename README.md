@@ -9,7 +9,7 @@ sees, stores or forwards a Mojang access token: it holds only public proofs, has
 its own signing keys.
 
 ```
-   Fabric client (mod + fabric-sdk-java)
+   Fabric client (mod + skymatrix-sdk-java)
             │
             │  1. POST /auth/minecraft/challenge   →  { serverId, publicKey, verifyToken }
             │  2. vanilla join with Mojang        →  (client ↔ Mojang, never through us)
@@ -196,7 +196,7 @@ skymatrix-servers/
 │   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
 │   └── api/                          # @skymatrix/api — leftover monorepo scaffold, not deployed
-├── clients/fabric-sdk-java/          # Java 21 auth library — no Minecraft dependency
+├── clients/skymatrix-sdk-java/          # Java 21 SDK: auth handshake + login bridge + IRC/REST clients
 ├── examples/fabric-mod/              # Fabric wiring examples (not compiled by the library)
 ├── packages/
 │   ├── shared-types/                 # SCOPES, ERROR_CODES, token claims, view types
@@ -270,7 +270,9 @@ node tools/e2e/irc/smoke.mjs                     # 39 protocol checks end to end
 node tools/e2e/irc/load.mjs                      # 100-client load check with real percentiles
 ```
 
-**Java client SDK** — `clients/fabric-irc-sdk` (JDK 21 only, no Minecraft dependency): `IrcClient` hides
+**Java SDK** — `clients/skymatrix-sdk-java` (JDK 21 only, no Minecraft dependency), one jar with two
+halves: the auth library (`cn.seiua.mcauth`) plus its loopback login bridge, and the SRP v1 relay client
+(`cn.seiua.irc` / `cn.seiua.irc.rest`): `IrcClient` hides
 the WebSocket, the envelope, ACK correlation, reconnects, de-duplication and token rejection. Wire it with
 two things — a `TokenProvider` (the MC Auth JWT) and an `Executor` (the game thread):
 
@@ -284,10 +286,10 @@ irc.sendDirect(targetUuid, "chat.message", Map.of("text", "hello"));
 ```
 
 ```bash
-cd clients/fabric-irc-sdk
+cd clients/skymatrix-sdk-java
 javac --release 21 -Xlint:all -d out "@sources.txt"
-java -cp out com.skymatrix.irc.IrcClientSelfTest   # 44 checks, offline
-# real relay: IRC_URL=... IRC_TOKEN=... java -cp out com.skymatrix.irc.IrcE2ESelfTest   (14 checks)
+java -cp out cn.seiua.irc.IrcClientSelfTest   # 44 checks, offline
+# real relay: IRC_URL=... IRC_TOKEN=... java -cp out cn.seiua.irc.IrcE2ESelfTest   (14 checks)
 ```
 
 Protocol and operations: [docs/srp-v1.md](docs/srp-v1.md), [docs/irc-api.md](docs/irc-api.md),
