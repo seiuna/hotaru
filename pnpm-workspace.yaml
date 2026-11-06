@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  esbuild: set this to true or false
+
+# pnpm >=10 blocks postinstall scripts by default; esbuild's is required by tsx.
+onlyBuiltDependencies:
+  - esbuild
