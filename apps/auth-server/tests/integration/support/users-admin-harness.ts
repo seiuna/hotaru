@@ -10,6 +10,7 @@ import { connectMongo, disconnectMongo } from '../../../src/infrastructure/mongo
 import { createRedis, closeRedis } from '../../../src/infrastructure/redis/client.js';
 import {
   AuditLogModel,
+  MinecraftLinkModel,
   PermissionModel,
   RefreshTokenModel,
   SessionModel,
@@ -176,6 +177,7 @@ export class TestData {
     }
     if (userIds.length > 0 || sessionIds.length > 0) {
       await PermissionModel.deleteMany({ userId: { $in: userIds } });
+      await MinecraftLinkModel.deleteMany({ accountId: { $in: userIds } });
       await RefreshTokenModel.deleteMany({
         $or: [{ userId: { $in: userIds } }, { sessionId: { $in: sessionIds } }],
       });

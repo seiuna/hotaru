@@ -8,6 +8,7 @@ import { pingMongo } from './infrastructure/mongo/connection.js';
 import { pingRedis } from './infrastructure/redis/client.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
 import { registerMinecraftAuthRoutes } from './modules/minecraft-auth/routes.js';
+import { registerPortalRoutes } from './modules/portal/routes.js';
 import { registerTokenRoutes } from './modules/tokens/routes.js';
 import { registerUserRoutes } from './modules/users/routes.js';
 import { registerAdminRoutes } from './modules/admin/routes.js';
@@ -65,6 +66,7 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
       tags: [
         { name: 'auth', description: 'Challenge/verify, refresh, logout, JWKS' },
         { name: 'users', description: 'Self-service account data' },
+        { name: 'portal', description: 'User portal account activation, login and Minecraft binding' },
         { name: 'admin', description: 'Administration (requires admin:users scope)' },
         { name: 'health', description: 'Liveness and readiness' },
       ],
@@ -113,6 +115,7 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
 
   await registerHealthRoutes(app, ctx, { pingMongo, pingRedis });
   await registerMinecraftAuthRoutes(app, ctx);
+  await registerPortalRoutes(app, ctx);
   await registerTokenRoutes(app, ctx);
   await registerUserRoutes(app, ctx);
   await registerAdminRoutes(app, ctx);

@@ -16,7 +16,10 @@ import { initKeys } from '../../../src/infrastructure/crypto/keys.js';
 import { connectMongo, disconnectMongo } from '../../../src/infrastructure/mongo/connection.js';
 import { createRedis, closeRedis } from '../../../src/infrastructure/redis/client.js';
 import {
+  ActivationCodeUseModel,
   AuditLogModel,
+  MinecraftBindingCodeModel,
+  MinecraftLinkModel,
   PermissionModel,
   RefreshTokenModel,
   SessionModel,
@@ -82,7 +85,26 @@ export async function startHarness(
   });
 
   await connectMongo(config);
+  // The account model replaced the old non-partial unique indexes. Tests use a
+  // persistent database, so synchronize the schema indexes before the first insert.
+  await UserModel.syncIndexes();
   const redis = createRedis(config);
+  await new Promise<void>((resolve, reject) => {
+    if (redis.status === 'ready') {
+      resolve();
+      return;
+    }
+    const onReady = (): void => {
+      redis.off('error', onError);
+      resolve();
+    };
+    const onError = (error: Error): void => {
+      redis.off('ready', onReady);
+      reject(error);
+    };
+    redis.once('ready', onReady);
+    redis.once('error', onError);
+  });
   await purgeAuthCoreData(redis);
 
   const keys = await initKeys(config);
@@ -108,6 +130,9 @@ export async function purgeAuthCoreData(redis: Redis): Promise<void> {
     SessionModel.deleteMany({}),
     RefreshTokenModel.deleteMany({}),
     AuditLogModel.deleteMany({}),
+    MinecraftLinkModel.deleteMany({}),
+    MinecraftBindingCodeModel.deleteMany({}),
+    ActivationCodeUseModel.deleteMany({}),
   ]);
 
   for (const pattern of [
@@ -224,6 +249,50 @@ export async function createVerifyBody(
 
 export function randomBuffer(bytes: number): Buffer {
   return randomBytes(bytes);
+}
+
+/**
+ * Creates the account/link fixture that the post-link login flow requires.
+ * Tests that specifically exercise an unlinked UUID must not call this.
+ */
+export async function seedLinkedAccount(options: {
+  uuid?: string;
+  username?: string;
+  scopes?: string[];
+  status?: 'active' | 'banned';
+} = {}): Promise<{ userId: string; minecraftUuid: string }> {
+  const uuid = options.uuid ?? PLAYER_UUID;
+  const username = options.username ?? PLAYER_NAME;
+  const status = options.status ?? 'active';
+  const user = await UserModel.findOneAndUpdate(
+    { minecraftUuid: uuid },
+    {
+      $set: { username, status },
+      $setOnInsert: { loginName: null, passwordHash: null },
+    },
+    { upsert: true, new: true },
+  );
+  const now = new Date();
+  await MinecraftLinkModel.findOneAndUpdate(
+    { minecraftUuid: uuid },
+    {
+      $set: {
+        accountId: user._id,
+        minecraftUsername: username,
+        status: status === 'banned' ? 'banned' : 'active',
+      },
+      $setOnInsert: { verifiedAt: now, linkedAt: now },
+    },
+    { upsert: true, new: true },
+  );
+  for (const scope of options.scopes ?? DEFAULT_SCOPES) {
+    await PermissionModel.updateOne(
+      { userId: user._id, scope },
+      { $setOnInsert: { userId: user._id, scope, expiresAt: null, grantedBy: null } },
+      { upsert: true },
+    );
+  }
+  return { userId: String(user._id), minecraftUuid: uuid };
 }
 
 export function encryptForPublicKey(publicKeyBase64: string, plaintext: Buffer): Buffer {

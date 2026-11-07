@@ -12,7 +12,7 @@ export interface AdminSession {
   /** Epoch milliseconds, from the JWT `exp` claim. */
   expiresAt: number;
   userId: string;
-  minecraftUuid: string;
+  minecraftUuid: string | null;
   username: string;
   scopes: Scope[];
 }
@@ -77,9 +77,9 @@ export async function loginWithToken(rawToken: string): Promise<AdminSession> {
 
     if (!scopes.includes(ADMIN_SCOPE)) {
       throw new Error(
-        `账号 ${me.user.username}（${me.user.minecraftUuid}）没有 ${ADMIN_SCOPE} 权限。` +
+        `账号 ${me.user.username}（${me.user.minecraftUuid ?? '未绑定'}）没有 ${ADMIN_SCOPE} 权限。` +
           '请先由已有管理员授权，或在服务器上执行：pnpm --filter @hotaru/auth-server admin:seed -- --uuid ' +
-          me.user.minecraftUuid,
+          (me.user.minecraftUuid ?? '<minecraft-uuid>'),
       );
     }
 

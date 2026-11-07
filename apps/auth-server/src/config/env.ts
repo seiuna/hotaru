@@ -28,10 +28,13 @@ const envSchema = z.object({
   PUBLIC_BASE_URL: z.string().url().default('http://localhost:3000'),
   JWT_ISSUER: z.string().url().optional(),
   JWT_AUDIENCE: z.string().default('hotaru-api'),
+  PORTAL_JWT_AUDIENCE: z.string().default('hotaru-portal'),
+  PORTAL_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
   CHALLENGE_TTL_SECONDS: z.coerce.number().int().min(10).max(300).default(60),
+  BINDING_CODE_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(600),
 
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_CHALLENGE_MAX: z.coerce.number().int().positive().default(10),
@@ -44,6 +47,10 @@ const envSchema = z.object({
 
   DEFAULT_SCOPES: z.string().default('hotaru:profile'),
   CORS_ORIGINS: z.string().default(''),
+
+  /** Ed25519 public key used to verify signed activation codes. */
+  ACTIVATION_PUBLIC_KEY_PEM: z.string().optional(),
+  ACTIVATION_PUBLIC_KEY_FILE: z.string().optional(),
 
   JWT_PRIVATE_KEY_PEM: z.string().optional(),
   JWT_PUBLIC_KEY_PEM: z.string().optional(),
@@ -65,10 +72,13 @@ export interface AppConfig {
   publicBaseUrl: string;
   jwtIssuer: string;
   jwtAudience: string;
+  portalJwtAudience: string;
+  portalTokenTtlSeconds: number;
 
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
   challengeTtlSeconds: number;
+  bindingCodeTtlSeconds: number;
 
   rateLimitWindowSeconds: number;
   rateLimitChallengeMax: number;
@@ -81,6 +91,8 @@ export interface AppConfig {
 
   defaultScopes: string[];
   corsOrigins: string[];
+  activationPublicKeyPem?: string;
+  activationPublicKeyFile?: string;
 
   jwtPrivateKeyPem?: string;
   jwtPublicKeyPem?: string;
@@ -114,9 +126,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     publicBaseUrl: v.PUBLIC_BASE_URL,
     jwtIssuer: v.JWT_ISSUER ?? v.PUBLIC_BASE_URL,
     jwtAudience: v.JWT_AUDIENCE,
+    portalJwtAudience: v.PORTAL_JWT_AUDIENCE,
+    portalTokenTtlSeconds: v.PORTAL_TOKEN_TTL_SECONDS,
     accessTokenTtlSeconds: v.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: v.REFRESH_TOKEN_TTL_DAYS,
     challengeTtlSeconds: v.CHALLENGE_TTL_SECONDS,
+    bindingCodeTtlSeconds: v.BINDING_CODE_TTL_SECONDS,
     rateLimitWindowSeconds: v.RATE_LIMIT_WINDOW_SECONDS,
     rateLimitChallengeMax: v.RATE_LIMIT_CHALLENGE_MAX,
     rateLimitVerifyMax: v.RATE_LIMIT_VERIFY_MAX,
@@ -127,6 +142,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     defaultScopes: csv(v.DEFAULT_SCOPES),
     corsOrigins: csv(v.CORS_ORIGINS),
   };
+
+  if (v.ACTIVATION_PUBLIC_KEY_PEM) {
+    config.activationPublicKeyPem = v.ACTIVATION_PUBLIC_KEY_PEM.replace(/\\n/g, '\n');
+  }
+  if (v.ACTIVATION_PUBLIC_KEY_FILE) config.activationPublicKeyFile = v.ACTIVATION_PUBLIC_KEY_FILE;
 
   if (v.JWT_PRIVATE_KEY_PEM) config.jwtPrivateKeyPem = v.JWT_PRIVATE_KEY_PEM;
   if (v.JWT_PUBLIC_KEY_PEM) config.jwtPublicKeyPem = v.JWT_PUBLIC_KEY_PEM;

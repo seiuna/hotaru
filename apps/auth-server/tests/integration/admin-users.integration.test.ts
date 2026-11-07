@@ -1,6 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Types } from 'mongoose';
-import { PermissionModel, SessionModel, UserModel } from '../../src/infrastructure/mongo/models/index.js';
+import {
+  MinecraftLinkModel,
+  PermissionModel,
+  SessionModel,
+  UserModel,
+} from '../../src/infrastructure/mongo/models/index.js';
 import { revocationKey } from '../../src/plugins/auth.js';
 import {
   bearer,
@@ -420,6 +425,50 @@ describe('admin API', () => {
     // Newest first: the second ban was written last.
     expect(targets.indexOf(secondTarget.id)).toBeLessThan(targets.indexOf(firstTarget.id));
     expect(body.logs.every((log) => log.actorId === admin.id)).toBe(true);
+  });
+
+  it('bans one linked UUID without banning the account or other links', async () => {
+    const admin = await createAdmin();
+    const target = await data.createUser();
+    const now = new Date();
+    await MinecraftLinkModel.create({
+      accountId: target.id,
+      minecraftUuid: target.minecraftUuid,
+      minecraftUsername: target.username,
+      status: 'active',
+      verifiedAt: now,
+      linkedAt: now,
+    });
+    await SessionModel.updateOne(
+      { _id: target.sessionId },
+      { $set: { minecraftUuid: target.minecraftUuid, kind: 'mc' } },
+    );
+
+    const response = await harness.app.inject({
+      method: 'POST',
+      url: `/api/v1/admin/users/${target.id}/links/${target.minecraftUuid}/ban`,
+      headers: bearer(admin.accessToken),
+      payload: { reason: 'single identity test' },
+    });
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      link: { uuid: string; status: string };
+      sessionsRevoked: number;
+    };
+    expect(body.link.status).toBe('banned');
+    expect(body.sessionsRevoked).toBe(1);
+
+    const link = await MinecraftLinkModel.findOne({
+      accountId: target.id,
+      minecraftUuid: target.minecraftUuid,
+    }).lean();
+    expect(link?.status).toBe('banned');
+    const session = await SessionModel.findById(target.sessionId).lean();
+    expect(session?.revokedAt).not.toBeNull();
+    expect(await harness.ctx.redis.get(revocationKey(target.sessionId))).toBe('1');
+
+    const user = await UserModel.findById(target.id).lean();
+    expect(user?.status).toBe('active');
   });
 
   it('keeps the target sessions untouched when banning an unknown user id', async () => {

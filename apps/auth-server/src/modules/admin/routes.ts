@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import {
   adminBanSchema,
+  adminLinkBanResponseSchema,
   adminListUsersQuerySchema,
   adminListUsersResponseSchema,
   adminRevokeSessionSchema,
@@ -12,6 +13,7 @@ import {
   adminUserSessionsResponseSchema,
   auditListQuerySchema,
   errorResponseSchema,
+  minecraftUuidSchema,
   objectIdSchema,
   permissionsResponseSchema,
 } from '@hotaru/api-contract';
@@ -28,6 +30,7 @@ import {
 } from './schemas.js';
 import {
   adminStats,
+  banMinecraftLink,
   banUser,
   getUserDetail,
   listAuditLogs,
@@ -36,12 +39,14 @@ import {
   redisRevocationStore,
   replacePermissions,
   revokeSession,
+  unbanMinecraftLink,
   unbanUser,
   type AdminActor,
   type AdminDeps,
 } from './service.js';
 
 const idParamsSchema = z.object({ id: objectIdSchema });
+const linkParamsSchema = z.object({ id: objectIdSchema, uuid: minecraftUuidSchema });
 
 const errorResponses = {
   400: toJsonSchema(errorResponseSchema),
@@ -59,6 +64,12 @@ function idParam(params: unknown, what: string): string {
   const parsed = idParamsSchema.safeParse(params);
   if (!parsed.success) throw Errors.notFound(what);
   return parsed.data.id;
+}
+
+function linkParams(params: unknown): { id: string; uuid: string } {
+  const parsed = linkParamsSchema.safeParse(params);
+  if (!parsed.success) throw Errors.notFound('Minecraft link');
+  return parsed.data;
 }
 
 function actorOf(request: FastifyRequest): AdminActor {
@@ -171,6 +182,52 @@ export async function registerAdminRoutes(app: FastifyInstance, ctx: AppContext)
     async (request) => {
       const userId = idParam(request.params, 'User');
       return unbanUser(deps, actorOf(request), userId);
+    },
+  );
+
+  app.post(
+    '/api/v1/admin/users/:id/links/:uuid/ban',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'Ban one linked Minecraft identity and revoke its sessions',
+        security: [{ bearerAuth: [] }],
+        body: toJsonSchema(adminBanSchema),
+        response: {
+          200: toJsonSchema(adminLinkBanResponseSchema),
+          401: errorResponses[401],
+          403: errorResponses[403],
+          404: errorResponses[404],
+        },
+      },
+      preHandler: guard,
+    },
+    async (request) => {
+      const { id, uuid } = linkParams(request.params);
+      const body = adminBanSchema.parse(request.body ?? {});
+      return banMinecraftLink(deps, actorOf(request), id, uuid, body.reason ?? null);
+    },
+  );
+
+  app.post(
+    '/api/v1/admin/users/:id/links/:uuid/unban',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'Lift a ban on one linked Minecraft identity',
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: toJsonSchema(adminLinkBanResponseSchema),
+          401: errorResponses[401],
+          403: errorResponses[403],
+          404: errorResponses[404],
+        },
+      },
+      preHandler: guard,
+    },
+    async (request) => {
+      const { id, uuid } = linkParams(request.params);
+      return { ...(await unbanMinecraftLink(deps, actorOf(request), id, uuid)), sessionsRevoked: 0 };
     },
   );
 

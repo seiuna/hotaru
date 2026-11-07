@@ -3,9 +3,13 @@ import { SCOPES } from '@hotaru/shared-types';
 
 const userSchema = new Schema(
   {
-    /** Canonical dashed lowercase Mojang UUID. The only identity that matters. */
-    minecraftUuid: { type: String, required: true, unique: true, index: true },
-    /** Display only: Minecraft players can rename, so this is never a key. */
+    /** Primary Minecraft UUID, kept for the existing admin surface. Null for account-only rows. */
+    minecraftUuid: { type: String },
+    /** Platform login name. Null until the account is activated. */
+    loginName: { type: String },
+    /** scrypt hash; null means this account cannot use password login. */
+    passwordHash: { type: String, default: null },
+    /** Display name. Legacy rows use the Minecraft name; accounts use their login name. */
     username: { type: String, required: true },
     status: { type: String, enum: ['active', 'banned'], default: 'active', index: true },
     banReason: { type: String, default: null },
@@ -15,10 +19,77 @@ const userSchema = new Schema(
   { timestamps: true, collection: 'users' },
 );
 userSchema.index({ username: 1 });
+userSchema.index(
+  { minecraftUuid: 1 },
+  {
+    unique: true,
+    name: 'minecraftUuid_unique',
+    partialFilterExpression: { minecraftUuid: { $type: 'string' } },
+  },
+);
+userSchema.index(
+  { loginName: 1 },
+  {
+    unique: true,
+    name: 'loginName_unique',
+    partialFilterExpression: { loginName: { $type: 'string' } },
+  },
+);
+
+const minecraftLinkSchema = new Schema(
+  {
+    accountId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    minecraftUuid: { type: String, required: true, unique: true, index: true },
+    minecraftUsername: { type: String, required: true },
+    status: { type: String, enum: ['active', 'banned'], default: 'active', index: true },
+    verifiedAt: { type: Date, required: true },
+    linkedAt: { type: Date, required: true },
+    banReason: { type: String, default: null },
+    bannedAt: { type: Date, default: null },
+  },
+  { timestamps: true, collection: 'minecraft_links' },
+);
+minecraftLinkSchema.index({ accountId: 1, status: 1 });
+
+const minecraftBindingCodeSchema = new Schema(
+  {
+    codeHash: { type: String, required: true, unique: true, index: true },
+    minecraftUuid: { type: String, required: true, index: true },
+    minecraftUsername: { type: String, required: true },
+    expiresAt: { type: Date, required: true, index: true },
+    usedAt: { type: Date, default: null, index: true },
+    usedByAccountId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { timestamps: true, collection: 'minecraft_binding_codes' },
+);
+
+const activationCodeUseSchema = new Schema(
+  {
+    jti: { type: String, required: true, unique: true, index: true },
+    type: { type: String, enum: ['account', 'bind'], required: true, index: true },
+    accountId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    minecraftUuid: { type: String, default: null, index: true },
+    usedAt: { type: Date, required: true },
+  },
+  { timestamps: true, collection: 'activation_code_uses' },
+);
 
 export type UserDoc = InferSchemaType<typeof userSchema>;
 export const UserModel: Model<UserDoc> =
   (model<UserDoc>('User', userSchema) as Model<UserDoc>);
+export type MinecraftLinkDoc = InferSchemaType<typeof minecraftLinkSchema>;
+export const MinecraftLinkModel: Model<MinecraftLinkDoc> = model<MinecraftLinkDoc>(
+  'MinecraftLink',
+  minecraftLinkSchema,
+);
+export type MinecraftBindingCodeDoc = InferSchemaType<typeof minecraftBindingCodeSchema>;
+export const MinecraftBindingCodeModel: Model<MinecraftBindingCodeDoc> =
+  model<MinecraftBindingCodeDoc>('MinecraftBindingCode', minecraftBindingCodeSchema);
+export type ActivationCodeUseDoc = InferSchemaType<typeof activationCodeUseSchema>;
+export const ActivationCodeUseModel: Model<ActivationCodeUseDoc> = model<ActivationCodeUseDoc>(
+  'ActivationCodeUse',
+  activationCodeUseSchema,
+);
 
 const permissionSchema = new Schema(
   {

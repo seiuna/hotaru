@@ -33,7 +33,7 @@ const columns: DataTableColumns<UserView> = [
         h('span', { class: 'player__avatar', 'aria-hidden': 'true' }, initialOf(row.username)),
         h('div', { class: 'player__meta' }, [
           h('strong', row.username),
-          h('code', { class: 'player__uuid' }, shortUuid(row.minecraftUuid)),
+          h('code', { class: 'player__uuid' }, shortUuid(row.minecraftUuid ?? '未绑定')),
         ]),
       ]),
   },

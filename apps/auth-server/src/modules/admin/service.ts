@@ -1,13 +1,14 @@
 import type { Redis } from 'ioredis';
 import type { AnyBulkWriteOperation, FilterQuery, Types } from 'mongoose';
 import { Types as MongooseTypes } from 'mongoose';
-import type { PermissionView, Scope, UserStatus, UserView } from '@hotaru/shared-types';
+import type { MinecraftLinkView, PermissionView, Scope, UserStatus, UserView } from '@hotaru/shared-types';
 import type { AdminSetPermissionsRequest } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { revocationKey } from '../../plugins/auth.js';
 import {
   AuditLogModel,
+  MinecraftLinkModel,
   PermissionModel,
   RefreshTokenModel,
   SessionModel,
@@ -420,10 +421,110 @@ export async function unbanUser(
 }
 
 /**
- * Revokes one session: MongoDB first (authoritative), then the Redis key so
- * other services' fast path agrees. Revoking an already-revoked session is a
- * no-op apart from refreshing the fast-path key.
+ * Bans one Minecraft identity. The account stays usable in the portal and its
+ * other linked UUIDs keep working; only sessions created through this UUID are
+ * revoked.
  */
+export async function banMinecraftLink(
+  deps: AdminDeps,
+  actor: AdminActor,
+  userId: string,
+  minecraftUuid: string,
+  reason: string | null,
+): Promise<{ link: MinecraftLinkView; sessionsRevoked: number }> {
+  const link = await MinecraftLinkModel.findOne({ accountId: userId, minecraftUuid }).lean();
+  if (!link) throw Errors.notFound('Minecraft link');
+
+  const now = new Date();
+  const updated = await MinecraftLinkModel.findOneAndUpdate(
+    { _id: link._id },
+    {
+      $set: {
+        status: 'banned',
+        banReason: reason ?? link.banReason ?? null,
+        bannedAt: link.bannedAt ?? now,
+      },
+    },
+    { new: true },
+  ).lean();
+  if (!updated) throw Errors.notFound('Minecraft link');
+
+  const sessions = await SessionModel.find({
+    userId,
+    minecraftUuid,
+    revokedAt: null,
+    expiresAt: { $gt: now },
+  }).lean();
+  const sessionIds = sessions.map((session) => String(session._id));
+  if (sessionIds.length > 0) {
+    await SessionModel.updateMany(
+      { _id: { $in: sessionIds } },
+      { $set: { revokedAt: now, revokedReason: 'uuid_banned' } },
+    );
+    await RefreshTokenModel.updateMany(
+      { sessionId: { $in: sessionIds }, revokedAt: null },
+      { $set: { revokedAt: now } },
+    );
+  }
+
+  const ttlSeconds = Math.max(1, Math.floor(deps.ctx.config.accessTokenTtlSeconds));
+  await Promise.allSettled(
+    sessionIds.map((sessionId) => deps.store.set(revocationKey(sessionId), '1', 'EX', ttlSeconds)),
+  );
+
+  await recordAudit(deps.ctx, {
+    event: 'account.link.banned',
+    actorId: actor.userId,
+    actorType: 'admin',
+    targetType: 'minecraft_link',
+    targetId: minecraftUuid,
+    ip: actor.ip,
+    metadata: { accountId: userId, reason, sessionsRevoked: sessionIds.length },
+  });
+
+  return {
+    link: {
+      uuid: updated.minecraftUuid,
+      username: updated.minecraftUsername,
+      status: 'banned',
+      linkedAt: updated.linkedAt.toISOString(),
+    },
+    sessionsRevoked: sessionIds.length,
+  };
+}
+
+export async function unbanMinecraftLink(
+  deps: AdminDeps,
+  actor: AdminActor,
+  userId: string,
+  minecraftUuid: string,
+): Promise<{ link: MinecraftLinkView }> {
+  const link = await MinecraftLinkModel.findOneAndUpdate(
+    { accountId: userId, minecraftUuid },
+    { $set: { status: 'active', banReason: null, bannedAt: null } },
+    { new: true },
+  ).lean();
+  if (!link) throw Errors.notFound('Minecraft link');
+
+  await recordAudit(deps.ctx, {
+    event: 'account.link.unbanned',
+    actorId: actor.userId,
+    actorType: 'admin',
+    targetType: 'minecraft_link',
+    targetId: minecraftUuid,
+    ip: actor.ip,
+    metadata: { accountId: userId },
+  });
+
+  return {
+    link: {
+      uuid: link.minecraftUuid,
+      username: link.minecraftUsername,
+      status: 'active',
+      linkedAt: link.linkedAt.toISOString(),
+    },
+  };
+}
 export async function revokeSession(
   deps: AdminDeps,
   actor: AdminActor,

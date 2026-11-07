@@ -242,13 +242,32 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
     ...extra,
   });
 
+  const seedPlayer = async ({ uuidHex, username, scopes }) =>
+    new Promise((resolve, reject) => {
+      const child = spawn(
+        process.execPath,
+        ['--import', 'tsx', 'scripts/seed-player.ts', '--uuid', uuidHexToDashed(uuidHex), '--username', username],
+        {
+          cwd: path.join(repoRoot, 'apps', 'auth-server'),
+          env: authEnv(config.authPort, { DEFAULT_SCOPES: scopes }),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
+      let output = '';
+      child.stdout.on('data', (data) => (output += String(data)));
+      child.stderr.on('data', (data) => (output += String(data)));
+      child.on('exit', (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`seed-player failed (${code}): ${output.slice(-1000)}`));
+      });
+    });
+
   const authMain = spawnService({
     label: 'auth#1',
     cwd: path.join(repoRoot, 'apps', 'auth-server'),
     env: authEnv(config.authPort, { DEFAULT_SCOPES: 'hotaru:profile,hotaru:ircserver' }),
     logs,
-  });
-  const authRestricted = spawnService({
+  });  const authRestricted = spawnService({
     label: 'auth#2',
     cwd: path.join(repoRoot, 'apps', 'auth-server'),
     env: authEnv(config.restrictedAuthPort, { DEFAULT_SCOPES: 'hotaru:profile' }),
@@ -326,6 +345,8 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
     counter += 1;
     const resolvedUsername = username ?? `Player${counter}`;
     const resolvedUuid = (uuidHex ?? createHash('md5').update(`${runId}-${resolvedUsername}-${counter}`).digest('hex')).toLowerCase();
+    const scopes = from === 'restricted' ? 'hotaru:profile' : 'hotaru:profile,hotaru:ircserver';
+    await seedPlayer({ uuidHex: resolvedUuid, username: resolvedUsername, scopes });
     const authBase = {
       main: issuer,
       restricted: `http://127.0.0.1:${config.restrictedAuthPort}`,

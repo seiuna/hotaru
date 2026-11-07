@@ -72,6 +72,47 @@ export const Errors = {
 
   userBanned: () => new AppError('USER_BANNED', 'Account is banned', 403),
 
+  uuidBanned: () =>
+    new AppError('UUID_BANNED', 'This Minecraft identity is banned', 403),
+
+  linkRequired: (details: { bindingCode: string; expiresIn: number }) =>
+    new AppError(
+      'LINK_REQUIRED',
+      'This Minecraft identity is not linked to an account yet',
+      403,
+      { details },
+    ),
+
+  linkAlreadyBound: () =>
+    new AppError('LINK_ALREADY_BOUND', 'This Minecraft identity is already linked', 409),
+
+  linkCodeInvalid: () =>
+    new AppError('LINK_CODE_INVALID', 'Binding code is invalid', 400),
+
+  linkCodeExpired: () =>
+    new AppError('LINK_CODE_EXPIRED', 'Binding code has expired', 410),
+
+  invalidCredentials: () =>
+    new AppError('INVALID_CREDENTIALS', 'Invalid username or password', 401),
+
+  accountExists: () =>
+    new AppError('ACCOUNT_EXISTS', 'This login name is already in use', 409),
+
+  activationDisabled: () =>
+    new AppError('ACTIVATION_DISABLED', 'Activation codes are not configured', 503),
+
+  activationInvalid: () =>
+    new AppError('ACTIVATION_INVALID', 'Activation code is invalid', 400),
+
+  activationExpired: () =>
+    new AppError('ACTIVATION_EXPIRED', 'Activation code has expired', 410),
+
+  activationUsed: () =>
+    new AppError('ACTIVATION_USED', 'Activation code has already been used', 409),
+
+  passwordPolicy: (message = 'Password does not meet the policy') =>
+    new AppError('PASSWORD_POLICY', message, 400),
+
   forbidden: (message = 'Insufficient scope') => new AppError('FORBIDDEN', message, 403),
 
   notFound: (what = 'Resource') => new AppError('NOT_FOUND', `${what} not found`, 404),

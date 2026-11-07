@@ -193,6 +193,20 @@ async function runSeedAdmin(uuid) {
   });
 }
 
+async function runSeedPlayer(uuid, username) {
+  return new Promise((resolve) => {
+    const child = spawn(
+      process.execPath,
+      ['--import', 'tsx', 'scripts/seed-player.ts', '--uuid', uuid, '--username', username],
+      { cwd: path.join(repoRoot, 'apps', 'auth-server'), env: authServerEnv('http://127.0.0.1:1'), stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    let out = '';
+    child.stdout.on('data', (d) => (out += String(d)));
+    child.stderr.on('data', (d) => (out += String(d)));
+    child.on('exit', (code) => resolve({ code, out }));
+  });
+}
+
 async function main() {
   const mojang = startFakeMojang({ port: MOJANG_PORT, log: () => {} });
   const mojangBase = await mojang.listen();
@@ -241,6 +255,8 @@ async function main() {
     check('unknown challenge id -> CHALLENGE_NOT_FOUND', unknown.status === 404 && unknown.json?.error?.code === 'CHALLENGE_NOT_FOUND', JSON.stringify(unknown.json));
 
     section('happy path: premium login');
+    const seededAlice = await runSeedPlayer(dashedUuid(aliceUuid), 'Alice');
+    check('Alice fixture seeded', seededAlice.code === 0, seededAlice.out.slice(0, 300));
     const login = await handshake({ username: 'Alice', uuidHex: aliceUuid, mojangBase });
     check('verify returns 200', login.status === 200, JSON.stringify(login.json));
     check('profile uuid matches Mojang identity', login.json?.profile?.uuid === dashedUuid(aliceUuid), `${login.json?.profile?.uuid} vs ${dashedUuid(aliceUuid)}`);

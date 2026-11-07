@@ -3,6 +3,10 @@ import { Schema, model, type InferSchemaType, type Model } from 'mongoose';
 const sessionSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    /** Distinguishes a game session from a user-portal session. */
+    kind: { type: String, enum: ['mc', 'portal'], default: 'mc', index: true },
+    /** The Minecraft UUID used for an MC session; null for a portal session. */
+    minecraftUuid: { type: String, default: null, index: true },
     expiresAt: { type: Date, required: true },
     revokedAt: { type: Date, default: null },
     revokedReason: { type: String, default: null },
@@ -12,6 +16,7 @@ const sessionSchema = new Schema(
   { timestamps: true, collection: 'sessions' },
 );
 sessionSchema.index({ userId: 1, expiresAt: -1 });
+sessionSchema.index({ minecraftUuid: 1, expiresAt: -1 });
 // No TTL here on purpose: revocation must stay checkable for the whole token
 // lifetime, and MongoDB TTL deletion is not immediate.
 

@@ -96,13 +96,37 @@ export const jwksResponseSchema = z.object({
 
 export const userViewSchema = z.object({
   id: objectIdSchema,
-  minecraftUuid: minecraftUuidSchema,
+  minecraftUuid: minecraftUuidSchema.nullable(),
   username: z.string(),
   status: z.enum(['active', 'banned']),
   createdAt: z.string(),
   lastLoginAt: z.string().nullable(),
 });
 export type UserView = z.infer<typeof userViewSchema>;
+
+export const minecraftLinkViewSchema = z.object({
+  uuid: minecraftUuidSchema,
+  username: z.string(),
+  status: z.enum(['active', 'banned']),
+  linkedAt: z.string(),
+});
+export type MinecraftLinkView = z.infer<typeof minecraftLinkViewSchema>;
+
+export const accountViewSchema = z.object({
+  id: objectIdSchema,
+  username: z.string(),
+  loginName: z.string(),
+  status: z.enum(['active', 'banned']),
+  createdAt: z.string(),
+  links: z.array(minecraftLinkViewSchema),
+});
+export type AccountView = z.infer<typeof accountViewSchema>;
+
+export const adminLinkBanResponseSchema = z.object({
+  link: minecraftLinkViewSchema,
+  sessionsRevoked: z.number().int().nonnegative(),
+});
+export type AdminLinkBanResponse = z.infer<typeof adminLinkBanResponseSchema>;
 
 export const permissionViewSchema = z.object({
   scope: scopeSchema,
@@ -124,6 +148,61 @@ export const permissionsResponseSchema = z.object({
   scopes: z.array(scopeSchema),
 });
 export type PermissionsResponse = z.infer<typeof permissionsResponseSchema>;
+
+/* ------------------------------------------------------------------ */
+/* User portal                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Platform login name; case-insensitive, normalized to lower-case by the server. */
+export const accountNameSchema = z
+  .string()
+  .min(3)
+  .max(32)
+  .regex(/^[A-Za-z0-9_.-]+$/, 'login name must be 3-32 characters of A-Za-z0-9_.-');
+
+export const accountPasswordSchema = z.string().min(10).max(128);
+
+export const activateAccountRequestSchema = z.object({
+  code: z.string().min(20).max(2048),
+  username: accountNameSchema,
+  password: accountPasswordSchema,
+});
+export type ActivateAccountRequest = z.infer<typeof activateAccountRequestSchema>;
+
+export const portalLoginRequestSchema = z.object({
+  username: accountNameSchema,
+  password: z.string().min(1).max(128),
+});
+export type PortalLoginRequest = z.infer<typeof portalLoginRequestSchema>;
+
+export const portalTokenResponseSchema = z.object({
+  accessToken: z.string(),
+  tokenType: z.literal('Bearer'),
+  expiresIn: z.number().int().positive(),
+  account: accountViewSchema,
+});
+export type PortalTokenResponse = z.infer<typeof portalTokenResponseSchema>;
+
+export const portalMeResponseSchema = z.object({
+  account: accountViewSchema,
+});
+export type PortalMeResponse = z.infer<typeof portalMeResponseSchema>;
+
+export const portalBindRequestSchema = z.object({
+  code: z.string().min(4).max(2048),
+});
+export type PortalBindRequest = z.infer<typeof portalBindRequestSchema>;
+
+export const portalUnbindRequestSchema = z.object({
+  uuid: minecraftUuidSchema,
+});
+export type PortalUnbindRequest = z.infer<typeof portalUnbindRequestSchema>;
+
+export const portalChangePasswordRequestSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: accountPasswordSchema,
+});
+export type PortalChangePasswordRequest = z.infer<typeof portalChangePasswordRequestSchema>;
 
 /* ------------------------------------------------------------------ */
 /* Admin                                                               */

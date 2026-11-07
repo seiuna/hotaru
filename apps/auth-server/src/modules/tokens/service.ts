@@ -27,6 +27,11 @@ export interface SessionRequestMeta {
   userAgent: string | null;
 }
 
+export interface SessionOptions {
+  kind?: 'mc' | 'portal';
+  minecraftUuid?: string | null;
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Seconds a revocation key must live so it outlives the access token it kills. */
@@ -44,12 +49,15 @@ export async function startSession(
   ctx: AppContext,
   identity: SessionIdentity,
   meta: SessionRequestMeta,
+  options: SessionOptions = {},
 ): Promise<TokenResponse> {
   const now = new Date();
   const sessionExpiresAt = new Date(now.getTime() + ctx.config.refreshTokenTtlDays * DAY_MS);
 
   const session = await SessionModel.create({
     userId: identity.userId,
+    kind: options.kind ?? 'mc',
+    minecraftUuid: options.minecraftUuid ?? identity.minecraftUuid,
     expiresAt: sessionExpiresAt,
     revokedAt: null,
     ip: meta.ip,
@@ -199,10 +207,13 @@ export async function rotateRefreshToken(
       targetType: 'user',
       targetId: String(user._id),
       ip: meta.ip,
-      metadata: { minecraftUuid: user.minecraftUuid, stage: 'refresh' },
+      metadata: { minecraftUuid: user.minecraftUuid ?? null, stage: 'refresh' },
     });
     throw Errors.userBanned();
   }
+
+  const minecraftUuid = session.minecraftUuid ?? user.minecraftUuid;
+  if (!minecraftUuid) throw Errors.unauthorized('Session has no Minecraft identity');
 
   const replacement = generateRefreshToken();
   const claimed = await RefreshTokenModel.findOneAndUpdate(
@@ -227,7 +238,7 @@ export async function rotateRefreshToken(
   const scopes = await effectiveScopes(user._id);
   const access = await signAccessToken(ctx.keys.jwt, {
     userId: String(user._id),
-    minecraftUuid: user.minecraftUuid,
+    minecraftUuid,
     sessionId: String(session._id),
     scopes,
     issuer: ctx.config.jwtIssuer,
@@ -249,7 +260,7 @@ export async function rotateRefreshToken(
     refreshToken: replacement.token,
     tokenType: 'Bearer',
     expiresIn: access.expiresIn,
-    profile: { uuid: user.minecraftUuid, username: user.username },
+    profile: { uuid: minecraftUuid, username: user.username },
     scopes,
   };
 }

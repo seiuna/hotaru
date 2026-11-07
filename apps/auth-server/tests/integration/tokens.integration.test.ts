@@ -16,6 +16,7 @@ import {
   postRefresh,
   postVerify,
   purgeAuthCoreData,
+  seedLinkedAccount,
   sessionIdOfRefreshToken,
   startHarness,
   stopHarness,
@@ -49,6 +50,7 @@ interface Login {
 
 /** Runs the real handshake so every token test starts from a genuine session. */
 async function login(username: string = PLAYER_NAME): Promise<Login> {
+  await seedLinkedAccount({ username });
   stubMojangJoined();
   const { body } = await createVerifyBody(harness.app, username);
   const response = await postVerify(harness.app, body);

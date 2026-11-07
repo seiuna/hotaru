@@ -2,7 +2,12 @@ import { jwtVerify, type JWTPayload } from 'jose';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Scope } from '@hotaru/shared-types';
 import { Errors } from '../errors.js';
-import { SessionModel, UserModel, PermissionModel } from '../infrastructure/mongo/models/index.js';
+import {
+  MinecraftLinkModel,
+  SessionModel,
+  UserModel,
+  PermissionModel,
+} from '../infrastructure/mongo/models/index.js';
 
 export interface AuthContext {
   userId: string;
@@ -58,7 +63,8 @@ export function authenticate(options: { scopes?: Scope[] } = {}) {
 
     const userId = payload.sub;
     const sessionId = payload.sid;
-    if (typeof userId !== 'string' || typeof sessionId !== 'string') {
+    const minecraftUuid = payload.minecraft_uuid;
+    if (typeof userId !== 'string' || typeof sessionId !== 'string' || typeof minecraftUuid !== 'string') {
       throw Errors.unauthorized('Access token is missing required claims');
     }
 
@@ -69,6 +75,14 @@ export function authenticate(options: { scopes?: Scope[] } = {}) {
     const user = await UserModel.findById(userId).lean();
     if (!user) throw Errors.unauthorized('User not found');
     if (user.status === 'banned') throw Errors.userBanned();
+
+    const link = await MinecraftLinkModel.findOne({ minecraftUuid }).lean();
+    if (link) {
+      if (link.status === 'banned') throw Errors.uuidBanned();
+      if (String(link.accountId) !== userId) throw Errors.unauthorized('Minecraft link mismatch');
+    } else if (user.minecraftUuid !== minecraftUuid) {
+      throw Errors.unauthorized('Minecraft identity is not linked to this account');
+    }
 
     if (await ctx.redis.exists(revocationKey(sessionId))) {
       throw Errors.sessionRevoked();
@@ -93,7 +107,7 @@ export function authenticate(options: { scopes?: Scope[] } = {}) {
 
     request.auth = {
       userId,
-      minecraftUuid: user.minecraftUuid,
+      minecraftUuid,
       username: user.username,
       sessionId,
       jti: String(payload.jti ?? ''),

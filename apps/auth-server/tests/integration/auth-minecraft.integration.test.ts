@@ -25,6 +25,7 @@ import {
   postRefresh,
   postVerify,
   purgeAuthCoreData,
+  seedLinkedAccount,
   startHarness,
   stopHarness,
   stubMojang,
@@ -83,6 +84,7 @@ describe('POST /api/v1/auth/minecraft/challenge', () => {
 
 describe('POST /api/v1/auth/minecraft/verify', () => {
   it('completes challenge -> verify -> refresh -> logout', async () => {
+    await seedLinkedAccount();
     stubMojangJoined();
 
     const challenge = await createChallenge(harness.app, PLAYER_NAME);
@@ -207,6 +209,7 @@ describe('POST /api/v1/auth/minecraft/verify', () => {
   });
 
   it('ignores client-supplied identity claims (uuid / scopes)', async () => {
+    await seedLinkedAccount();
     stubMojangJoined();
 
     const { body } = await createVerifyBody(harness.app, PLAYER_NAME);
@@ -228,6 +231,7 @@ describe('POST /api/v1/auth/minecraft/verify', () => {
   });
 
   it('rejects a replayed verify on an already consumed challenge', async () => {
+    await seedLinkedAccount();
     stubMojangJoined();
 
     const { body } = await createVerifyBody(harness.app, PLAYER_NAME);
@@ -243,6 +247,7 @@ describe('POST /api/v1/auth/minecraft/verify', () => {
   });
 
   it('lets exactly one of two concurrent verifies consume the challenge', async () => {
+    await seedLinkedAccount();
     stubMojangJoined();
 
     const { body } = await createVerifyBody(harness.app, PLAYER_NAME);
@@ -324,6 +329,7 @@ describe('POST /api/v1/auth/minecraft/verify', () => {
   });
 
   it('accepts a case-insensitive username match but stores Mojang casing', async () => {
+    await seedLinkedAccount();
     stubMojangJoined({ id: PLAYER_UUID_UNDASHED, name: PLAYER_NAME });
 
     const challenge = await createChallenge(harness.app, 'hotaruplayer');

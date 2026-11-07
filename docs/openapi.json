@@ -375,6 +375,616 @@
         }
       }
     },
+    "/api/v1/portal/activate": {
+      "post": {
+        "summary": "Create a portal account from an activation code",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 2048
+                  },
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32,
+                    "pattern": "^[A-Za-z0-9_.-]+$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "code",
+                  "username",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{24}$"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "loginName": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "banned"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "banned"
+                            ]
+                          },
+                          "linkedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uuid",
+                          "username",
+                          "status",
+                          "linkedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "loginName",
+                    "status",
+                    "createdAt",
+                    "links"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/login": {
+      "post": {
+        "summary": "Log in to the user portal with username and password",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32,
+                    "pattern": "^[A-Za-z0-9_.-]+$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "status",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "tokenType",
+                    "expiresIn",
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/me": {
+      "get": {
+        "summary": "Current portal account and linked Minecraft identities",
+        "tags": [
+          "portal"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "status",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/bind": {
+      "post": {
+        "summary": "Bind a Minecraft UUID with a one-time code",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 2048
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "status",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/unbind": {
+      "post": {
+        "summary": "Remove a Minecraft UUID from the current account",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "uuid": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  }
+                },
+                "required": [
+                  "uuid"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "status",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/password": {
+      "post": {
+        "summary": "Change the portal account password",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "summary": "Rotate a refresh token and issue a new access token",
@@ -518,8 +1128,15 @@
                           "pattern": "^[0-9a-f]{24}$"
                         },
                         "minecraftUuid": {
-                          "type": "string",
-                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "username": {
                           "type": "string"
@@ -599,6 +1216,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -738,6 +1367,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -843,8 +1484,15 @@
                             "pattern": "^[0-9a-f]{24}$"
                           },
                           "minecraftUuid": {
-                            "type": "string",
-                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "username": {
                             "type": "string"
@@ -926,6 +1574,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -980,6 +1640,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1179,6 +1851,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1233,6 +1917,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1287,6 +1983,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1341,6 +2049,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1427,8 +2147,15 @@
                           "pattern": "^[0-9a-f]{24}$"
                         },
                         "minecraftUuid": {
-                          "type": "string",
-                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "username": {
                           "type": "string"
@@ -1499,6 +2226,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1553,6 +2292,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1607,6 +2358,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1661,6 +2424,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1730,8 +2505,15 @@
                           "pattern": "^[0-9a-f]{24}$"
                         },
                         "minecraftUuid": {
-                          "type": "string",
-                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "username": {
                           "type": "string"
@@ -1797,6 +2579,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1851,6 +2645,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -1905,6 +2711,597 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/links/{uuid}/ban": {
+      "post": {
+        "summary": "Ban one linked Minecraft identity and revoke its sessions",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "link": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "linkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "uuid",
+                        "username",
+                        "status",
+                        "linkedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sessionsRevoked": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "link",
+                    "sessionsRevoked"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/links/{uuid}/unban": {
+      "post": {
+        "summary": "Lift a ban on one linked Minecraft identity",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "link": {
+                      "type": "object",
+                      "properties": {
+                        "uuid": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "linkedAt": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "uuid",
+                        "username",
+                        "status",
+                        "linkedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "sessionsRevoked": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "link",
+                    "sessionsRevoked"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2059,6 +3456,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2113,6 +3522,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2167,6 +3588,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2221,6 +3654,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2290,8 +3735,15 @@
                           "pattern": "^[0-9a-f]{24}$"
                         },
                         "minecraftUuid": {
-                          "type": "string",
-                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
                         "username": {
                           "type": "string"
@@ -2412,6 +3864,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2466,6 +3930,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2520,6 +3996,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2674,6 +4162,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2728,6 +4228,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2917,6 +4429,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -2971,6 +4495,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3025,6 +4561,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3079,6 +4627,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3293,6 +4853,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3347,6 +4919,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3401,6 +4985,18 @@
                             "SESSION_REVOKED",
                             "REFRESH_REUSED",
                             "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
                             "INTERNAL"
@@ -3447,6 +5043,10 @@
     {
       "name": "users",
       "description": "Self-service account data"
+    },
+    {
+      "name": "portal",
+      "description": "User portal account activation, login and Minecraft binding"
     },
     {
       "name": "admin",

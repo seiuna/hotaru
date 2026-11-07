@@ -1,7 +1,10 @@
 import {
+  ActivationCodeUseModel,
   AdminModel,
   AuditLogModel,
   LicenseModel,
+  MinecraftBindingCodeModel,
+  MinecraftLinkModel,
   PermissionModel,
   RefreshTokenModel,
   ServiceKeyModel,
@@ -18,6 +21,9 @@ const models = [
   AuditLogModel,
   LicenseModel,
   ServiceKeyModel,
+  MinecraftLinkModel,
+  MinecraftBindingCodeModel,
+  ActivationCodeUseModel,
 ];
 
 /**

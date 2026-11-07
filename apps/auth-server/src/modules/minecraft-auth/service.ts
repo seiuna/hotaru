@@ -1,6 +1,10 @@
 import type { ChallengeResponse, TokenResponse, VerifyRequest } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { AppError, Errors } from '../../errors.js';
+import {
+  MinecraftLinkModel,
+  UserModel,
+} from '../../infrastructure/mongo/models/index.js';
 import { minecraftServerHash } from '../../infrastructure/crypto/server-hash.js';
 import { hasJoined, type HasJoinedInput } from '../../infrastructure/mojang/client.js';
 import { recordAudit } from '../audit/service.js';
@@ -14,7 +18,11 @@ import {
 } from './challenge-store.js';
 import { decodeBase64, decryptRsaPkcs1, safeEqual } from './crypto.js';
 import { consumeRateLimit, rateLimitIpKey, rateLimitUsernameKey } from './rate-limit.js';
-import { ensureUser } from './user-repository.js';
+import { issueBindingCode } from './binding-code.js';
+import {
+  assertAccountNotBanned,
+  findLinkedAccount,
+} from './user-repository.js';
 
 /** The vanilla handshake always carries a 16-byte AES key. */
 export const SHARED_SECRET_BYTES = 16;
@@ -206,23 +214,51 @@ export async function verifyChallenge(
 
   // Identity comes from Mojang only: `profile.uuid`/`profile.username` were
   // derived from hasJoined, never from the request body.
-  const user = await ensureUser(ctx, {
-    minecraftUuid: profile.uuid,
-    username: profile.username,
-    defaultScopes: ctx.config.defaultScopes,
-    ip: meta.ip,
-  });
+  const linked = await findLinkedAccount(profile.uuid);
+  if (!linked) {
+    const binding = await issueBindingCode(ctx, profile);
+    await recordAudit(ctx, {
+      event: 'auth.link.required',
+      actorType: 'system',
+      targetType: 'minecraft_identity',
+      targetId: profile.uuid,
+      ip: meta.ip,
+      metadata: { username: profile.username },
+    });
+    throw Errors.linkRequired({
+      bindingCode: binding.code,
+      expiresIn: binding.expiresIn,
+    });
+  }
 
-  const scopes = await effectiveScopes(user.userId);
+  if (linked.link.status === 'banned') {
+    throw Errors.uuidBanned();
+  }
+
+  const user = linked.user;
+  await assertAccountNotBanned(ctx, user, meta.ip);
+
+  const username = profile.username;
+  const now = new Date();
+  await Promise.all([
+    UserModel.updateOne({ _id: user._id }, { $set: { username, lastLoginAt: now } }),
+    MinecraftLinkModel.updateOne(
+      { minecraftUuid: profile.uuid },
+      { $set: { minecraftUsername: username } },
+    ),
+  ]);
+
+  const scopes = await effectiveScopes(user._id);
 
   return startSession(
     ctx,
     {
-      userId: user.userId,
-      minecraftUuid: user.minecraftUuid,
-      username: user.username,
+      userId: user._id,
+      minecraftUuid: profile.uuid,
+      username,
       scopes,
     },
     { ip: meta.ip, userAgent: meta.userAgent },
+    { kind: 'mc', minecraftUuid: profile.uuid },
   );
 }

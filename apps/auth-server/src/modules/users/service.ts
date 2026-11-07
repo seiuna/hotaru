@@ -20,7 +20,7 @@ export const EPOCH_ISO = new Date(0).toISOString();
  */
 export interface UserViewSource {
   _id: Types.ObjectId | string;
-  minecraftUuid: string;
+  minecraftUuid?: string | null;
   username: string;
   status?: string | null;
   createdAt?: Date | string | null;
@@ -50,7 +50,7 @@ export function toUserView(user: UserViewSource): UserView {
   const status: UserStatus = user.status === 'banned' ? 'banned' : 'active';
   return {
     id: String(user._id),
-    minecraftUuid: user.minecraftUuid,
+    minecraftUuid: user.minecraftUuid ?? null,
     username: user.username,
     status,
     createdAt: toIso(user.createdAt) ?? EPOCH_ISO,

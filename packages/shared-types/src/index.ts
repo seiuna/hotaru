@@ -13,6 +13,11 @@ export const SCOPES = [
 
 export type Scope = (typeof SCOPES)[number];
 
+/** Scopes carried by a user-portal token. These never grant game or IRC access. */
+export const PORTAL_SCOPES = ['portal:account', 'portal:link'] as const;
+
+export type PortalScope = (typeof PORTAL_SCOPES)[number];
+
 export const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
   'hotaru:profile': 'Read the authenticated account profile',
   'hotaru:resource': 'Access the Hotaru mod resource service',
@@ -22,6 +27,7 @@ export const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
 };
 
 export type UserStatus = 'active' | 'banned';
+export type MinecraftLinkStatus = 'active' | 'banned';
 
 export interface MinecraftProfile {
   /** Canonical, undashed-then-dashed Mojang UUID (36 chars, lowercase, hyphens). */
@@ -29,13 +35,30 @@ export interface MinecraftProfile {
   username: string;
 }
 
+export interface MinecraftLinkView {
+  uuid: string;
+  username: string;
+  status: MinecraftLinkStatus;
+  linkedAt: string;
+}
+
 export interface UserView {
   id: string;
-  minecraftUuid: string;
+  /** Primary UUID kept for the existing admin list; null for an account with no links. */
+  minecraftUuid: string | null;
   username: string;
   status: UserStatus;
   createdAt: string;
   lastLoginAt: string | null;
+}
+
+export interface AccountView {
+  id: string;
+  username: string;
+  loginName: string;
+  status: UserStatus;
+  createdAt: string;
+  links: MinecraftLinkView[];
 }
 
 export interface PermissionView {
@@ -72,6 +95,14 @@ export type AuditEvent =
   | 'auth.session.revoked'
   | 'auth.refresh.reused'
   | 'auth.login.banned'
+  | 'auth.link.required'
+  | 'account.activated'
+  | 'account.login'
+  | 'account.password.changed'
+  | 'account.link.created'
+  | 'account.link.removed'
+  | 'account.link.banned'
+  | 'account.link.unbanned'
   | 'user.permissions.updated'
   | 'user.banned'
   | 'user.unbanned'
@@ -103,6 +134,18 @@ export const ERROR_CODES = [
   'SESSION_REVOKED',
   'REFRESH_REUSED',
   'USER_BANNED',
+  'UUID_BANNED',
+  'LINK_REQUIRED',
+  'LINK_ALREADY_BOUND',
+  'LINK_CODE_INVALID',
+  'LINK_CODE_EXPIRED',
+  'INVALID_CREDENTIALS',
+  'ACCOUNT_EXISTS',
+  'ACTIVATION_DISABLED',
+  'ACTIVATION_INVALID',
+  'ACTIVATION_EXPIRED',
+  'ACTIVATION_USED',
+  'PASSWORD_POLICY',
   'FORBIDDEN',
   'NOT_FOUND',
   'INTERNAL',
@@ -125,6 +168,18 @@ export interface AccessTokenClaims {
   sub: string;
   aud: string[];
   minecraft_uuid: string;
+  sid: string;
+  jti: string;
+  scope: string;
+  iat: number;
+  exp: number;
+}
+
+/** User-portal token. It deliberately has no Minecraft UUID claim. */
+export interface PortalTokenClaims {
+  iss: string;
+  sub: string;
+  aud: string[];
   sid: string;
   jti: string;
   scope: string;

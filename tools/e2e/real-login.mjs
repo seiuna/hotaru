@@ -142,8 +142,7 @@ async function startServer(mojangBase) {
     cwd: APP_DIR,
     env: serverEnv(mojangBase),
     stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  const logs = [];
+  });  const logs = [];
   child.stdout.on('data', (d) => logs.push(String(d)));
   child.stderr.on('data', (d) => logs.push(String(d)));
 
@@ -159,6 +158,20 @@ async function startServer(mojangBase) {
     await sleep(400);
   }
   throw new Error(`server never became ready:\n${logs.join('')}`);
+}
+
+async function seedPlayer(mojangBase, uuid, username) {
+  return new Promise((resolve) => {
+    const child = spawn(
+      process.execPath,
+      ['--import', 'tsx', 'scripts/seed-player.ts', '--uuid', uuid, '--username', username],
+      { cwd: APP_DIR, env: serverEnv(mojangBase), stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+    let output = '';
+    child.stdout.on('data', (data) => (output += String(data)));
+    child.stderr.on('data', (data) => (output += String(data)));
+    child.on('exit', (code) => resolve({ code, output }));
+  });
 }
 
 function printMissingTokenHelp() {
@@ -253,6 +266,14 @@ async function main() {
   try {
     server = await startServer(mojangBase);
     console.log('auth-server ready\n');
+
+    const seeded = await seedPlayer(mojangBase, dashed(uuid), username);
+    if (seeded.code !== 0) {
+      console.log(`  FAIL  seed linked player (${seeded.code}): ${seeded.output.slice(-500)}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log('linked player fixture ready\n');
 
     console.log('== 1. challenge ==');
     const challenge = await api('POST', '/api/v1/auth/minecraft/challenge', {
