@@ -24,22 +24,26 @@ Everything below assumes a single Linux host with Docker Engine + Compose v2 (Do
 
 ## What gets deployed
 
-`deploy/compose.yaml` defines four services:
+`deploy/compose.yaml` defines seven services:
 
 | Service | Image | Host ports | Purpose |
 | --- | --- | --- | --- |
 | `caddy` | `caddy:2-alpine` | `80:80`, `443:443`, `443:443/udp` | TLS termination, security headers, rate/shape limits, reverse proxy |
-| `auth-server` | built from `deploy/Dockerfile` | none | the API |
+| `auth-server` | built from `deploy/Dockerfile` | none | the API and user-portal account/binding API |
+| `irc-server` | built from `deploy/Dockerfile.irc-server` | none | SRP v1 WebSocket relay and REST API |
+| `admin-web` | built from `deploy/Dockerfile.admin-web` | none | admin console SPA, served by nginx |
+| `user-portal` | built from `deploy/Dockerfile.user-portal` | none | end-user account and UUID-binding SPA |
 | `mongo` | `mongo:7` | none | durable state, `--auth`, root user from `deploy/.env` |
 | `redis` | `redis:7-alpine` | none | challenges, rate limits, revocation fast path, `--requirepass`, AOF on |
 
-Only Caddy is reachable from the internet. `mongo`, `redis` and `auth-server` sit on the `internal`
-bridge network. Named volumes: `mongo-data`, `redis-data`, `caddy-data`, `caddy-config`.
+Only Caddy is reachable from the internet. Everything else sits on the `internal` bridge network.
+Named volumes: `mongo-data`, `redis-data`, `caddy-data`, `caddy-config`.
 
 ## First deployment
 
 Prerequisites: a DNS `A`/`AAAA` record for `AUTH_DOMAIN` pointing at the host, inbound `80` and `443`
-open (Let's Encrypt needs them), and Docker + Compose v2 installed.
+open (Let's Encrypt needs them), and Docker + Compose v2 installed. The default admin and user portal
+hosts (`admin.$AUTH_DOMAIN`, `user.$AUTH_DOMAIN`) and `IRC_DOMAIN` also need DNS records if you use them.
 
 ```bash
 # 1. On the host, in the repository root

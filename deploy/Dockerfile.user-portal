@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+# Static build of the user portal, served by nginx with SPA fallback.
+
+FROM node:24-alpine AS build
+ENV CI=true
+RUN corepack enable && corepack prepare pnpm@11.12.0 --activate
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
+COPY apps/admin-web/package.json apps/admin-web/
+COPY apps/api/package.json apps/api/
+COPY apps/auth-server/package.json apps/auth-server/
+COPY apps/irc-server/package.json apps/irc-server/
+COPY apps/user-portal/package.json apps/user-portal/
+COPY packages/api-contract/package.json packages/api-contract/
+COPY packages/shared/package.json packages/shared/
+COPY packages/shared-types/package.json packages/shared-types/
+COPY packages/srp-protocol/package.json packages/srp-protocol/
+RUN pnpm install --frozen-lockfile --filter @hotaru/user-portal...
+
+COPY tsconfig.base.json ./
+COPY apps/user-portal ./apps/user-portal
+RUN pnpm --filter @hotaru/user-portal build
+
+FROM nginx:1.27-alpine AS runtime
+COPY deploy/nginx.admin.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/user-portal/dist /usr/share/nginx/html
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1

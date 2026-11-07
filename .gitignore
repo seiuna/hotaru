@@ -39,3 +39,6 @@ coverage/
 .pnpm-store/
 .turbo/
 .eslintcache
+
+# activation signing keys (private key must never be committed)
+deploy/activation-*.pem

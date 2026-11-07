@@ -94,6 +94,8 @@ services:
       MOJANG_RETRY_DELAY_MS: ${MOJANG_RETRY_DELAY_MS:-500}
       DEFAULT_SCOPES: ${DEFAULT_SCOPES:-hotaru:profile}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
+      # Ed25519 public key for signed activation codes (escaped newlines are fine).
+      ACTIVATION_PUBLIC_KEY_PEM: ${ACTIVATION_PUBLIC_KEY_PEM:-}
       # Optional: bring-your-own PEMs. Empty means "generate once and persist in
       # MongoDB". Forwarded explicitly so an operator uncommenting them in
       # deploy/.env actually reaches loadConfig().
@@ -195,6 +197,19 @@ services:
       timeout: 3s
       retries: 3
 
+  user-portal:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.user-portal
+    restart: unless-stopped
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -205,6 +220,8 @@ services:
         condition: service_started
       admin-web:
         condition: service_started
+      user-portal:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
@@ -212,6 +229,7 @@ services:
     environment:
       AUTH_DOMAIN: ${AUTH_DOMAIN:?set in deploy/.env}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.${AUTH_DOMAIN}}
+      USER_DOMAIN: ${USER_DOMAIN:-user.${AUTH_DOMAIN}}
       IRC_DOMAIN: ${IRC_DOMAIN:?set in deploy/.env}
       ACME_EMAIL: ${ACME_EMAIL:?set in deploy/.env}
     volumes:

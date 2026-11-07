@@ -193,8 +193,10 @@ hotaru-servers/
 │   │   │   ├── plugins/              # auth guard, global error handler
 │   │   │   ├── infrastructure/       # mongo models, redis client, crypto, Mojang client
 │   │   │   └── modules/              # health, minecraft-auth, tokens, users, admin, audit
-│   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts
+│   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts, activation-code.ts
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
+│   ├── admin-web/                    # @hotaru/admin-web — operator console
+│   ├── user-portal/                  # @hotaru/user-portal — account + UUID binding
 │   └── api/                          # @hotaru/api — leftover monorepo scaffold, not deployed
 ├── clients/hotaru-sdk-java/          # Java 21 SDK: auth handshake + login bridge + IRC/REST clients
 ├── examples/fabric-mod/              # Fabric wiring examples (not compiled by the library)
@@ -257,6 +259,8 @@ Working today:
   revocation, audit log), first-admin seeding.
 - Health probes, global error envelope, audit trail, OpenAPI export, Docker/Compose/Caddy deployment,
   Java client SDK, unit + integration tests, e2e smoke test.
+- User portal with signed activation codes, account/password login, multiple linked Minecraft UUIDs,
+  account-scoped MC permissions, account-level and per-UUID bans.
 
 Not built yet (deliberate scope gaps):
 
@@ -355,9 +359,69 @@ that host to the auth server, so the bundle keeps a relative `/api` and needs no
 
 See [docs/admin-web.md](docs/admin-web.md) for the full rationale, screens, and known limits.
 
+## User portal (account + Minecraft binding)
+
+`apps/user-portal` is a separate Vue 3 SPA for end users. It has **no Minecraft login button**. Users
+activate a platform account with an activation code, log in with username/password, and bind one or more
+Minecraft UUIDs with a one-time code.
+
+```bash
+pnpm --filter @hotaru/user-portal dev     # http://localhost:5174 (proxies /api to :3000)
+pnpm --filter @hotaru/user-portal build   # vue-tsc + vite build -> dist/
+```
+
+Account tokens use `aud=hotaru-portal` and the `portal:account` / `portal:link` scopes. They cannot call
+the game API or the IRC server.
+
+### Activation codes
+
+Generate an Ed25519 activation key pair once:
+
+```bash
+pnpm --filter @hotaru/auth-server activation:code -- --keygen
+```
+
+This writes `deploy/activation-private.pem` and `deploy/activation-public.pem` (git-ignored). Keep the
+private key on the issuing machine and point the auth server at the public key:
+
+```dotenv
+ACTIVATION_PUBLIC_KEY_FILE=D:\project\skymatrix-servers\deploy\activation-public.pem
+```
+
+Issue an account code:
+
+```bash
+pnpm --filter @hotaru/auth-server activation:code -- --type account --expires-in 7d
+```
+
+Issue a bind code for a known UUID (admin fallback):
+
+```bash
+pnpm --filter @hotaru/auth-server activation:code -- --type bind --uuid <uuid> --username <name> --expires-in 1h
+```
+
+The private key can also be supplied as `ACTIVATION_PRIVATE_KEY_PEM`; the server accepts
+`ACTIVATION_PUBLIC_KEY_PEM` or `ACTIVATION_PUBLIC_KEY_FILE`.
+
+### Minecraft binding
+
+An unlinked UUID is rejected with `LINK_REQUIRED`. The rejected handshake includes a one-time
+`bindingCode`; the mod shows it, and the user enters it in the portal. The portal binds the UUID to the
+current account. A linked UUID logs in as the account and inherits the account permissions. An
+account can link multiple UUIDs; one UUID belongs to at most one account.
+
+```bash
+pnpm --filter @hotaru/auth-server migrate:accounts
+```
+
+This backfills `minecraft_links` for legacy MC-only users and replaces the old non-partial unique indexes.
+
+Deployment: `deploy/Dockerfile.user-portal` builds the SPA, Compose runs it as `user-portal`, and Caddy
+serves it on `USER_DOMAIN` (default `user.$AUTH_DOMAIN`) while proxying `/api/*` to the auth server.
+
 ## Repository extras
 
-- **`tools/e2e/smoke.mjs`** — the end-to-end harness behind the "47/47 checks" claim. It starts a fake
+- **`tools/e2e/smoke.mjs`** — the end-to-end harness behind the "48/48 checks" claim. It starts a fake
   Mojang session server, boots the real auth server against a throwaway database, then plays the whole
   user story with a client written independently of the server code (challenge → RSA handshake → Mojang
   join → verify → JWT → refresh → reuse detection → admin grant → ban → outage → rate limit → audit).

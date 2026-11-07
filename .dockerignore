@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/out
+.git
+.github
+.verify
+.agents
+clients/**/out
+clients/**/dist
+deploy/activation-*.pem
+tools/reqable
+tools/e2e/.token.json
+*.log
