@@ -193,7 +193,7 @@ hotaru-servers/
 │   │   │   ├── plugins/              # auth guard, global error handler
 │   │   │   ├── infrastructure/       # mongo models, redis client, crypto, Mojang client
 │   │   │   └── modules/              # health, minecraft-auth, tokens, users, admin, audit
-│   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts, activation-code.ts
+│   │   ├── scripts/                  # export-openapi, seed-admin, activation-code, migrate, seed-player
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
 │   ├── admin-web/                    # @hotaru/admin-web — operator console
 │   ├── user-portal/                  # @hotaru/user-portal — account + UUID binding
