@@ -30,6 +30,9 @@ const envSchema = z.object({
   JWT_AUDIENCE: z.string().default('hotaru-api'),
   PORTAL_JWT_AUDIENCE: z.string().default('hotaru-portal'),
   PORTAL_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
+  PORTAL_REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  PORTAL_BASE_URL: z.string().url().default('http://localhost:5174'),
+  TOTP_ISSUER: z.string().default('Hotaru'),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
@@ -51,6 +54,16 @@ const envSchema = z.object({
   /** Ed25519 public key used to verify signed activation codes. */
   ACTIVATION_PUBLIC_KEY_PEM: z.string().optional(),
   ACTIVATION_PUBLIC_KEY_FILE: z.string().optional(),
+  /** Ed25519 private key used by the admin API to issue signed activation codes. */
+  ACTIVATION_PRIVATE_KEY_PEM: z.string().optional(),
+  ACTIVATION_PRIVATE_KEY_FILE: z.string().optional(),
+  /** Optional HTTP mail delivery endpoint; falls back to console output. */
+  EMAIL_DELIVERY_URL: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().url().optional(),
+  ),
+  EMAIL_FROM: z.string().default('no-reply@hotaru.local'),
+  PASSWORD_RESET_TTL_SECONDS: z.coerce.number().int().min(300).max(86400).default(1800),
 
   JWT_PRIVATE_KEY_PEM: z.string().optional(),
   JWT_PUBLIC_KEY_PEM: z.string().optional(),
@@ -74,6 +87,9 @@ export interface AppConfig {
   jwtAudience: string;
   portalJwtAudience: string;
   portalTokenTtlSeconds: number;
+  portalRefreshTokenTtlDays: number;
+  portalBaseUrl: string;
+  totpIssuer: string;
 
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
@@ -93,6 +109,11 @@ export interface AppConfig {
   corsOrigins: string[];
   activationPublicKeyPem?: string;
   activationPublicKeyFile?: string;
+  activationPrivateKeyPem?: string;
+  activationPrivateKeyFile?: string;
+  emailDeliveryUrl?: string;
+  emailFrom: string;
+  passwordResetTtlSeconds: number;
 
   jwtPrivateKeyPem?: string;
   jwtPublicKeyPem?: string;
@@ -128,6 +149,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     jwtAudience: v.JWT_AUDIENCE,
     portalJwtAudience: v.PORTAL_JWT_AUDIENCE,
     portalTokenTtlSeconds: v.PORTAL_TOKEN_TTL_SECONDS,
+    portalRefreshTokenTtlDays: v.PORTAL_REFRESH_TOKEN_TTL_DAYS,
+    portalBaseUrl: v.PORTAL_BASE_URL,
+    totpIssuer: v.TOTP_ISSUER,
     accessTokenTtlSeconds: v.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: v.REFRESH_TOKEN_TTL_DAYS,
     challengeTtlSeconds: v.CHALLENGE_TTL_SECONDS,
@@ -141,12 +165,21 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     mojangRetryDelayMs: v.MOJANG_RETRY_DELAY_MS,
     defaultScopes: csv(v.DEFAULT_SCOPES),
     corsOrigins: csv(v.CORS_ORIGINS),
+    emailFrom: v.EMAIL_FROM,
+    passwordResetTtlSeconds: v.PASSWORD_RESET_TTL_SECONDS,
   };
 
   if (v.ACTIVATION_PUBLIC_KEY_PEM) {
     config.activationPublicKeyPem = v.ACTIVATION_PUBLIC_KEY_PEM.replace(/\\n/g, '\n');
   }
   if (v.ACTIVATION_PUBLIC_KEY_FILE) config.activationPublicKeyFile = v.ACTIVATION_PUBLIC_KEY_FILE;
+  if (v.ACTIVATION_PRIVATE_KEY_PEM) {
+    config.activationPrivateKeyPem = v.ACTIVATION_PRIVATE_KEY_PEM.replace(/\\n/g, '\n');
+  }
+  if (v.ACTIVATION_PRIVATE_KEY_FILE) config.activationPrivateKeyFile = v.ACTIVATION_PRIVATE_KEY_FILE;
+  if (v.EMAIL_DELIVERY_URL) config.emailDeliveryUrl = v.EMAIL_DELIVERY_URL;
+  config.emailFrom = v.EMAIL_FROM;
+  config.passwordResetTtlSeconds = v.PASSWORD_RESET_TTL_SECONDS;
 
   if (v.JWT_PRIVATE_KEY_PEM) config.jwtPrivateKeyPem = v.JWT_PRIVATE_KEY_PEM;
   if (v.JWT_PUBLIC_KEY_PEM) config.jwtPublicKeyPem = v.JWT_PUBLIC_KEY_PEM;

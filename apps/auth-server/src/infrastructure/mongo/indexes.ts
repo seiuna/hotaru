@@ -5,6 +5,7 @@ import {
   LicenseModel,
   MinecraftBindingCodeModel,
   MinecraftLinkModel,
+  PasswordResetTokenModel,
   PermissionModel,
   RefreshTokenModel,
   ServiceKeyModel,
@@ -24,6 +25,7 @@ const models = [
   MinecraftLinkModel,
   MinecraftBindingCodeModel,
   ActivationCodeUseModel,
+  PasswordResetTokenModel,
 ];
 
 /**

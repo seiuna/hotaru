@@ -36,6 +36,12 @@ export const router = createRouter({
       meta: { title: '审计日志' },
     },
     {
+      path: '/activation-codes',
+      name: 'activation-codes',
+      component: () => import('./views/ActivationCodesView.vue'),
+      meta: { title: '激活码' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('./views/NotFoundView.vue'),

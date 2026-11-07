@@ -46,6 +46,7 @@ export interface UserView {
   id: string;
   /** Primary UUID kept for the existing admin list; null for an account with no links. */
   minecraftUuid: string | null;
+  email: string | null;
   username: string;
   status: UserStatus;
   createdAt: string;
@@ -56,7 +57,9 @@ export interface AccountView {
   id: string;
   username: string;
   loginName: string;
+  email: string | null;
   status: UserStatus;
+  twoFactorEnabled: boolean;
   createdAt: string;
   links: MinecraftLinkView[];
 }
@@ -97,12 +100,19 @@ export type AuditEvent =
   | 'auth.login.banned'
   | 'auth.link.required'
   | 'account.activated'
+  | 'account.claimed'
   | 'account.login'
+  | 'account.refresh'
   | 'account.password.changed'
+  | 'account.password.reset'
+  | 'account.email.changed'
+  | 'account.2fa.enabled'
+  | 'account.2fa.disabled'
   | 'account.link.created'
   | 'account.link.removed'
   | 'account.link.banned'
   | 'account.link.unbanned'
+  | 'admin.activation_code.issued'
   | 'user.permissions.updated'
   | 'user.banned'
   | 'user.unbanned'
@@ -145,6 +155,15 @@ export const ERROR_CODES = [
   'ACTIVATION_INVALID',
   'ACTIVATION_EXPIRED',
   'ACTIVATION_USED',
+  'CLAIM_REQUIRED',
+  'CLAIM_INVALID',
+  'ACCOUNT_ALREADY_CLAIMED',
+  'EMAIL_INVALID',
+  'EMAIL_EXISTS',
+  'RESET_TOKEN_INVALID',
+  'RESET_TOKEN_EXPIRED',
+  'TOTP_REQUIRED',
+  'INVALID_TOTP',
   'PASSWORD_POLICY',
   'FORBIDDEN',
   'NOT_FOUND',

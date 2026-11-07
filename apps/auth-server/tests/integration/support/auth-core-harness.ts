@@ -20,6 +20,7 @@ import {
   AuditLogModel,
   MinecraftBindingCodeModel,
   MinecraftLinkModel,
+  PasswordResetTokenModel,
   PermissionModel,
   RefreshTokenModel,
   SessionModel,
@@ -133,6 +134,7 @@ export async function purgeAuthCoreData(redis: Redis): Promise<void> {
     MinecraftLinkModel.deleteMany({}),
     MinecraftBindingCodeModel.deleteMany({}),
     ActivationCodeUseModel.deleteMany({}),
+    PasswordResetTokenModel.deleteMany({}),
   ]);
 
   for (const pattern of [

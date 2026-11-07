@@ -1,5 +1,8 @@
 import type {
+  AdminActivationCodeRequest,
+  AdminActivationCodeResponse,
   AdminBanRequest,
+  AdminLinkBanResponse,
   AdminListUsersResponse,
   AdminSetPermissionsRequest,
   AdminStatsResponse,
@@ -144,6 +147,23 @@ export const api = {
 
   unban: (id: string) =>
     request<{ user: MeResponse['user'] }>(`/api/v1/admin/users/${id}/unban`, { method: 'POST' }),
+
+  banLink: (userId: string, uuid: string, reason?: string) =>
+    request<AdminLinkBanResponse>(`/api/v1/admin/users/${userId}/links/${uuid}/ban`, {
+      method: 'POST',
+      body: reason ? { reason } : {},
+    }),
+
+  unbanLink: (userId: string, uuid: string) =>
+    request<AdminLinkBanResponse>(`/api/v1/admin/users/${userId}/links/${uuid}/unban`, {
+      method: 'POST',
+    }),
+
+  issueActivationCode: (body: AdminActivationCodeRequest) =>
+    request<AdminActivationCodeResponse>('/api/v1/admin/activation-codes', {
+      method: 'POST',
+      body,
+    }),
 
   sessions: (
     userId: string,

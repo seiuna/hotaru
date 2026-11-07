@@ -146,6 +146,31 @@ button.primary { color: #fff; background: var(--primary); }
 button.primary:hover:not(:disabled) { background: var(--primary-hover); }
 button.ghost { background: transparent; border-color: var(--border); }
 button.ghost.danger { color: var(--danger); }
+button.link-button {
+  justify-self: start;
+  padding: 0;
+  color: var(--primary-hover);
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+
+.twofa {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.secret {
+  display: block;
+  padding: 9px 10px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+  background: var(--bg-alt);
+  border-radius: 8px;
+}
+
+.break { overflow-wrap: anywhere; }
 
 .account__head {
   display: flex;

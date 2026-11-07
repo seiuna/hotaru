@@ -5,10 +5,13 @@ const userSchema = new Schema(
   {
     /** Primary Minecraft UUID, kept for the existing admin surface. Null for account-only rows. */
     minecraftUuid: { type: String },
-    /** Platform login name. Null until the account is activated. */
+    /** Platform login name. Null until the account is activated or claimed. */
     loginName: { type: String },
     /** scrypt hash; null means this account cannot use password login. */
     passwordHash: { type: String, default: null },
+    email: { type: String, default: null },
+    twoFactorSecret: { type: String, default: null },
+    twoFactorEnabledAt: { type: Date, default: null },
     /** Display name. Legacy rows use the Minecraft name; accounts use their login name. */
     username: { type: String, required: true },
     status: { type: String, enum: ['active', 'banned'], default: 'active', index: true },
@@ -17,6 +20,14 @@ const userSchema = new Schema(
     lastLoginAt: { type: Date, default: null },
   },
   { timestamps: true, collection: 'users' },
+);
+userSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    name: 'email_unique',
+    partialFilterExpression: { email: { $type: 'string' } },
+  },
 );
 userSchema.index({ username: 1 });
 userSchema.index(
@@ -66,13 +77,24 @@ const minecraftBindingCodeSchema = new Schema(
 const activationCodeUseSchema = new Schema(
   {
     jti: { type: String, required: true, unique: true, index: true },
-    type: { type: String, enum: ['account', 'bind'], required: true, index: true },
+    type: { type: String, enum: ['account', 'bind', 'claim'], required: true, index: true },
     accountId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     minecraftUuid: { type: String, default: null, index: true },
     usedAt: { type: Date, required: true },
   },
   { timestamps: true, collection: 'activation_code_uses' },
 );
+
+const passwordResetTokenSchema = new Schema(
+  {
+    accountId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    tokenHash: { type: String, required: true, unique: true, index: true },
+    expiresAt: { type: Date, required: true },
+    usedAt: { type: Date, default: null },
+  },
+  { timestamps: true, collection: 'password_reset_tokens' },
+);
+passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export type UserDoc = InferSchemaType<typeof userSchema>;
 export const UserModel: Model<UserDoc> =
@@ -90,6 +112,9 @@ export const ActivationCodeUseModel: Model<ActivationCodeUseDoc> = model<Activat
   'ActivationCodeUse',
   activationCodeUseSchema,
 );
+export type PasswordResetTokenDoc = InferSchemaType<typeof passwordResetTokenSchema>;
+export const PasswordResetTokenModel: Model<PasswordResetTokenDoc> =
+  model<PasswordResetTokenDoc>('PasswordResetToken', passwordResetTokenSchema);
 
 const permissionSchema = new Schema(
   {

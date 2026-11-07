@@ -21,6 +21,7 @@ export const EPOCH_ISO = new Date(0).toISOString();
 export interface UserViewSource {
   _id: Types.ObjectId | string;
   minecraftUuid?: string | null;
+  email?: string | null;
   username: string;
   status?: string | null;
   createdAt?: Date | string | null;
@@ -51,6 +52,7 @@ export function toUserView(user: UserViewSource): UserView {
   return {
     id: String(user._id),
     minecraftUuid: user.minecraftUuid ?? null,
+    email: user.email ?? null,
     username: user.username,
     status,
     createdAt: toIso(user.createdAt) ?? EPOCH_ISO,

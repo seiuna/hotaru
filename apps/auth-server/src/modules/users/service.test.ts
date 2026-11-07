@@ -38,6 +38,7 @@ describe('toUserView', () => {
     expect(view).toEqual({
       id: '507f1f77bcf86cd799439011',
       minecraftUuid: '11111111-2222-3333-4444-555555555555',
+      email: null,
       username: 'Notch',
       status: 'active',
       createdAt: '2026-01-01T00:00:00.000Z',

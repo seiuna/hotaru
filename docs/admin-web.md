@@ -55,8 +55,9 @@ restricted to same-app absolute paths.
 | `/login` | Paste/validate a token, explains how to obtain one, links the `admin:seed` command |
 | `/` | Bento dashboard: user totals, active sessions, 24h audit events, grant count, dependency health, recent audit feed, current identity |
 | `/users` | Search by username substring or UUID prefix, filter by status, paginated table |
-| `/users/:id` | Profile, permission editor (5 scopes, optional expiry, live diff, save), ban/unban with reason, session list with per-session revoke |
+| `/users/:id` | Profile, permission editor (5 scopes, optional expiry, live diff, save), ban/unban with reason, linked UUID list with per-UUID ban/unban, session list with per-session revoke |
 | `/audit` | Audit log filtered by event type or actor id, paginated |
+| `/activation-codes` | Issue signed account, bind or claim codes; requires the auth server's activation private key |
 
 Everything is server-backed; there are no mocked rows or decorative-only controls.
 
@@ -119,3 +120,5 @@ wrong.
 - Visual verification in this environment was limited: `vite build`, `vue-tsc`, the unit tests and the
   dev server/proxy were verified, but screenshots were not captured because desktop automation is not
   permitted here. Open `http://localhost:5173/login` locally to review the rendering.
+- `/activation-codes` returns `ACTIVATION_DISABLED` until the auth server has
+  `ACTIVATION_PRIVATE_KEY_FILE` or `ACTIVATION_PRIVATE_KEY_PEM`. The CLI remains available without it.

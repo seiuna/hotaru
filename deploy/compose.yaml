@@ -94,8 +94,15 @@ services:
       MOJANG_RETRY_DELAY_MS: ${MOJANG_RETRY_DELAY_MS:-500}
       DEFAULT_SCOPES: ${DEFAULT_SCOPES:-hotaru:profile}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
+      PORTAL_BASE_URL: ${PORTAL_BASE_URL:?set in deploy/.env}
+      PORTAL_REFRESH_TOKEN_TTL_DAYS: ${PORTAL_REFRESH_TOKEN_TTL_DAYS:-7}
+      EMAIL_DELIVERY_URL: ${EMAIL_DELIVERY_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-no-reply@example.com}
       # Ed25519 public key for signed activation codes (escaped newlines are fine).
       ACTIVATION_PUBLIC_KEY_PEM: ${ACTIVATION_PUBLIC_KEY_PEM:-}
+      # Optional: lets the admin console issue activation codes. Keep this only on
+      # the auth server; the public key alone cannot sign.
+      ACTIVATION_PRIVATE_KEY_PEM: ${ACTIVATION_PRIVATE_KEY_PEM:-}
       # Optional: bring-your-own PEMs. Empty means "generate once and persist in
       # MongoDB". Forwarded explicitly so an operator uncommenting them in
       # deploy/.env actually reaches loadConfig().

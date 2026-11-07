@@ -2,7 +2,7 @@ import { createPrivateKey, createPublicKey, sign, verify, type KeyObject } from 
 import { readFile } from 'node:fs/promises';
 import type { AppConfig } from '../../config/env.js';
 
-export type ActivationType = 'account' | 'bind';
+export type ActivationType = 'account' | 'bind' | 'claim';
 
 export interface ActivationPayload {
   v: 1;
@@ -26,6 +26,24 @@ export class ActivationCodeError extends Error {
 }
 
 const publicKeyCache = new Map<string, KeyObject>();
+const privateKeyCache = new Map<string, KeyObject>();
+
+export async function loadActivationPrivateKey(config: AppConfig): Promise<KeyObject | null> {
+  if (config.activationPrivateKeyPem) {
+    const key = createPrivateKey(config.activationPrivateKeyPem);
+    privateKeyCache.set(config.activationPrivateKeyPem, key);
+    return key;
+  }
+  if (config.activationPrivateKeyFile) {
+    const cached = privateKeyCache.get(config.activationPrivateKeyFile);
+    if (cached) return cached;
+    const pem = await readFile(config.activationPrivateKeyFile, 'utf8');
+    const key = createPrivateKey(pem);
+    privateKeyCache.set(config.activationPrivateKeyFile, key);
+    return key;
+  }
+  return null;
+}
 
 export async function loadActivationPublicKey(config: AppConfig): Promise<KeyObject | null> {
   if (config.activationPublicKeyPem) {
@@ -78,7 +96,7 @@ export function verifyActivationCode(
     throw new ActivationCodeError('invalid', 'activation code payload is invalid');
   }
   const value = payload as Record<string, unknown>;
-  if (value.v !== 1 || (value.type !== 'account' && value.type !== 'bind')) {
+  if (value.v !== 1 || (value.type !== 'account' && value.type !== 'bind' && value.type !== 'claim')) {
     throw new ActivationCodeError('type', 'activation code type is unsupported');
   }
   if (typeof value.jti !== 'string' || !value.jti) {
@@ -93,9 +111,9 @@ export function verifyActivationCode(
   if (typeof value.username !== 'undefined' && typeof value.username !== 'string') {
     throw new ActivationCodeError('invalid', 'activation code username is invalid');
   }
-  if (value.type === 'bind') {
+  if (value.type === 'bind' || value.type === 'claim') {
     if (typeof value.uuid !== 'string' || !value.uuid) {
-      throw new ActivationCodeError('invalid', 'bind activation code has no UUID');
+      throw new ActivationCodeError('invalid', `${value.type} activation code has no UUID`);
     }
   }
   if (value.exp <= Math.floor(nowMs / 1000)) {
@@ -105,7 +123,10 @@ export function verifyActivationCode(
 }
 
 export function signActivationCode(payload: ActivationPayload, privateKeyPem: string): string {
-  const privateKey = createPrivateKey(privateKeyPem);
+  return signActivationCodeWithKey(payload, createPrivateKey(privateKeyPem));
+}
+
+export function signActivationCodeWithKey(payload: ActivationPayload, privateKey: KeyObject): string {
   const payloadBytes = Buffer.from(JSON.stringify(payload), 'utf8');
   const signature = sign(null, payloadBytes, privateKey);
   return `${payloadBytes.toString('base64url')}.${signature.toString('base64url')}`;

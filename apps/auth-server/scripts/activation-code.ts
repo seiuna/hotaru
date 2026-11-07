@@ -49,7 +49,7 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--out-dir') args.outDir = fromRepoRoot(argv[++index] ?? 'deploy');
     else if (arg === '--help' || arg === '-h') {
       console.log('Usage: activation-code --keygen [--out-dir deploy]');
-      console.log('       activation-code --type account|bind --expires-in 7d [--uuid UUID] [--username NAME] [--key private.pem]');
+      console.log('       activation-code --type account|bind|claim --expires-in 7d [--uuid UUID] [--username NAME] [--key private.pem]');
       process.exit(0);
     } else {
       throw new Error(`unknown argument: ${arg}`);
@@ -82,7 +82,8 @@ async function keygen(outDir: string): Promise<void> {
 async function privateKeyFrom(args: Args): Promise<string> {
   if (args.key) return readFile(args.key, 'utf8');
   if (process.env.ACTIVATION_PRIVATE_KEY_PEM) return process.env.ACTIVATION_PRIVATE_KEY_PEM.replace(/\\n/g, '\n');
-  throw new Error('private key missing: pass --key <file> or set ACTIVATION_PRIVATE_KEY_PEM');
+  if (process.env.ACTIVATION_PRIVATE_KEY_FILE) return readFile(process.env.ACTIVATION_PRIVATE_KEY_FILE, 'utf8');
+  throw new Error('private key missing: pass --key <file> or set ACTIVATION_PRIVATE_KEY_PEM / ACTIVATION_PRIVATE_KEY_FILE');
 }
 
 async function main(): Promise<void> {
@@ -91,11 +92,14 @@ async function main(): Promise<void> {
     await keygen(args.outDir);
     return;
   }
-  if (args.type === 'bind' && (!args.uuid || !args.username)) {
-    throw new Error('--type bind requires --uuid and --username');
+  if (args.type !== 'account' && !args.uuid) {
+    throw new Error('--type bind and --type claim require --uuid');
   }
-  if (args.type !== 'account' && args.type !== 'bind') {
-    throw new Error('--type must be account or bind');
+  if (args.type === 'bind' && !args.username) {
+    throw new Error('--type bind requires --username');
+  }
+  if (args.type !== 'account' && args.type !== 'bind' && args.type !== 'claim') {
+    throw new Error('--type must be account, bind or claim');
   }
 
   const exp = Math.floor(Date.now() / 1000) + parseDuration(args.expiresIn);
@@ -104,7 +108,8 @@ async function main(): Promise<void> {
     type: args.type,
     jti: randomUUID(),
     exp,
-    ...(args.type === 'bind' ? { uuid: args.uuid, username: args.username } : {}),
+    ...(args.type !== 'account' ? { uuid: args.uuid } : {}),
+    ...(args.type === 'bind' ? { username: args.username } : {}),
   };
   const code = signActivationCode(payload, await privateKeyFrom(args));
   console.log(code);

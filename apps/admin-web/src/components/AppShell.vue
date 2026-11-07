@@ -12,6 +12,7 @@ const message = useMessage();
 const NAV = [
   { name: 'dashboard', label: '概览', to: '/' },
   { name: 'users', label: '用户', to: '/users' },
+  { name: 'activation-codes', label: '激活码', to: '/activation-codes' },
   { name: 'audit', label: '审计日志', to: '/audit' },
 ] as const;
 

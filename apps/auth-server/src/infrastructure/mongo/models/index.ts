@@ -3,6 +3,7 @@ export {
   AdminModel,
   MinecraftBindingCodeModel,
   MinecraftLinkModel,
+  PasswordResetTokenModel,
   PermissionModel,
   UserModel,
 } from './identity.js';
@@ -11,6 +12,7 @@ export type {
   AdminDoc,
   MinecraftBindingCodeDoc,
   MinecraftLinkDoc,
+  PasswordResetTokenDoc,
   PermissionDoc,
   UserDoc,
 } from './identity.js';

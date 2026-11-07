@@ -4,6 +4,7 @@ import {
   NDataTable,
   NInput,
   NModal,
+  NPopconfirm,
   NTag,
   useMessage,
   type DataTableColumns,
@@ -11,7 +12,7 @@ import {
 import { computed, h, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import type { AdminUserDetailResponse, SessionView } from '@hotaru/api-contract';
-import type { Scope } from '@hotaru/shared-types';
+import type { MinecraftLinkView, Scope } from '@hotaru/shared-types';
 import { ApiError, api } from '../api/client';
 import EmptyState from '../components/EmptyState.vue';
 import { authState, setScopes } from '../stores/auth';
@@ -152,6 +153,23 @@ async function revokeSession(sessionId: string): Promise<void> {
   }
 }
 
+async function toggleLinkBan(link: MinecraftLinkView): Promise<void> {
+  if (!detail.value) return;
+  try {
+    const result =
+      link.status === 'banned'
+        ? await api.unbanLink(detail.value.user.id, link.uuid)
+        : await api.banLink(detail.value.user.id, link.uuid);
+    detail.value = {
+      ...detail.value,
+      links: detail.value.links.map((item) => (item.uuid === link.uuid ? result.link : item)),
+    };
+    message.success(link.status === 'banned' ? '已解除 UUID 封禁' : '已封禁该 UUID');
+  } catch (error) {
+    message.error(error instanceof ApiError ? error.message : (error as Error).message);
+  }
+}
+
 const sessionColumns: DataTableColumns<SessionView> = [
   {
     title: '会话',
@@ -235,13 +253,15 @@ onMounted(load);
               </NTag>
               <span v-if="isSelf" class="pill">这是你自己</span>
             </div>
-            <code class="profile__uuid">{{ detail.user.minecraftUuid }}</code>
+            <code class="profile__uuid">{{ detail.user.minecraftUuid ?? '无主 UUID' }}</code>
             <div class="profile__meta">
               <span>注册 {{ formatDateTime(detail.user.createdAt) }}</span>
               <span aria-hidden="true">·</span>
               <span>
                 最近登录 {{ detail.user.lastLoginAt ? formatRelative(detail.user.lastLoginAt) : '从未' }}
               </span>
+              <span v-if="detail.user.email" aria-hidden="true">·</span>
+              <span v-if="detail.user.email">{{ detail.user.email }}</span>
             </div>
           </div>
         </div>
@@ -252,6 +272,44 @@ onMounted(load);
           </NButton>
           <NButton v-else secondary @click="toggleBan" :loading="banning">解除封禁</NButton>
         </div>
+      </section>
+
+      <section class="span-12 cozy-card card link-card rise rise-1">
+        <header class="card__head">
+          <div>
+            <h2>Minecraft 绑定</h2>
+            <p class="muted card__sub">一个账号可以绑定多个 UUID；封禁只影响对应的游戏身份。</p>
+          </div>
+          <span class="muted card__sub">{{ detail.links.length }} 个 UUID</span>
+        </header>
+
+        <p v-if="detail.links.length === 0" class="muted">这个账号还没有绑定任何 UUID。</p>
+        <ul v-else class="link-list">
+          <li v-for="link in detail.links" :key="link.uuid" class="link-row">
+            <div class="link-row__id">
+              <code>{{ link.uuid }}</code>
+              <span class="muted">{{ link.username }}</span>
+            </div>
+            <div class="link-row__actions">
+              <NTag
+                :type="link.status === 'active' ? 'success' : 'error'"
+                size="small"
+                round
+                :bordered="false"
+              >
+                {{ link.status === 'active' ? '正常' : '已封禁' }}
+              </NTag>
+              <NPopconfirm @positive-click="toggleLinkBan(link)">
+                <template #trigger>
+                  <NButton size="small" :type="link.status === 'active' ? 'error' : 'default'" tertiary>
+                    {{ link.status === 'active' ? '封禁 UUID' : '解除封禁' }}
+                  </NButton>
+                </template>
+                {{ link.status === 'active' ? '封禁这个 UUID？该身份会立即被登出。' : '解除这个 UUID 的封禁？' }}
+              </NPopconfirm>
+            </div>
+          </li>
+        </ul>
       </section>
 
       <div class="grid grid--bento">
@@ -432,6 +490,48 @@ onMounted(load);
   color: var(--muted);
   font-size: 12px;
   margin-top: 3px;
+}
+
+.link-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.link-card {
+  margin-bottom: 18px;
+}
+
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.link-row__id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.link-row__id code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.link-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .profile__meta {

@@ -110,6 +110,32 @@ export const Errors = {
   activationUsed: () =>
     new AppError('ACTIVATION_USED', 'Activation code has already been used', 409),
 
+  claimRequired: () =>
+    new AppError('CLAIM_REQUIRED', 'This account has no login credentials yet', 403),
+
+  claimInvalid: () =>
+    new AppError('CLAIM_INVALID', 'Claim code is invalid', 400),
+
+  accountAlreadyClaimed: () =>
+    new AppError('ACCOUNT_ALREADY_CLAIMED', 'This account already has login credentials', 409),
+
+  emailExists: () =>
+    new AppError('EMAIL_EXISTS', 'This email is already in use', 409),
+
+  resetTokenInvalid: () =>
+    new AppError('RESET_TOKEN_INVALID', 'Password reset token is invalid', 400),
+
+  resetTokenExpired: () =>
+    new AppError('RESET_TOKEN_EXPIRED', 'Password reset token has expired', 410),
+
+  totpRequired: () =>
+    new AppError('TOTP_REQUIRED', 'Two-factor authentication code is required', 401, {
+      details: { factor: 'totp' },
+    }),
+
+  invalidTotp: () =>
+    new AppError('INVALID_TOTP', 'Two-factor authentication code is invalid', 401),
+
   passwordPolicy: (message = 'Password does not meet the policy') =>
     new AppError('PASSWORD_POLICY', message, 400),
 

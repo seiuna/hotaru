@@ -50,7 +50,7 @@ hosts (`admin.$AUTH_DOMAIN`, `user.$AUTH_DOMAIN`) and `IRC_DOMAIN` also need DNS
 cp deploy/.env.example deploy/.env
 
 # 2. Edit deploy/.env — every CHANGE_ME must be replaced
-#    AUTH_DOMAIN, ACME_EMAIL, PUBLIC_BASE_URL, MONGO_INITDB_ROOT_PASSWORD, REDIS_PASSWORD
+#    AUTH_DOMAIN, ACME_EMAIL, PUBLIC_BASE_URL, PORTAL_BASE_URL, MONGO_INITDB_ROOT_PASSWORD, REDIS_PASSWORD
 
 # 3. Build and start the whole stack
 docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build
@@ -71,6 +71,12 @@ created automatically at boot (`MONGODB_ENSURE_INDEXES=true` by default) — see
 
 `deploy/.env` is git-ignored (`.gitignore` ignores `.env` and `.env.*` except `.env.example`). Keep it
 `chmod 600`.
+
+For the portal account lifecycle set `PORTAL_BASE_URL` (used in reset emails). Password reset also needs
+an HTTP mail relay at `EMAIL_DELIVERY_URL`; without it reset links are printed to the auth-server log.
+Admins can issue activation codes from the console only when `ACTIVATION_PRIVATE_KEY_PEM` (or
+`ACTIVATION_PRIVATE_KEY_FILE` in a compose override) is present. The public key alone is enough for
+redemption but cannot sign new codes.
 
 ## Seeding the first administrator
 

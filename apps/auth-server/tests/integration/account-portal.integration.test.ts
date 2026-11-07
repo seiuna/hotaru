@@ -2,14 +2,20 @@ import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { jwtVerify } from 'jose';
 import type { PortalTokenResponse } from '@hotaru/api-contract';
-import { MinecraftLinkModel } from '../../src/infrastructure/mongo/models/index.js';
+import {
+  MinecraftLinkModel,
+  PasswordResetTokenModel,
+} from '../../src/infrastructure/mongo/models/index.js';
 import { signActivationCode } from '../../src/infrastructure/activation/code.js';
+import { generateTotp } from '../../src/infrastructure/crypto/totp.js';
+import { hashRefreshToken } from '../../src/modules/tokens/refresh-token.js';
 import {
   createVerifyBody,
   PLAYER_NAME,
   PLAYER_UUID,
   postVerify,
   purgeAuthCoreData,
+  seedLinkedAccount,
   startHarness,
   stopHarness,
   stubMojangJoined,
@@ -42,6 +48,7 @@ async function activate(code: string): Promise<void> {
     code,
     username: ACCOUNT_NAME,
     password: PASSWORD,
+    email: 'portal@example.com',
   });
   expect(response.statusCode).toBe(201);
 }
@@ -71,6 +78,19 @@ function bindCode(uuid: string, username: string, expSeconds = 600): string {
       exp: Math.floor(Date.now() / 1000) + expSeconds,
       uuid,
       username,
+    },
+    privateKeyPem,
+  );
+}
+
+function claimCode(uuid: string, expSeconds = 600): string {
+  return signActivationCode(
+    {
+      v: 1,
+      type: 'claim',
+      jti: randomUUID(),
+      exp: Math.floor(Date.now() / 1000) + expSeconds,
+      uuid,
     },
     privateKeyPem,
   );
@@ -207,6 +227,125 @@ describe('user portal account flow', () => {
 
     const me = await portalCall('GET', '/api/v1/portal/me', undefined, portal.accessToken);
     expect(me.statusCode).toBe(200);
+  });
+
+  it('claims a legacy Minecraft-only account', async () => {
+    await seedLinkedAccount({ uuid: SECOND_UUID, username: 'LegacyPlayer' });
+    const response = await portalCall('POST', '/api/v1/portal/claim', {
+      code: claimCode(SECOND_UUID),
+      username: 'legacy_account',
+      password: PASSWORD,
+      email: 'legacy@example.com',
+    });
+    expect(response.statusCode).toBe(201);
+    expect(response.json().loginName).toBe('legacy_account');
+
+    const loginResponse = await portalCall('POST', '/api/v1/portal/login', {
+      username: 'legacy_account',
+      password: PASSWORD,
+    });
+    expect(loginResponse.statusCode).toBe(200);
+  });
+
+  it('rotates a portal refresh token and detects reuse', async () => {
+    await activate(accountCode());
+    const first = await login();
+
+    const refreshed = await portalCall('POST', '/api/v1/portal/refresh', {
+      refreshToken: first.refreshToken,
+    });
+    expect(refreshed.statusCode).toBe(200);
+    expect(refreshed.json().accessToken).not.toBe(first.accessToken);
+    expect(refreshed.json().refreshToken).not.toBe(first.refreshToken);
+
+    const reuse = await portalCall('POST', '/api/v1/portal/refresh', {
+      refreshToken: first.refreshToken,
+    });
+    expect(reuse.statusCode).toBe(401);
+    expect(reuse.json().error.code).toBe('REFRESH_REUSED');
+  });
+
+  it('resets a password with a single-use email token', async () => {
+    await activate(accountCode());
+    const portal = await login();
+    const rawToken = 'reset-token-for-test-1234567890';
+    await PasswordResetTokenModel.create({
+      accountId: portal.account.id,
+      tokenHash: hashRefreshToken(rawToken),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    const forgot = await portalCall('POST', '/api/v1/portal/forgot-password', {
+      email: 'portal@example.com',
+    });
+    expect(forgot.statusCode).toBe(202);
+
+    const reset = await portalCall('POST', '/api/v1/portal/reset-password', {
+      token: rawToken,
+      newPassword: 'reset password 123',
+    });
+    expect(reset.statusCode).toBe(204);
+
+    const oldLogin = await portalCall('POST', '/api/v1/portal/login', {
+      username: ACCOUNT_NAME,
+      password: PASSWORD,
+    });
+    expect(oldLogin.statusCode).toBe(401);
+    const newLogin = await portalCall('POST', '/api/v1/portal/login', {
+      username: ACCOUNT_NAME,
+      password: 'reset password 123',
+    });
+    expect(newLogin.statusCode).toBe(200);
+
+    const replay = await portalCall('POST', '/api/v1/portal/reset-password', {
+      token: rawToken,
+      newPassword: 'another password 123',
+    });
+    expect(replay.statusCode).toBe(400);
+  });
+
+  it('enables TOTP and requires it on later logins', async () => {
+    await activate(accountCode());
+    const portal = await login();
+
+    const setup = await portalCall('POST', '/api/v1/portal/2fa/setup', undefined, portal.accessToken);
+    expect(setup.statusCode).toBe(200);
+    const secret = setup.json().secret as string;
+    const enable = await portalCall(
+      'POST',
+      '/api/v1/portal/2fa/enable',
+      { code: generateTotp(secret) },
+      portal.accessToken,
+    );
+    expect(enable.statusCode).toBe(200);
+    expect(enable.json().account.twoFactorEnabled).toBe(true);
+
+    const missing = await portalCall('POST', '/api/v1/portal/login', {
+      username: ACCOUNT_NAME,
+      password: PASSWORD,
+    });
+    expect(missing.statusCode).toBe(401);
+    expect(missing.json().error.code).toBe('TOTP_REQUIRED');
+
+    const withCode = await portalCall('POST', '/api/v1/portal/login', {
+      username: ACCOUNT_NAME,
+      password: PASSWORD,
+      totp: generateTotp(secret),
+    });
+    expect(withCode.statusCode).toBe(200);
+  });
+
+  it('changes the account email with the current password', async () => {
+    await activate(accountCode());
+    const portal = await login();
+    const changed = await portalCall(
+      'POST',
+      '/api/v1/portal/email',
+      { email: 'new-portal@example.com', password: PASSWORD },
+      portal.accessToken,
+    );
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json().account.email).toBe('new-portal@example.com');
   });
 
   it('changes the password and invalidates the old password', async () => {

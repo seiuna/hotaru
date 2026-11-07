@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { generateKeyPairSync } from 'node:crypto';
 import { SignJWT } from 'jose';
 import type { FastifyInstance } from 'fastify';
 import { Types } from 'mongoose';
@@ -32,6 +33,14 @@ export const TEST_REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://127.0.0.1:1
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
+const activationKeys = generateKeyPairSync('ed25519');
+const activationPrivatePem = activationKeys.privateKey
+  .export({ type: 'pkcs8', format: 'pem' })
+  .toString();
+const activationPublicPem = activationKeys.publicKey
+  .export({ type: 'spki', format: 'pem' })
+  .toString();
+
 export interface Harness {
   app: FastifyInstance;
   ctx: AppContext;
@@ -53,6 +62,8 @@ function testConfig(): AppConfig {
     MONGODB_URI: TEST_MONGODB_URI,
     MONGODB_DB: TEST_MONGODB_DB,
     REDIS_URL: TEST_REDIS_URL,
+    ACTIVATION_PRIVATE_KEY_PEM: activationPrivatePem,
+    ACTIVATION_PUBLIC_KEY_PEM: activationPublicPem,
   });
 }
 

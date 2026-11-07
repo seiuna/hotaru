@@ -97,6 +97,7 @@ export const jwksResponseSchema = z.object({
 export const userViewSchema = z.object({
   id: objectIdSchema,
   minecraftUuid: minecraftUuidSchema.nullable(),
+  email: z.string().nullable(),
   username: z.string(),
   status: z.enum(['active', 'banned']),
   createdAt: z.string(),
@@ -116,7 +117,9 @@ export const accountViewSchema = z.object({
   id: objectIdSchema,
   username: z.string(),
   loginName: z.string(),
+  email: z.string().nullable(),
   status: z.enum(['active', 'banned']),
+  twoFactorEnabled: z.boolean(),
   createdAt: z.string(),
   links: z.array(minecraftLinkViewSchema),
 });
@@ -162,26 +165,44 @@ export const accountNameSchema = z
 
 export const accountPasswordSchema = z.string().min(10).max(128);
 
+export const emailSchema = z.string().email().max(254);
+
 export const activateAccountRequestSchema = z.object({
   code: z.string().min(20).max(2048),
   username: accountNameSchema,
   password: accountPasswordSchema,
+  email: emailSchema.optional(),
 });
 export type ActivateAccountRequest = z.infer<typeof activateAccountRequestSchema>;
+
+export const claimAccountRequestSchema = z.object({
+  code: z.string().min(20).max(2048),
+  username: accountNameSchema,
+  password: accountPasswordSchema,
+  email: emailSchema.optional(),
+});
+export type ClaimAccountRequest = z.infer<typeof claimAccountRequestSchema>;
 
 export const portalLoginRequestSchema = z.object({
   username: accountNameSchema,
   password: z.string().min(1).max(128),
+  totp: z.string().regex(/^\d{6}$/).optional(),
 });
 export type PortalLoginRequest = z.infer<typeof portalLoginRequestSchema>;
 
 export const portalTokenResponseSchema = z.object({
   accessToken: z.string(),
+  refreshToken: z.string(),
   tokenType: z.literal('Bearer'),
   expiresIn: z.number().int().positive(),
   account: accountViewSchema,
 });
 export type PortalTokenResponse = z.infer<typeof portalTokenResponseSchema>;
+
+export const portalRefreshRequestSchema = z.object({
+  refreshToken: z.string().min(20).max(512),
+});
+export type PortalRefreshRequest = z.infer<typeof portalRefreshRequestSchema>;
 
 export const portalMeResponseSchema = z.object({
   account: accountViewSchema,
@@ -203,6 +224,55 @@ export const portalChangePasswordRequestSchema = z.object({
   newPassword: accountPasswordSchema,
 });
 export type PortalChangePasswordRequest = z.infer<typeof portalChangePasswordRequestSchema>;
+
+export const portalEmailChangeRequestSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1).max(128),
+});
+export type PortalEmailChangeRequest = z.infer<typeof portalEmailChangeRequestSchema>;
+
+export const portalForgotPasswordRequestSchema = z.object({
+  email: emailSchema,
+});
+export type PortalForgotPasswordRequest = z.infer<typeof portalForgotPasswordRequestSchema>;
+
+export const portalResetPasswordRequestSchema = z.object({
+  token: z.string().min(20).max(512),
+  newPassword: accountPasswordSchema,
+});
+export type PortalResetPasswordRequest = z.infer<typeof portalResetPasswordRequestSchema>;
+
+export const portalTotpSetupResponseSchema = z.object({
+  secret: z.string(),
+  otpauthUri: z.string(),
+});
+export type PortalTotpSetupResponse = z.infer<typeof portalTotpSetupResponseSchema>;
+
+export const portalTotpEnableRequestSchema = z.object({
+  code: z.string().regex(/^\d{6}$/),
+});
+export type PortalTotpEnableRequest = z.infer<typeof portalTotpEnableRequestSchema>;
+
+export const portalTotpDisableRequestSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  code: z.string().regex(/^\d{6}$/).optional(),
+});
+export type PortalTotpDisableRequest = z.infer<typeof portalTotpDisableRequestSchema>;
+
+export const adminActivationCodeRequestSchema = z.object({
+  type: z.enum(['account', 'bind', 'claim']),
+  expiresInSeconds: z.coerce.number().int().min(60).max(60 * 60 * 24 * 365).default(7 * 24 * 60 * 60),
+  uuid: minecraftUuidSchema.optional(),
+  username: z.string().min(1).max(64).optional(),
+});
+export type AdminActivationCodeRequest = z.infer<typeof adminActivationCodeRequestSchema>;
+
+export const adminActivationCodeResponseSchema = z.object({
+  code: z.string(),
+  type: z.enum(['account', 'bind', 'claim']),
+  expiresAt: z.string(),
+});
+export type AdminActivationCodeResponse = z.infer<typeof adminActivationCodeResponseSchema>;
 
 /* ------------------------------------------------------------------ */
 /* Admin                                                               */
@@ -302,6 +372,7 @@ export const adminUserDetailResponseSchema = z.object({
   user: userViewSchema,
   permissions: z.array(permissionViewSchema),
   scopes: z.array(scopeSchema),
+  links: z.array(minecraftLinkViewSchema),
 });
 export type AdminUserDetailResponse = z.infer<typeof adminUserDetailResponseSchema>;
 

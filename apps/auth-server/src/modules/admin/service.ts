@@ -1,8 +1,18 @@
+import { randomUUID } from 'node:crypto';
 import type { Redis } from 'ioredis';
 import type { AnyBulkWriteOperation, FilterQuery, Types } from 'mongoose';
 import { Types as MongooseTypes } from 'mongoose';
-import type { MinecraftLinkView, PermissionView, Scope, UserStatus, UserView } from '@hotaru/shared-types';
-import type { AdminSetPermissionsRequest } from '@hotaru/api-contract';
+import type {
+  MinecraftLinkView,
+  PermissionView,
+  Scope,
+  UserStatus,
+  UserView,
+} from '@hotaru/shared-types';
+import type {
+  AdminActivationCodeRequest,
+  AdminSetPermissionsRequest,
+} from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { revocationKey } from '../../plugins/auth.js';
@@ -20,6 +30,11 @@ import type {
   UserDoc,
 } from '../../infrastructure/mongo/models/index.js';
 import { recordAudit } from '../audit/service.js';
+import {
+  loadActivationPrivateKey,
+  signActivationCodeWithKey,
+} from '../../infrastructure/activation/code.js';
+import { listMinecraftLinks } from '../minecraft-auth/user-repository.js';
 import {
   EPOCH_ISO,
   effectiveScopes,
@@ -563,16 +578,58 @@ export async function revokeSession(
  * One user plus their grants, for the detail screen. Kept as a single call so the
  * UI cannot render a user whose permissions silently failed to load.
  */
+export async function issueActivationCode(
+  deps: AdminDeps,
+  actor: AdminActor,
+  input: AdminActivationCodeRequest,
+): Promise<{ code: string; type: 'account' | 'bind' | 'claim'; expiresAt: string }> {
+  const privateKey = await loadActivationPrivateKey(deps.ctx.config);
+  if (!privateKey) throw Errors.activationDisabled();
+
+  if (input.type !== 'account' && !input.uuid) {
+    throw Errors.invalidRequest(`--type ${input.type} requires a UUID`);
+  }
+  const expiresAtSeconds = Math.floor(Date.now() / 1000) + input.expiresInSeconds;
+  const payload = {
+    v: 1 as const,
+    type: input.type,
+    jti: randomUUID(),
+    exp: expiresAtSeconds,
+    ...(input.type === 'account' ? {} : { uuid: input.uuid as string }),
+    ...(input.type === 'bind' ? { username: input.username ?? 'unknown' } : {}),
+  };
+  const code = signActivationCodeWithKey(payload, privateKey);
+
+  await recordAudit(deps.ctx, {
+    event: 'admin.activation_code.issued',
+    actorId: actor.userId,
+    actorType: 'admin',
+    targetType: 'activation_code',
+    targetId: payload.jti,
+    ip: actor.ip,
+    metadata: { type: input.type, uuid: input.uuid ?? null, expiresAt: expiresAtSeconds },
+  });
+
+  return {
+    code,
+    type: input.type,
+    expiresAt: new Date(expiresAtSeconds * 1000).toISOString(),
+  };
+}
+
 export async function getUserDetail(userId: string): Promise<{
   user: UserView;
   permissions: PermissionView[];
   scopes: Scope[];
-}> {
-  const user = await UserModel.findById(userId).lean();
+  links: MinecraftLinkView[];
+}> {  const user = await UserModel.findById(userId).lean();
   if (!user) throw Errors.notFound('User');
 
-  const permissions = await loadPermissionViews(userId);
-  return { user: toUserView(user), permissions, scopes: effectiveScopes(permissions) };
+  const [permissions, links] = await Promise.all([
+    loadPermissionViews(userId),
+    listMinecraftLinks(userId),
+  ]);
+  return { user: toUserView(user), permissions, scopes: effectiveScopes(permissions), links };
 }
 
 export interface ListUserSessionsParams {  userId: string;

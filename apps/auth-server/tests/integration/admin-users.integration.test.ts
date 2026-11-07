@@ -427,6 +427,21 @@ describe('admin API', () => {
     expect(body.logs.every((log) => log.actorId === admin.id)).toBe(true);
   });
 
+  it('issues a signed activation code', async () => {
+    const admin = await createAdmin();
+    const response = await harness.app.inject({
+      method: 'POST',
+      url: '/api/v1/admin/activation-codes',
+      headers: bearer(admin.accessToken),
+      payload: { type: 'account', expiresInSeconds: 3600 },
+    });
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as { code: string; type: string; expiresAt: string };
+    expect(body.type).toBe('account');
+    expect(body.code.split('.')).toHaveLength(2);
+    expect(new Date(body.expiresAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
   it('bans one linked UUID without banning the account or other links', async () => {
     const admin = await createAdmin();
     const target = await data.createUser();
@@ -469,6 +484,14 @@ describe('admin API', () => {
 
     const user = await UserModel.findById(target.id).lean();
     expect(user?.status).toBe('active');
+
+    const detail = await harness.app.inject({
+      method: 'GET',
+      url: `/api/v1/admin/users/${target.id}`,
+      headers: bearer(admin.accessToken),
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().links[0].status).toBe('banned');
   });
 
   it('keeps the target sessions untouched when banning an unknown user id', async () => {

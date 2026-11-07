@@ -403,6 +403,11 @@
                     "type": "string",
                     "minLength": 10,
                     "maxLength": 128
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
                   }
                 },
                 "required": [
@@ -433,12 +438,21 @@
                     "loginName": {
                       "type": "string"
                     },
+                    "email": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
                         "active",
                         "banned"
                       ]
+                    },
+                    "twoFactorEnabled": {
+                      "type": "boolean"
                     },
                     "createdAt": {
                       "type": "string"
@@ -480,7 +494,9 @@
                     "id",
                     "username",
                     "loginName",
+                    "email",
                     "status",
+                    "twoFactorEnabled",
                     "createdAt",
                     "links"
                   ],
@@ -492,9 +508,9 @@
         }
       }
     },
-    "/api/v1/portal/login": {
+    "/api/v1/portal/claim": {
       "post": {
-        "summary": "Log in to the user portal with username and password",
+        "summary": "Claim an existing Minecraft-only account with a signed claim code",
         "tags": [
           "portal"
         ],
@@ -505,6 +521,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 2048
+                  },
                   "username": {
                     "type": "string",
                     "minLength": 3,
@@ -513,13 +534,134 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 10,
                     "maxLength": 128
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
                   }
                 },
                 "required": [
+                  "code",
                   "username",
                   "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{24}$"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "loginName": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "banned"
+                      ]
+                    },
+                    "twoFactorEnabled": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "banned"
+                            ]
+                          },
+                          "linkedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uuid",
+                          "username",
+                          "status",
+                          "linkedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "loginName",
+                    "email",
+                    "status",
+                    "twoFactorEnabled",
+                    "createdAt",
+                    "links"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/refresh": {
+      "post": {
+        "summary": "Rotate a portal refresh token",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 512
+                  }
+                },
+                "required": [
+                  "refreshToken"
                 ],
                 "additionalProperties": false
               }
@@ -535,6 +677,9 @@
                   "type": "object",
                   "properties": {
                     "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
                       "type": "string"
                     },
                     "tokenType": {
@@ -560,12 +705,21 @@
                         "loginName": {
                           "type": "string"
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
                             "active",
                             "banned"
                           ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
                         },
                         "createdAt": {
                           "type": "string"
@@ -607,7 +761,9 @@
                         "id",
                         "username",
                         "loginName",
+                        "email",
                         "status",
+                        "twoFactorEnabled",
                         "createdAt",
                         "links"
                       ],
@@ -616,6 +772,236 @@
                   },
                   "required": [
                     "accessToken",
+                    "refreshToken",
+                    "tokenType",
+                    "expiresIn",
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/forgot-password": {
+      "post": {
+        "summary": "Request a password reset email (always 202)",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  }
+                },
+                "required": [
+                  "email"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/portal/reset-password": {
+      "post": {
+        "summary": "Reset a portal password with a single-use token",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 512
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "token",
+                  "newPassword"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/portal/login": {
+      "post": {
+        "summary": "Log in to the user portal with username and password",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32,
+                    "pattern": "^[A-Za-z0-9_.-]+$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "totp": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "email",
+                        "status",
+                        "twoFactorEnabled",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "refreshToken",
                     "tokenType",
                     "expiresIn",
                     "account"
@@ -655,12 +1041,21 @@
                         "loginName": {
                           "type": "string"
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
                             "active",
                             "banned"
                           ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
                         },
                         "createdAt": {
                           "type": "string"
@@ -702,7 +1097,423 @@
                         "id",
                         "username",
                         "loginName",
+                        "email",
                         "status",
+                        "twoFactorEnabled",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/email": {
+      "post": {
+        "summary": "Set or replace the account email",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 254
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "email",
+                        "status",
+                        "twoFactorEnabled",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/2fa/setup": {
+      "post": {
+        "summary": "Generate a TOTP secret for the current account",
+        "tags": [
+          "portal"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "secret": {
+                      "type": "string"
+                    },
+                    "otpauthUri": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "secret",
+                    "otpauthUri"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/2fa/enable": {
+      "post": {
+        "summary": "Enable TOTP after verifying a code",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "email",
+                        "status",
+                        "twoFactorEnabled",
+                        "createdAt",
+                        "links"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "account"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/portal/2fa/disable": {
+      "post": {
+        "summary": "Disable TOTP after verifying the password and a current code",
+        "tags": [
+          "portal"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^\\d{6}$"
+                  }
+                },
+                "required": [
+                  "currentPassword"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{24}$"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "loginName": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "banned"
+                          ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "links": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "uuid": {
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                              },
+                              "username": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "banned"
+                                ]
+                              },
+                              "linkedAt": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "uuid",
+                              "username",
+                              "status",
+                              "linkedAt"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "username",
+                        "loginName",
+                        "email",
+                        "status",
+                        "twoFactorEnabled",
                         "createdAt",
                         "links"
                       ],
@@ -768,12 +1579,21 @@
                         "loginName": {
                           "type": "string"
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
                             "active",
                             "banned"
                           ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
                         },
                         "createdAt": {
                           "type": "string"
@@ -815,7 +1635,9 @@
                         "id",
                         "username",
                         "loginName",
+                        "email",
                         "status",
+                        "twoFactorEnabled",
                         "createdAt",
                         "links"
                       ],
@@ -880,12 +1702,21 @@
                         "loginName": {
                           "type": "string"
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "status": {
                           "type": "string",
                           "enum": [
                             "active",
                             "banned"
                           ]
+                        },
+                        "twoFactorEnabled": {
+                          "type": "boolean"
                         },
                         "createdAt": {
                           "type": "string"
@@ -927,7 +1758,9 @@
                         "id",
                         "username",
                         "loginName",
+                        "email",
                         "status",
+                        "twoFactorEnabled",
                         "createdAt",
                         "links"
                       ],
@@ -1138,6 +1971,12 @@
                             }
                           ]
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "username": {
                           "type": "string"
                         },
@@ -1161,6 +2000,7 @@
                       "required": [
                         "id",
                         "minecraftUuid",
+                        "email",
                         "username",
                         "status",
                         "createdAt",
@@ -1227,6 +2067,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1378,6 +2227,326 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/activation-codes": {
+      "post": {
+        "summary": "Issue a signed activation code",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "account",
+                      "bind",
+                      "claim"
+                    ]
+                  },
+                  "expiresInSeconds": {
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 31536000,
+                    "default": 604800
+                  },
+                  "uuid": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  },
+                  "username": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "account",
+                        "bind",
+                        "claim"
+                      ]
+                    },
+                    "expiresAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "type",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
+                            "PASSWORD_POLICY",
+                            "FORBIDDEN",
+                            "NOT_FOUND",
+                            "INTERNAL"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retryable": {
+                          "type": "boolean"
+                        },
+                        "details": {}
+                      },
+                      "required": [
+                        "code",
+                        "message",
+                        "retryable"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INVALID_REQUEST",
+                            "CHALLENGE_NOT_FOUND",
+                            "CHALLENGE_EXPIRED",
+                            "CHALLENGE_CONSUMED",
+                            "NOT_A_PREMIUM_SESSION",
+                            "MOJANG_UNAVAILABLE",
+                            "RATE_LIMITED",
+                            "UNAUTHORIZED",
+                            "TOKEN_EXPIRED",
+                            "SESSION_REVOKED",
+                            "REFRESH_REUSED",
+                            "USER_BANNED",
+                            "UUID_BANNED",
+                            "LINK_REQUIRED",
+                            "LINK_ALREADY_BOUND",
+                            "LINK_CODE_INVALID",
+                            "LINK_CODE_EXPIRED",
+                            "INVALID_CREDENTIALS",
+                            "ACCOUNT_EXISTS",
+                            "ACTIVATION_DISABLED",
+                            "ACTIVATION_INVALID",
+                            "ACTIVATION_EXPIRED",
+                            "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1494,6 +2663,12 @@
                               }
                             ]
                           },
+                          "email": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
                           "username": {
                             "type": "string"
                           },
@@ -1517,6 +2692,7 @@
                         "required": [
                           "id",
                           "minecraftUuid",
+                          "email",
                           "username",
                           "status",
                           "createdAt",
@@ -1585,6 +2761,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1651,6 +2836,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1862,6 +3056,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1928,6 +3131,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -1994,6 +3206,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2060,6 +3281,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2157,6 +3387,12 @@
                             }
                           ]
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "username": {
                           "type": "string"
                         },
@@ -2180,6 +3416,7 @@
                       "required": [
                         "id",
                         "minecraftUuid",
+                        "email",
                         "username",
                         "status",
                         "createdAt",
@@ -2237,6 +3474,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2303,6 +3549,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2369,6 +3624,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2435,6 +3699,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2515,6 +3788,12 @@
                             }
                           ]
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "username": {
                           "type": "string"
                         },
@@ -2538,6 +3817,7 @@
                       "required": [
                         "id",
                         "minecraftUuid",
+                        "email",
                         "username",
                         "status",
                         "createdAt",
@@ -2590,6 +3870,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2656,6 +3945,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2722,6 +4020,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2888,6 +4195,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -2954,6 +4270,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3020,6 +4345,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3169,6 +4503,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3235,6 +4578,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3301,6 +4653,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3467,6 +4828,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3533,6 +4903,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3599,6 +4978,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3665,6 +5053,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3745,6 +5142,12 @@
                             }
                           ]
                         },
+                        "email": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
                         "username": {
                           "type": "string"
                         },
@@ -3768,6 +5171,7 @@
                       "required": [
                         "id",
                         "minecraftUuid",
+                        "email",
                         "username",
                         "status",
                         "createdAt",
@@ -3827,12 +5231,45 @@
                           "admin:users"
                         ]
                       }
+                    },
+                    "links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "uuid": {
+                            "type": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "active",
+                              "banned"
+                            ]
+                          },
+                          "linkedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "uuid",
+                          "username",
+                          "status",
+                          "linkedAt"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
                     "user",
                     "permissions",
-                    "scopes"
+                    "scopes",
+                    "links"
                   ],
                   "additionalProperties": false
                 }
@@ -3875,6 +5312,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -3941,6 +5387,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4007,6 +5462,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4173,6 +5637,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4239,6 +5712,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4440,6 +5922,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4506,6 +5997,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4572,6 +6072,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4638,6 +6147,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4864,6 +6382,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4930,6 +6457,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",
@@ -4996,6 +6532,15 @@
                             "ACTIVATION_INVALID",
                             "ACTIVATION_EXPIRED",
                             "ACTIVATION_USED",
+                            "CLAIM_REQUIRED",
+                            "CLAIM_INVALID",
+                            "ACCOUNT_ALREADY_CLAIMED",
+                            "EMAIL_INVALID",
+                            "EMAIL_EXISTS",
+                            "RESET_TOKEN_INVALID",
+                            "RESET_TOKEN_EXPIRED",
+                            "TOTP_REQUIRED",
+                            "INVALID_TOTP",
                             "PASSWORD_POLICY",
                             "FORBIDDEN",
                             "NOT_FOUND",

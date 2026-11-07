@@ -1,11 +1,19 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
   accountViewSchema,
+  claimAccountRequestSchema,
   portalBindRequestSchema,
   portalChangePasswordRequestSchema,
+  portalEmailChangeRequestSchema,
+  portalForgotPasswordRequestSchema,
   portalLoginRequestSchema,
   portalMeResponseSchema,
+  portalRefreshRequestSchema,
+  portalResetPasswordRequestSchema,
   portalTokenResponseSchema,
+  portalTotpDisableRequestSchema,
+  portalTotpEnableRequestSchema,
+  portalTotpSetupResponseSchema,
   portalUnbindRequestSchema,
   activateAccountRequestSchema,
 } from '@hotaru/api-contract';
@@ -15,9 +23,17 @@ import { authenticatePortal, currentPortalAuth } from '../../plugins/portal.js';
 import {
   activateAccount,
   bindMinecraft,
+  changeEmail,
   changePassword,
+  claimAccount,
+  disableTotp,
+  enableTotp,
+  forgotPassword,
   getPortalAccount,
   loginAccount,
+  refreshPortalToken,
+  resetPassword,
+  setupTotp,
   unbindMinecraft,
 } from './service.js';
 
@@ -52,6 +68,76 @@ export async function registerPortalRoutes(
   );
 
   app.post(
+    '/api/v1/portal/claim',
+    {
+      schema: {
+        tags: ['portal'],
+        summary: 'Claim an existing Minecraft-only account with a signed claim code',
+        body: toJsonSchema(claimAccountRequestSchema),
+        response: { 201: toJsonSchema(accountViewSchema) },
+      },
+    },
+    async (request, reply) => {
+      const ctx = request.server.ctx;
+      const body = claimAccountRequestSchema.parse(request.body);
+      const account = await claimAccount(ctx, body, requestMeta(request));
+      reply.status(201);
+      return account;
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/refresh',
+    {
+      schema: {
+        tags: ['portal'],
+        summary: 'Rotate a portal refresh token',
+        body: toJsonSchema(portalRefreshRequestSchema),
+        response: { 200: toJsonSchema(portalTokenResponseSchema) },
+      },
+    },
+    async (request) => {
+      const ctx = request.server.ctx;
+      const body = portalRefreshRequestSchema.parse(request.body);
+      return refreshPortalToken(ctx, body, requestMeta(request));
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/forgot-password',
+    {
+      schema: {
+        tags: ['portal'],
+        summary: 'Request a password reset email (always 202)',
+        body: toJsonSchema(portalForgotPasswordRequestSchema),
+      },
+    },
+    async (request, reply) => {
+      const ctx = request.server.ctx;
+      const body = portalForgotPasswordRequestSchema.parse(request.body);
+      await forgotPassword(ctx, body, requestMeta(request));
+      reply.status(202);
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/reset-password',
+    {
+      schema: {
+        tags: ['portal'],
+        summary: 'Reset a portal password with a single-use token',
+        body: toJsonSchema(portalResetPasswordRequestSchema),
+      },
+    },
+    async (request, reply) => {
+      const ctx = request.server.ctx;
+      const body = portalResetPasswordRequestSchema.parse(request.body);
+      await resetPassword(ctx, body, requestMeta(request));
+      reply.status(204);
+    },
+  );
+
+  app.post(
     '/api/v1/portal/login',
     {
       schema: {
@@ -81,6 +167,80 @@ export async function registerPortalRoutes(
     async (request) => {
       const auth = currentPortalAuth(request);
       return { account: await getPortalAccount(auth.accountId) };
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/email',
+    {
+      preHandler: authenticatePortal(),
+      schema: {
+        tags: ['portal'],
+        summary: 'Set or replace the account email',
+        body: toJsonSchema(portalEmailChangeRequestSchema),
+        response: { 200: toJsonSchema(portalMeResponseSchema) },
+      },
+    },
+    async (request) => {
+      const ctx = request.server.ctx;
+      const auth = currentPortalAuth(request);
+      const body = portalEmailChangeRequestSchema.parse(request.body);
+      return { account: await changeEmail(ctx, auth.accountId, body, requestMeta(request)) };
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/2fa/setup',
+    {
+      preHandler: authenticatePortal(),
+      schema: {
+        tags: ['portal'],
+        summary: 'Generate a TOTP secret for the current account',
+        response: { 200: toJsonSchema(portalTotpSetupResponseSchema) },
+      },
+    },
+    async (request) => {
+      const ctx = request.server.ctx;
+      const auth = currentPortalAuth(request);
+      return setupTotp(ctx, auth.accountId);
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/2fa/enable',
+    {
+      preHandler: authenticatePortal(),
+      schema: {
+        tags: ['portal'],
+        summary: 'Enable TOTP after verifying a code',
+        body: toJsonSchema(portalTotpEnableRequestSchema),
+        response: { 200: toJsonSchema(portalMeResponseSchema) },
+      },
+    },
+    async (request) => {
+      const ctx = request.server.ctx;
+      const auth = currentPortalAuth(request);
+      const body = portalTotpEnableRequestSchema.parse(request.body);
+      return { account: await enableTotp(ctx, auth.accountId, body, requestMeta(request)) };
+    },
+  );
+
+  app.post(
+    '/api/v1/portal/2fa/disable',
+    {
+      preHandler: authenticatePortal(),
+      schema: {
+        tags: ['portal'],
+        summary: 'Disable TOTP after verifying the password and a current code',
+        body: toJsonSchema(portalTotpDisableRequestSchema),
+        response: { 200: toJsonSchema(portalMeResponseSchema) },
+      },
+    },
+    async (request) => {
+      const ctx = request.server.ctx;
+      const auth = currentPortalAuth(request);
+      const body = portalTotpDisableRequestSchema.parse(request.body);
+      return { account: await disableTotp(ctx, auth.accountId, body, requestMeta(request)) };
     },
   );
 

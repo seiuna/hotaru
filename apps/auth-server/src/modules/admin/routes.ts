@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import {
+  adminActivationCodeRequestSchema,
+  adminActivationCodeResponseSchema,
   adminBanSchema,
   adminLinkBanResponseSchema,
   adminListUsersQuerySchema,
@@ -33,6 +35,7 @@ import {
   banMinecraftLink,
   banUser,
   getUserDetail,
+  issueActivationCode,
   listAuditLogs,
   listUserSessions,
   listUsers,
@@ -85,6 +88,29 @@ function actorOf(request: FastifyRequest): AdminActor {
 export async function registerAdminRoutes(app: FastifyInstance, ctx: AppContext): Promise<void> {
   const deps: AdminDeps = { ctx, store: redisRevocationStore(ctx.redis) };
   const guard = authenticate({ scopes: ['admin:users'] });
+
+  app.post(
+    '/api/v1/admin/activation-codes',
+    {
+      schema: {
+        tags: ['admin'],
+        summary: 'Issue a signed activation code',
+        security: [{ bearerAuth: [] }],
+        body: toJsonSchema(adminActivationCodeRequestSchema),
+        response: {
+          200: toJsonSchema(adminActivationCodeResponseSchema),
+          400: errorResponses[400],
+          401: errorResponses[401],
+          403: errorResponses[403],
+        },
+      },
+      preHandler: guard,
+    },
+    async (request) => {
+      const body = adminActivationCodeRequestSchema.parse(request.body ?? {});
+      return issueActivationCode(deps, actorOf(request), body);
+    },
+  );
 
   app.get(
     '/api/v1/admin/users',
