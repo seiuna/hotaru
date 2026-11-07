@@ -12,6 +12,7 @@
  */
 import { loadConfig } from '../src/config/env.js';
 import { connectMongo, disconnectMongo } from '../src/infrastructure/mongo/connection.js';
+import { hashPassword } from '../src/infrastructure/crypto/password.js';
 import {
   AdminModel,
   PermissionModel,
@@ -34,12 +35,16 @@ class UsageError extends Error {}
 interface SeedArgs {
   uuid: string;
   username: string | null;
+  loginName: string | null;
+  password: string | null;
 }
 
 /** `--uuid x`, `--uuid=x`, `--username Name`; anything else is a usage error. */
 function parseArgs(argv: string[]): SeedArgs {
   let uuid: string | null = null;
   let username: string | null = null;
+  let loginName: string | null = null;
+  let password: string | null = null;
 
   for (let index = 0; index < argv.length; index += 1) {
     const raw = argv[index] ?? '';
@@ -58,6 +63,12 @@ function parseArgs(argv: string[]): SeedArgs {
         break;
       case '--username':
         username = nextValue();
+        break;
+      case '--login-name':
+        loginName = nextValue().toLowerCase();
+        break;
+      case '--password':
+        password = nextValue();
         break;
       case '-h':
       case '--help':
@@ -87,7 +98,11 @@ function parseArgs(argv: string[]): SeedArgs {
     parsedUsername = result.data;
   }
 
-  return { uuid: parsedUuid.data, username: parsedUsername };
+  if (password !== null && password.length < 10) {
+    throw new UsageError('--password must contain at least 10 characters');
+  }
+
+  return { uuid: parsedUuid.data, username: parsedUsername, loginName, password };
 }
 
 type UpsertOutcome = 'created' | 'updated' | 'unchanged';
@@ -97,6 +112,12 @@ async function seed(args: SeedArgs): Promise<void> {
   await connectMongo(config);
   try {
     const existing = await UserModel.findOne({ minecraftUuid: args.uuid }).lean();
+    if (args.loginName) {
+      const owner = await UserModel.findOne({ loginName: args.loginName }).lean();
+      if (owner && String(owner._id) !== String(existing?._id ?? '')) {
+        throw new UsageError(`--login-name is already in use: ${args.loginName}`);
+      }
+    }
     if (!existing && args.username === null) {
       throw new UsageError('--username is required when the account does not exist yet');
     }
@@ -108,14 +129,17 @@ async function seed(args: SeedArgs): Promise<void> {
     if (existing) {
       const needsStatusFix =
         existing.status !== 'active' || existing.bannedAt != null || existing.banReason != null;
+      const needsCredentials = Boolean(args.loginName && args.password);
       const needsRename = args.username !== null && args.username !== existing.username;
       userId = String(existing._id);
       userLabel = args.username ?? existing.username;
-      if (!needsStatusFix && !needsRename) {
+      if (!needsStatusFix && !needsRename && !needsCredentials) {
         userOutcome = 'unchanged';
       } else {
         const patch: Record<string, unknown> = { status: 'active', banReason: null, bannedAt: null };
         if (args.username !== null) patch.username = args.username;
+        if (args.loginName) patch.loginName = args.loginName;
+        if (args.password) patch.passwordHash = await hashPassword(args.password);
         await UserModel.updateOne({ _id: existing._id }, { $set: patch });
         userOutcome = 'updated';
         if (existing.status === 'banned') console.log(`[seed-admin] user was banned; reactivating ${userId}`);
@@ -124,6 +148,8 @@ async function seed(args: SeedArgs): Promise<void> {
       const created = await UserModel.create({
         minecraftUuid: args.uuid,
         username: args.username,
+        loginName: args.loginName,
+        passwordHash: args.password ? await hashPassword(args.password) : null,
         status: 'active',
       });
       userId = String(created._id);
@@ -166,6 +192,9 @@ async function seed(args: SeedArgs): Promise<void> {
     console.log(`[seed-admin] user        ${userOutcome.padEnd(9)} id=${userId} uuid=${args.uuid} username=${userLabel}`);
     console.log(`[seed-admin] permission  ${permissionOutcome.padEnd(9)} scope=${ADMIN_SCOPE} expiresAt=never`);
     console.log(`[seed-admin] admin       ${adminOutcome.padEnd(9)} role=owner identity=${args.uuid}`);
+    if (args.loginName && args.password) {
+      console.log(`[seed-admin] password    configured loginName=${args.loginName}`);
+    }
     console.log('[seed-admin] done');
   } finally {
     await disconnectMongo();

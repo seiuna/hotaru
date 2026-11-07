@@ -376,6 +376,12 @@ export const adminUserDetailResponseSchema = z.object({
 });
 export type AdminUserDetailResponse = z.infer<typeof adminUserDetailResponseSchema>;
 
+export const adminSessionResponseSchema = z.object({
+  account: accountViewSchema,
+  scopes: z.array(scopeSchema),
+});
+export type AdminSessionResponse = z.infer<typeof adminSessionResponseSchema>;
+
 export const auditLogViewSchema = z.object({
   id: objectIdSchema,
   event: z.string(),

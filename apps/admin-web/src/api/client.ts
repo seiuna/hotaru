@@ -4,6 +4,7 @@ import type {
   AdminBanRequest,
   AdminLinkBanResponse,
   AdminListUsersResponse,
+  AdminSessionResponse,
   AdminSetPermissionsRequest,
   AdminStatsResponse,
   AdminUserDetailResponse,
@@ -11,8 +12,15 @@ import type {
   AuditLogListResponse,
   MeResponse,
   PermissionsResponse,
+  PortalTokenResponse,
 } from '@hotaru/api-contract';
 import { getApiToken } from './token';
+
+/** Late-bound to avoid a circular module initialization between store and client. */
+async function refreshApiToken(): Promise<boolean> {
+  const { refreshSession } = await import('../stores/auth');
+  return refreshSession();
+}
 
 const BASE: string = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -43,6 +51,7 @@ interface RequestOptions {
   body?: unknown;
   token?: string | null;
   signal?: AbortSignal;
+  retry?: boolean;
 }
 
 type QueryValue = string | number | boolean | undefined | null;
@@ -89,6 +98,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      options.retry !== false &&
+      !path.startsWith('/api/v1/portal/') &&
+      (await refreshApiToken())
+    ) {
+      return request<T>(path, { ...options, retry: false });
+    }
+
     const envelope = (payload as { error?: { code?: string; message?: string; retryable?: boolean; details?: unknown } })
       ?.error;
     throw new ApiError(
@@ -116,6 +134,20 @@ export const api = {
 
   permissions: (token?: string) =>
     request<PermissionsResponse>('/api/v1/users/me/permissions', { token }),
+
+  /** Password-authenticated admin console session. */
+  login: (body: { username: string; password: string; totp?: string }) =>
+    request<PortalTokenResponse>('/api/v1/portal/login', { method: 'POST', body, token: null }),
+
+  adminSession: (token?: string) =>
+    request<AdminSessionResponse>('/api/v1/portal/admin-session', { token }),
+
+  refresh: (refreshToken: string) =>
+    request<PortalTokenResponse>('/api/v1/portal/refresh', {
+      method: 'POST',
+      body: { refreshToken },
+      token: null,
+    }),
 
   stats: (signal?: AbortSignal) => request<AdminStatsResponse>('/api/v1/admin/stats', { signal }),
 

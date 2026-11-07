@@ -5,10 +5,12 @@ import { setApiToken } from '../api/token';
 import { decodeToken, isTokenExpired } from '../utils/jwt';
 
 const STORAGE_KEY = 'hotaru.admin.session';
+const REFRESH_KEY = 'hotaru.admin.refresh';
 const ADMIN_SCOPE: Scope = 'admin:users';
 
 export interface AdminSession {
   token: string;
+  refreshToken: string | null;
   /** Epoch milliseconds, from the JWT `exp` claim. */
   expiresAt: number;
   userId: string;
@@ -51,53 +53,73 @@ export const authState = reactive<AuthState>({
 function persist(session: AdminSession | null): void {
   authState.session = session;
   setApiToken(session?.token ?? null);
-  if (session) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  else sessionStorage.removeItem(STORAGE_KEY);
+  if (session) {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    if (session.refreshToken) sessionStorage.setItem(REFRESH_KEY, session.refreshToken);
+    else sessionStorage.removeItem(REFRESH_KEY);
+  } else {
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
+  }
 }
 
 /**
- * Logs in with a token minted by the Minecraft handshake (the browser cannot
- * obtain one itself — only the game client can). The token is validated against
- * the live API and must carry `admin:users`; everything the UI shows afterwards
- * is re-derived from server responses, never from the token's claims.
+ * Password login for the console. The account must have `admin:users`; the
+ * server's scope guard enforces it again on every admin API request.
  */
-export async function loginWithToken(rawToken: string): Promise<AdminSession> {
-  const token = rawToken.trim();
+export async function loginWithPassword(credentials: {
+  username: string;
+  password: string;
+  totp?: string;
+}): Promise<AdminSession> {
   authState.error = null;
-
-  if (!token) throw new Error('请粘贴访问令牌');
-  const decoded = decodeToken(token);
-  if (!decoded) throw new Error('这不是一个可解析的 JWT，请确认复制完整');
-  if (isTokenExpired(token)) throw new Error('令牌已过期，请在游戏内重新登录获取新的令牌');
-
   authState.loading = true;
   try {
-    const [me, permissions] = await Promise.all([api.me(token), api.permissions(token)]);
-    const scopes = permissions.scopes;
-
-    if (!scopes.includes(ADMIN_SCOPE)) {
-      throw new Error(
-        `账号 ${me.user.username}（${me.user.minecraftUuid ?? '未绑定'}）没有 ${ADMIN_SCOPE} 权限。` +
-          '请先由已有管理员授权，或在服务器上执行：pnpm --filter @hotaru/auth-server admin:seed -- --uuid ' +
-          (me.user.minecraftUuid ?? '<minecraft-uuid>'),
-      );
+    const tokens = await api.login(credentials);
+    const session = await api.adminSession(tokens.accessToken);
+    if (!session.scopes.includes(ADMIN_SCOPE)) {
+      throw new Error(`账号 ${session.account.username} 没有 ${ADMIN_SCOPE} 权限，无法进入控制台。`);
     }
 
-    const session: AdminSession = {
-      token,
+    const decoded = decodeToken(tokens.accessToken);
+    if (!decoded) throw new Error('服务端返回的访问令牌无效');
+    const next: AdminSession = {
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       expiresAt: decoded.exp * 1000,
-      userId: me.user.id,
-      minecraftUuid: me.user.minecraftUuid,
-      username: me.user.username,
-      scopes,
+      userId: session.account.id,
+      minecraftUuid: session.account.links[0]?.uuid ?? null,
+      username: session.account.username,
+      scopes: session.scopes,
     };
-    persist(session);
-    return session;
+    persist(next);
+    return next;
   } catch (error) {
     authState.error = error instanceof ApiError ? error.message : (error as Error).message;
     throw error;
   } finally {
     authState.loading = false;
+  }
+}
+
+export async function refreshSession(): Promise<boolean> {
+  const refreshToken = sessionStorage.getItem(REFRESH_KEY);
+  const current = authState.session;
+  if (!refreshToken || !current) return false;
+  try {
+    const tokens = await api.refresh(refreshToken);
+    const decoded = decodeToken(tokens.accessToken);
+    if (!decoded) throw new Error('服务端返回的访问令牌无效');
+    persist({
+      ...current,
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: decoded.exp * 1000,
+    });
+    return true;
+  } catch {
+    persist(null);
+    return false;
   }
 }
 
@@ -129,7 +151,7 @@ export function useAuth() {
       if (!authState.session) return 0;
       return Math.max(0, Math.round((authState.session.expiresAt - Date.now()) / 1000));
     }),
-    loginWithToken,
+    loginWithPassword,
     logout,
   };
 }

@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
   accountViewSchema,
+  adminSessionResponseSchema,
   claimAccountRequestSchema,
   portalBindRequestSchema,
   portalChangePasswordRequestSchema,
@@ -18,6 +19,7 @@ import {
   activateAccountRequestSchema,
 } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
+import { effectiveScopes, loadPermissionViews } from '../users/service.js';
 import { clientIp, toJsonSchema, userAgentOf } from '../../http/zod-schema.js';
 import { authenticatePortal, currentPortalAuth } from '../../plugins/portal.js';
 import {
@@ -241,6 +243,26 @@ export async function registerPortalRoutes(
       const auth = currentPortalAuth(request);
       const body = portalTotpDisableRequestSchema.parse(request.body);
       return { account: await disableTotp(ctx, auth.accountId, body, requestMeta(request)) };
+    },
+  );
+
+  app.get(
+    '/api/v1/portal/admin-session',
+    {
+      preHandler: authenticatePortal(),
+      schema: {
+        tags: ['portal'],
+        summary: 'Account identity and live permissions for a password-authenticated console',
+        response: { 200: toJsonSchema(adminSessionResponseSchema) },
+      },
+    },
+    async (request) => {
+      const auth = currentPortalAuth(request);
+      const permissions = await loadPermissionViews(auth.accountId);
+      return {
+        account: await getPortalAccount(auth.accountId),
+        scopes: effectiveScopes(permissions),
+      };
     },
   );
 
