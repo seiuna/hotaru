@@ -184,25 +184,6 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@24.19.2)(jsdom@26.1.0)(tsx@4.23.15)(yaml@2.9.1)
 
-  apps/user-portal:
-    dependencies:
-      vue:
-        specifier: ^3.5.0
-        version: 3.5.45(typescript@5.9.3)
-    devDependencies:
-      '@vitejs/plugin-vue':
-        specifier: ^6.0.0
-        version: 6.0.10(vite@7.3.7(@types/node@24.19.2)(tsx@4.23.15)(yaml@2.9.1))(vue@3.5.45(typescript@5.9.3))
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-      vite:
-        specifier: ^7.0.0
-        version: 7.3.7(@types/node@24.19.2)(tsx@4.23.15)(yaml@2.9.1)
-      vue-tsc:
-        specifier: ^3.0.0
-        version: 3.3.14(typescript@5.9.3)
-
   packages/api-contract:
     dependencies:
       '@hotaru/shared-types':

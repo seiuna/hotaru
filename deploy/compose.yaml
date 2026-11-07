@@ -94,7 +94,7 @@ services:
       MOJANG_RETRY_DELAY_MS: ${MOJANG_RETRY_DELAY_MS:-500}
       DEFAULT_SCOPES: ${DEFAULT_SCOPES:-hotaru:profile}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
-      PORTAL_BASE_URL: ${PORTAL_BASE_URL:?set in deploy/.env}
+      PORTAL_BASE_URL: ${PORTAL_BASE_URL:-}
       PORTAL_REFRESH_TOKEN_TTL_DAYS: ${PORTAL_REFRESH_TOKEN_TTL_DAYS:-7}
       EMAIL_DELIVERY_URL: ${EMAIL_DELIVERY_URL:-}
       EMAIL_FROM: ${EMAIL_FROM:-no-reply@example.com}
@@ -204,19 +204,6 @@ services:
       timeout: 3s
       retries: 3
 
-  user-portal:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile.user-portal
-    restart: unless-stopped
-    networks:
-      - internal
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -227,8 +214,6 @@ services:
         condition: service_started
       admin-web:
         condition: service_started
-      user-portal:
-        condition: service_started
     ports:
       - "80:80"
       - "443:443"
@@ -236,7 +221,6 @@ services:
     environment:
       AUTH_DOMAIN: ${AUTH_DOMAIN:?set in deploy/.env}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.${AUTH_DOMAIN}}
-      USER_DOMAIN: ${USER_DOMAIN:-user.${AUTH_DOMAIN}}
       IRC_DOMAIN: ${IRC_DOMAIN:?set in deploy/.env}
       ACME_EMAIL: ${ACME_EMAIL:?set in deploy/.env}
     volumes:

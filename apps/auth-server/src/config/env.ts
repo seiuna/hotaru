@@ -31,7 +31,10 @@ const envSchema = z.object({
   PORTAL_JWT_AUDIENCE: z.string().default('hotaru-portal'),
   PORTAL_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
   PORTAL_REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
-  PORTAL_BASE_URL: z.string().url().default('http://localhost:5174'),
+  PORTAL_BASE_URL: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().url().default('http://localhost:3000'),
+  ),
   TOTP_ISSUER: z.string().default('Hotaru'),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),

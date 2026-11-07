@@ -196,7 +196,6 @@ hotaru-servers/
 │   │   ├── scripts/                  # export-openapi, seed-admin, activation-code, migrate, seed-player
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
 │   ├── admin-web/                    # @hotaru/admin-web — operator console
-│   ├── user-portal/                  # @hotaru/user-portal — account + UUID binding
 │   └── api/                          # @hotaru/api — leftover monorepo scaffold, not deployed
 ├── clients/hotaru-sdk-java/          # Java 21 SDK: auth handshake + login bridge + IRC/REST clients
 ├── examples/fabric-mod/              # Fabric wiring examples (not compiled by the library)
@@ -259,9 +258,9 @@ Working today:
   revocation, audit log), first-admin seeding.
 - Health probes, global error envelope, audit trail, OpenAPI export, Docker/Compose/Caddy deployment,
   Java client SDK, unit + integration tests, e2e smoke test.
-- User portal with signed activation codes, account/password login, multiple linked Minecraft UUIDs,
-  account-scoped MC permissions, account-level and per-UUID bans, legacy-account claim, email password
-  reset, rotating refresh tokens and TOTP two-factor authentication.
+- Headless account API with signed activation codes, account/password login, multiple linked Minecraft
+  UUIDs, account-scoped MC permissions, account-level and per-UUID bans, legacy-account claim, email
+  password reset, rotating refresh tokens and TOTP two-factor authentication.
 - Admin console activation-code issuance and per-UUID ban/unban on the user detail page.
 
 Not built yet (deliberate scope gaps):
@@ -365,95 +364,41 @@ API; it requires `ACTIVATION_PRIVATE_KEY_FILE` or `ACTIVATION_PRIVATE_KEY_PEM` o
 
 See [docs/admin-web.md](docs/admin-web.md) for the full rationale, screens, and known limits.
 
-## User portal (account + Minecraft binding)
+## Account API (headless)
 
-`apps/user-portal` is a separate Vue 3 SPA for end users. It has **no Minecraft login button**. Users
-activate a platform account with an activation code, log in with username/password, claim a legacy
-Minecraft-only account, bind one or more Minecraft UUIDs, set an email, reset a forgotten password, and
-enable TOTP two-factor authentication.
+The auth server still exposes the account lifecycle under `/api/v1/portal/*` for an external client.
+This repository does not ship a user portal SPA. The endpoints cover activation, legacy claim, login,
+rotating refresh tokens, email change, password reset, TOTP and UUID binding.
 
-```bash
-pnpm --filter @hotaru/user-portal dev     # http://localhost:5174 (proxies /api to :3000)
-pnpm --filter @hotaru/user-portal build   # vue-tsc + vite build -> dist/
-```
-
-Account tokens use `aud=hotaru-portal` and the `portal:account` / `portal:link` scopes. They cannot call
-the game API or the IRC server. Access tokens last one hour; the portal receives a rotating seven-day
-refresh token and refreshes silently on a 401.
-
-### Activation codes
-
-Generate an Ed25519 activation key pair once:
+Activation codes use Ed25519. Generate a pair once, keep the private key on the issuing machine, and
+give the auth server the public key. The admin console can issue codes only when the server also has the
+private key.
 
 ```bash
 pnpm --filter @hotaru/auth-server activation:code -- --keygen
-```
-
-This writes `deploy/activation-private.pem` and `deploy/activation-public.pem` (git-ignored). Keep the
-private key on the issuing machine and point the auth server at the public key:
-
-```dotenv
-ACTIVATION_PUBLIC_KEY_FILE=D:\project\skymatrix-servers\deploy\activation-public.pem
-```
-
-Issue an account code:
-
-```bash
 pnpm --filter @hotaru/auth-server activation:code -- --type account --expires-in 7d
-```
-
-Issue a bind code for a known UUID (admin fallback):
-
-```bash
 pnpm --filter @hotaru/auth-server activation:code -- --type bind --uuid <uuid> --username <name> --expires-in 1h
-```
-
-Issue a claim code for a legacy MC-only account:
-
-```bash
 pnpm --filter @hotaru/auth-server activation:code -- --type claim --uuid <uuid> --expires-in 1d
 ```
 
-Admins can also issue all three types from the console at `/activation-codes`. That page needs the
-private key on the auth server:
+`ACTIVATION_PUBLIC_KEY_FILE` or `ACTIVATION_PUBLIC_KEY_PEM` verifies codes.
+`ACTIVATION_PRIVATE_KEY_FILE` or `ACTIVATION_PRIVATE_KEY_PEM` lets `/activation-codes` in the admin
+console sign them.
 
-```dotenv
-ACTIVATION_PRIVATE_KEY_FILE=D:\project\skymatrix-servers\deploy\activation-private.pem
-```
+Email password reset sends a link through `EMAIL_DELIVERY_URL`; without it the link is printed to the
+auth-server log. Set `PORTAL_BASE_URL` to the external client that will consume the reset token. Without
+an external client the reset endpoints remain API-only.
 
-Without the private key the console reports `ACTIVATION_DISABLED`; the CLI remains usable. The server
-accepts `ACTIVATION_PUBLIC_KEY_PEM` / `ACTIVATION_PUBLIC_KEY_FILE` for verification and
-`ACTIVATION_PRIVATE_KEY_PEM` / `ACTIVATION_PRIVATE_KEY_FILE` for signing.
-
-### Minecraft binding
-
-An unlinked UUID is rejected with `LINK_REQUIRED`. The rejected handshake includes a one-time
-`bindingCode`; the mod shows it, and the user enters it in the portal. The portal binds the UUID to the
-current account. A linked UUID logs in as the account and inherits the account permissions. An
-account can link multiple UUIDs; one UUID belongs to at most one account.
+An unlinked UUID is rejected with `LINK_REQUIRED` and a one-time `bindingCode`; a client binds it with
+`POST /api/v1/portal/bind`. A linked UUID inherits the account permissions. One account can link many
+UUIDs; one UUID belongs to at most one account. Account bans cover every UUID and the account API; UUID
+bans cover only that game identity.
 
 ```bash
 pnpm --filter @hotaru/auth-server migrate:accounts
 ```
 
 This backfills `minecraft_links` for legacy MC-only users and replaces the old non-partial unique indexes.
-
-### Account lifecycle
-
-- **Activation** creates a new account with a signed `account` code.
-- **Claim** takes over a legacy MC-only account with a signed `claim` code. The code carries the UUID;
-  the account gets a login name, password and optional email without losing its existing permissions.
-- **Email** is optional at activation/claim and can be set later in the portal. Password reset sends a
-  single-use link through `EMAIL_DELIVERY_URL`; without it the link is printed to the auth-server log.
-  Set `PORTAL_BASE_URL` so the link points at the user portal.
-- **TOTP** setup stores a secret, verifies a six-digit code, then requires that code on later logins.
-  Disabling it requires both the password and a current code.
-- **Bans** are split: an account ban blocks every UUID and the portal; a UUID ban blocks only that game
-  identity. The admin user page now lists every linked UUID and exposes both actions.
-
-Deployment: `deploy/Dockerfile.user-portal` builds the SPA, Compose runs it as `user-portal`, and Caddy
-serves it on `USER_DOMAIN` (default `user.$AUTH_DOMAIN`) while proxying `/api/*` to the auth server.
-Set `PORTAL_BASE_URL` and, for real password-reset mail, `EMAIL_DELIVERY_URL` in `deploy/.env`.
 
 ## Repository extras
 

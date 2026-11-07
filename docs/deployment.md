@@ -24,15 +24,14 @@ Everything below assumes a single Linux host with Docker Engine + Compose v2 (Do
 
 ## What gets deployed
 
-`deploy/compose.yaml` defines seven services:
+`deploy/compose.yaml` defines six services:
 
 | Service | Image | Host ports | Purpose |
 | --- | --- | --- | --- |
 | `caddy` | `caddy:2-alpine` | `80:80`, `443:443`, `443:443/udp` | TLS termination, security headers, rate/shape limits, reverse proxy |
-| `auth-server` | built from `deploy/Dockerfile` | none | the API and user-portal account/binding API |
+| `auth-server` | built from `deploy/Dockerfile` | none | the API, including the headless account and binding endpoints |
 | `irc-server` | built from `deploy/Dockerfile.irc-server` | none | SRP v1 WebSocket relay and REST API |
 | `admin-web` | built from `deploy/Dockerfile.admin-web` | none | admin console SPA, served by nginx |
-| `user-portal` | built from `deploy/Dockerfile.user-portal` | none | end-user account and UUID-binding SPA |
 | `mongo` | `mongo:7` | none | durable state, `--auth`, root user from `deploy/.env` |
 | `redis` | `redis:7-alpine` | none | challenges, rate limits, revocation fast path, `--requirepass`, AOF on |
 
@@ -50,7 +49,7 @@ hosts (`admin.$AUTH_DOMAIN`, `user.$AUTH_DOMAIN`) and `IRC_DOMAIN` also need DNS
 cp deploy/.env.example deploy/.env
 
 # 2. Edit deploy/.env — every CHANGE_ME must be replaced
-#    AUTH_DOMAIN, ACME_EMAIL, PUBLIC_BASE_URL, PORTAL_BASE_URL, MONGO_INITDB_ROOT_PASSWORD, REDIS_PASSWORD
+#    AUTH_DOMAIN, ACME_EMAIL, PUBLIC_BASE_URL, MONGO_INITDB_ROOT_PASSWORD, REDIS_PASSWORD
 
 # 3. Build and start the whole stack
 docker compose -f deploy/compose.yaml --env-file deploy/.env up -d --build
@@ -72,7 +71,7 @@ created automatically at boot (`MONGODB_ENSURE_INDEXES=true` by default) — see
 `deploy/.env` is git-ignored (`.gitignore` ignores `.env` and `.env.*` except `.env.example`). Keep it
 `chmod 600`.
 
-For the portal account lifecycle set `PORTAL_BASE_URL` (used in reset emails). Password reset also needs
+For an external account client set `PORTAL_BASE_URL` (used in reset emails). Password reset also needs
 an HTTP mail relay at `EMAIL_DELIVERY_URL`; without it reset links are printed to the auth-server log.
 Admins can issue activation codes from the console only when `ACTIVATION_PRIVATE_KEY_PEM` (or
 `ACTIVATION_PRIVATE_KEY_FILE` in a compose override) is present. The public key alone is enough for

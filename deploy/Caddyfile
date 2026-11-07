@@ -104,42 +104,6 @@
 }
 
 # ---------------------------------------------------------------------------
-# End-user portal. Same-origin: the SPA calls /api on this host, while account
-# and binding routes live on the auth server.
-# ---------------------------------------------------------------------------
-{$USER_DOMAIN} {
-	encode zstd gzip
-
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
-		Referrer-Policy "no-referrer"
-		-Server
-	}
-
-	handle /api/* {
-		reverse_proxy auth-server:3000 {
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-		}
-	}
-
-	handle {
-		reverse_proxy user-portal:80
-	}
-
-	log {
-		output file /data/user-access.log {
-			roll_size 10MB
-			roll_keep 5
-		}
-		format json
-		level INFO
-	}
-}
-
-# ---------------------------------------------------------------------------
 # IRC / SRP v1 edge.
 #
 # One public host carries two very different transports:
