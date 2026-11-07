@@ -13,6 +13,7 @@ import type {
   MeResponse,
   PermissionsResponse,
   PortalTokenResponse,
+  StatusResponse,
 } from '@hotaru/api-contract';
 import { getApiToken } from './token';
 
@@ -148,6 +149,10 @@ export const api = {
       body: { refreshToken },
       token: null,
     }),
+
+  /** Public, login-free service snapshot used by /status. */
+  status: (signal?: AbortSignal) =>
+    request<StatusResponse>('/api/v1/status', { signal, token: null }),
 
   stats: (signal?: AbortSignal) => request<AdminStatsResponse>('/api/v1/admin/stats', { signal }),
 

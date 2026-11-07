@@ -141,6 +141,8 @@ async function submit(): Promise<void> {
       <span>Hotaru 认证服务</span>
       <span class="login__foot-dot" aria-hidden="true">·</span>
       <span>状态：{{ authState.session ? '已登录' : '未登录' }}</span>
+      <span class="login__foot-dot" aria-hidden="true">·</span>
+      <a href="/status">服务状态</a>
     </footer>
   </div>
 </template>
@@ -230,6 +232,15 @@ async function submit(): Promise<void> {
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.login__foot a {
+  color: var(--primary-strong);
+  text-decoration: none;
+}
+
+.login__foot a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 900px) {

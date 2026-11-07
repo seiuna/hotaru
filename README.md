@@ -370,6 +370,10 @@ The user detail page lists every linked Minecraft UUID and can ban or unban one 
 the account. The `/activation-codes` page issues signed account, bind and claim codes through the admin
 API; it requires `ACTIVATION_PRIVATE_KEY_FILE` or `ACTIVATION_PRIVATE_KEY_PEM` on the auth server.
 
+`/status` is a public, login-free service page. It polls `GET /api/v1/status` every five seconds and shows
+Auth API, MongoDB, Redis, IRC and the console itself, with per-service latency curves. The curves are kept
+in the browser for the latest 60 samples; no user data is exposed.
+
 See [docs/admin-web.md](docs/admin-web.md) for the full rationale, screens, and known limits.
 
 ## Account API (headless)

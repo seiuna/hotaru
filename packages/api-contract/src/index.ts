@@ -382,6 +382,21 @@ export const adminSessionResponseSchema = z.object({
 });
 export type AdminSessionResponse = z.infer<typeof adminSessionResponseSchema>;
 
+export const serviceStatusSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.enum(['up', 'degraded', 'down']),
+  latencyMs: z.number().nonnegative().nullable(),
+  detail: z.string().nullable(),
+});
+export type ServiceStatus = z.infer<typeof serviceStatusSchema>;
+
+export const statusResponseSchema = z.object({
+  generatedAt: z.string(),
+  services: z.array(serviceStatusSchema),
+});
+export type StatusResponse = z.infer<typeof statusResponseSchema>;
+
 export const auditLogViewSchema = z.object({
   id: objectIdSchema,
   event: z.string(),

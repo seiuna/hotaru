@@ -35,6 +35,7 @@ const envSchema = z.object({
     (value) => (value === '' ? undefined : value),
     z.string().url().default('http://localhost:3000'),
   ),
+  IRC_HEALTH_URL: z.string().url().default('http://127.0.0.1:3001/health/ready'),
   TOTP_ISSUER: z.string().default('Hotaru'),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
@@ -92,6 +93,7 @@ export interface AppConfig {
   portalTokenTtlSeconds: number;
   portalRefreshTokenTtlDays: number;
   portalBaseUrl: string;
+  ircHealthUrl: string;
   totpIssuer: string;
 
   accessTokenTtlSeconds: number;
@@ -154,6 +156,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     portalTokenTtlSeconds: v.PORTAL_TOKEN_TTL_SECONDS,
     portalRefreshTokenTtlDays: v.PORTAL_REFRESH_TOKEN_TTL_DAYS,
     portalBaseUrl: v.PORTAL_BASE_URL,
+    ircHealthUrl: v.IRC_HEALTH_URL,
     totpIssuer: v.TOTP_ISSUER,
     accessTokenTtlSeconds: v.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: v.REFRESH_TOKEN_TTL_DAYS,

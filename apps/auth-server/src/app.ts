@@ -7,6 +7,7 @@ import type { AppContext } from './context.js';
 import { pingMongo } from './infrastructure/mongo/connection.js';
 import { pingRedis } from './infrastructure/redis/client.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
+import { registerStatusRoutes } from './modules/status/routes.js';
 import { registerMinecraftAuthRoutes } from './modules/minecraft-auth/routes.js';
 import { registerPortalRoutes } from './modules/portal/routes.js';
 import { registerTokenRoutes } from './modules/tokens/routes.js';
@@ -114,6 +115,7 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
   });
 
   await registerHealthRoutes(app, ctx, { pingMongo, pingRedis });
+  await registerStatusRoutes(app, ctx);
   await registerMinecraftAuthRoutes(app, ctx);
   await registerPortalRoutes(app, ctx);
   await registerTokenRoutes(app, ctx);

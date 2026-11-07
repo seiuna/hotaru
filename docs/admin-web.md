@@ -22,6 +22,10 @@ POST /api/v1/portal/refresh        rotate the refresh token
 The access token is stored in **`sessionStorage`** only; closing the tab signs you out. The refresh token
 is stored beside it and used silently on a 401. The password itself is never stored by the browser.
 
+`/status` bypasses the auth guard (`meta.public`) and is safe to share with operators or players. It
+shows Auth API, MongoDB, Redis, IRC and the console itself. Latency curves are browser-local and retain
+the latest 60 samples; the endpoint exposes only status, latency and a short error detail.
+
 ### Seed a password administrator
 
 ```bash
@@ -43,6 +47,7 @@ Minecraft handshake and the account API, but it cannot use the console's passwor
 | `/users/:id` | Profile, permission editor (5 scopes, optional expiry, live diff, save), ban/unban with reason, linked UUID list with per-UUID ban/unban, session list with per-session revoke |
 | `/audit` | Audit log filtered by event type or actor id, paginated |
 | `/activation-codes` | Issue signed account, bind or claim codes; requires the auth server's activation private key |
+| `/status` | Public, login-free availability and latency page; polls `/api/v1/status` every 5 s |
 
 Everything is server-backed; there are no mocked rows or decorative-only controls.
 

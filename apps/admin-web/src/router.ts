@@ -42,6 +42,12 @@ export const router = createRouter({
       meta: { title: '激活码' },
     },
     {
+      path: '/status',
+      name: 'status',
+      component: () => import('./views/StatusView.vue'),
+      meta: { public: true, title: '服务状态' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('./views/NotFoundView.vue'),

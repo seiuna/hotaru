@@ -336,6 +336,20 @@ describe('user portal account flow', () => {
     expect(withCode.statusCode).toBe(200);
   });
 
+  it('exposes a public status feed without authentication', async () => {
+    const response = await portalCall('GET', '/api/v1/status');
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      services: Array<{ id: string; status: string }>;
+    };
+    expect(body.services.map((service) => service.id)).toEqual(
+      expect.arrayContaining(['auth', 'mongodb', 'redis', 'irc']),
+    );
+    expect(body.services.find((service) => service.id === 'auth')?.status).toBe('up');
+    expect(body.services.find((service) => service.id === 'mongodb')?.status).toBe('up');
+    expect(body.services.find((service) => service.id === 'redis')?.status).toBe('up');
+  });
+
   it('lets a portal token use admin routes when the account has admin:users', async () => {
     await activate(accountCode());
     const portal = await login();
