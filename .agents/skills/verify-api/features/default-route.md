@@ -24,7 +24,7 @@ Preconditions:
 - An instance launched per [../SKILL.md](../SKILL.md) reports ready on port `3100`.
 
 - **Root path.** Request the root. Run `Invoke-RestMethod -Uri "http://localhost:3100/"`. The
-  response `message` equals `Hello from skymatrix-api` and `path` equals `/`.
+  response `message` equals `Hello from hotaru-api` and `path` equals `/`.
 - **Arbitrary path.** Request a nested path. Run
   `Invoke-RestMethod -Uri "http://localhost:3100/api/v1/users"`. `path` equals `/api/v1/users`.
 - **Echo fidelity.** Request a mixed-case path. Run

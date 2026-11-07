@@ -13,11 +13,11 @@ interface Vector {
 
 const VECTORS: Vector[] = [
   {
-    name: 'typical handshake (negative digest)',
-    serverId: 'skymatrix-server-1',
+    name: 'typical handshake',
+    serverId: 'hotaru-server-1',
     sharedSecretHex: '000102030405060708090a0b0c0d0e0f',
     publicKeyDerHex: '30820122300d06092a864886f70d01010105000382010f00aabbccdd',
-    expected: '-c249659717b59e51dc24b927625e2b1c3b0d5af',
+    expected: '5242a762d815426edae6d2bc2485f9413558453e',
   },
   {
     name: 'positive digest',

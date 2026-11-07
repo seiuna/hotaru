@@ -1,6 +1,6 @@
 # Architecture
 
-The MC Auth Platform is the identity provider for the Skymatrix Minecraft servers. It answers one
+The MC Auth Platform is the identity provider for the Hotaru Minecraft servers. It answers one
 question — *"is this player really the premium Minecraft account they claim to be, and what are they
 allowed to do?"* — and it answers it without ever holding a Mojang access token.
 
@@ -77,7 +77,7 @@ another module's internals, and nothing outside `app.ts` imports a `routes.ts`.
 | --- | --- |
 | `packages/shared-types` | Pure domain vocabulary: `SCOPES`, `ERROR_CODES`, `AccessTokenClaims`, view interfaces. No runtime dependencies. |
 | `packages/api-contract` | Zod schemas for every request/response plus `toJsonSchema()`-compatible contracts. The single source of truth for the wire format. |
-| `clients/skymatrix-sdk-java` | Dependency-free Java client for the handshake (RSA-1024 PKCS#1 v1.5 + server hash), used by the Fabric mod. |
+| `clients/hotaru-sdk-java` | Dependency-free Java client for the handshake (RSA-1024 PKCS#1 v1.5 + server hash), used by the Fabric mod. |
 | `tools/e2e` | Fake Mojang server + full user-story smoke test used for verification. |
 
 `apps/api` is the leftover monorepo scaffold service (`/health` + a hello route). It is not part of the
@@ -89,7 +89,7 @@ auth platform and is not deployed.
                         ┌──────────────────────────────────────────┐
    Minecraft client     │  deploy/Caddyfile                        │
    (Fabric mod +        │  TLS 1.3, HSTS, 64 KB body cap,          │
-    skymatrix-sdk-java)    │  /docs blocked, access log without tokens │
+    hotaru-sdk-java)    │  /docs blocked, access log without tokens │
           │             └───────────────────┬──────────────────────┘
           │ HTTPS :443                      │ HTTP over private Docker network
           ▼                                 ▼

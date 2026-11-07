@@ -1,6 +1,6 @@
 # Graceful shutdown
 
-On `SIGINT` or `SIGTERM` the service logs `[skymatrix-api] <signal> received, shutting down`, calls
+On `SIGINT` or `SIGTERM` the service logs `[hotaru-api] <signal> received, shutting down`, calls
 `server.close()`, and exits with code `0` once the callback fires. This is the promise that a
 deploy-time restart does not cut an in-flight request in half.
 
@@ -26,7 +26,7 @@ Preconditions:
 - An instance started directly, keeping its handle: `$env:PORT=3100; $p = Start-Process node -ArgumentList 'apps/api/dist/index.js' -PassThru -NoNewWindow`
 
 - **SIGTERM while idle.** Send the signal. Run `kill -TERM $p.Id` (bash) / `Stop-Process` is *not*
-  equivalent. The stdout log gains `[skymatrix-api] SIGTERM received, shutting down` and the exit
+  equivalent. The stdout log gains `[hotaru-api] SIGTERM received, shutting down` and the exit
   code is `0`.
 - **SIGINT while idle.** Run `kill -INT $p.Id`. Same log line with `SIGINT`, same exit code `0`.
 - **Signal during an in-flight request.** Start a slow request against a route that takes time, then

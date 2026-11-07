@@ -4,15 +4,15 @@ import {
   auditLogViewSchema,
   sessionViewSchema,
   userViewSchema,
-} from '@skymatrix/api-contract';
+} from '@hotaru/api-contract';
 
 /**
  * Response schemas that the shared contract does not define. They mirror
- * `@skymatrix/shared-types` so the OpenAPI document generated from these routes
+ * `@hotaru/shared-types` so the OpenAPI document generated from these routes
  * stays truthful.
  *
  * `sessionViewSchema` and the audit-log schemas now live in
- * `@skymatrix/api-contract` because the admin web app consumes the same shapes;
+ * `@hotaru/api-contract` because the admin web app consumes the same shapes;
  * they are re-exported here so existing imports keep working.
  */
 export { sessionViewSchema, auditLogViewSchema, auditLogListResponseSchema };

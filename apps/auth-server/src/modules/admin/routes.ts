@@ -14,7 +14,7 @@ import {
   errorResponseSchema,
   objectIdSchema,
   permissionsResponseSchema,
-} from '@skymatrix/api-contract';
+} from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { clientIp, toJsonSchema } from '../../http/zod-schema.js';

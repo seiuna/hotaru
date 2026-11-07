@@ -1,4 +1,4 @@
-# Feature map — @skymatrix/api
+# Feature map — @hotaru/api
 
 The index of every user-facing behavior this service exposes, and the exact way to drive each one.
 An agent proving a change picks the entries the change touches; a change to request handling usually

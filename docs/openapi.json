@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Skymatrix MC Auth Platform",
+    "title": "Hotaru MC Auth Platform",
     "description": "Independent Minecraft premium authentication and authorization service. Verifies Mojang sessions via the join/hasJoined handshake and issues its own Ed25519 JWTs.",
     "version": "0.1.0"
   },
@@ -350,10 +350,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }
@@ -448,10 +448,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }
@@ -556,10 +556,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }
@@ -658,10 +658,10 @@
                           "scope": {
                             "type": "string",
                             "enum": [
-                              "skymatrix:profile",
-                              "skymatrix:resource",
-                              "skymatrix:ircserver",
-                              "skymatrix:license",
+                              "hotaru:profile",
+                              "hotaru:resource",
+                              "hotaru:ircserver",
+                              "hotaru:license",
                               "admin:users"
                             ]
                           },
@@ -695,10 +695,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }
@@ -1033,10 +1033,10 @@
                         "scope": {
                           "type": "string",
                           "enum": [
-                            "skymatrix:profile",
-                            "skymatrix:resource",
-                            "skymatrix:ircserver",
-                            "skymatrix:license",
+                            "hotaru:profile",
+                            "hotaru:resource",
+                            "hotaru:ircserver",
+                            "hotaru:license",
                             "admin:users"
                           ]
                         },
@@ -1099,10 +1099,10 @@
                           "scope": {
                             "type": "string",
                             "enum": [
-                              "skymatrix:profile",
-                              "skymatrix:resource",
-                              "skymatrix:ircserver",
-                              "skymatrix:license",
+                              "hotaru:profile",
+                              "hotaru:resource",
+                              "hotaru:ircserver",
+                              "hotaru:license",
                               "admin:users"
                             ]
                           },
@@ -1136,10 +1136,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }
@@ -2331,10 +2331,10 @@
                           "scope": {
                             "type": "string",
                             "enum": [
-                              "skymatrix:profile",
-                              "skymatrix:resource",
-                              "skymatrix:ircserver",
-                              "skymatrix:license",
+                              "hotaru:profile",
+                              "hotaru:resource",
+                              "hotaru:ircserver",
+                              "hotaru:license",
                               "admin:users"
                             ]
                           },
@@ -2368,10 +2368,10 @@
                       "items": {
                         "type": "string",
                         "enum": [
-                          "skymatrix:profile",
-                          "skymatrix:resource",
-                          "skymatrix:ircserver",
-                          "skymatrix:license",
+                          "hotaru:profile",
+                          "hotaru:resource",
+                          "hotaru:ircserver",
+                          "hotaru:license",
                           "admin:users"
                         ]
                       }

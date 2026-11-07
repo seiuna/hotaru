@@ -1,5 +1,5 @@
 {
-  "name": "@skymatrix/irc-server",
+  "name": "@hotaru/irc-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,8 +15,8 @@
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@skymatrix/shared-types": "workspace:*",
-    "@skymatrix/srp-protocol": "workspace:*",
+    "@hotaru/shared-types": "workspace:*",
+    "@hotaru/srp-protocol": "workspace:*",
     "dotenv": "^16.4.0",
     "fastify": "^5.0.0",
     "ioredis": "^5.4.0",

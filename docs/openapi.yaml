@@ -1,6 +1,6 @@
 openapi: "3.1.0"
 info:
-  title: "Skymatrix MC Auth Platform"
+  title: "Hotaru MC Auth Platform"
   description: "Independent Minecraft premium authentication and authorization service. Verifies Mojang sessions via the join/hasJoined handshake and issues its own Ed25519 JWTs."
   version: "0.1.0"
 components:
@@ -243,10 +243,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - accessToken
@@ -311,10 +311,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - accessToken
@@ -384,10 +384,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - user
@@ -457,10 +457,10 @@ paths:
                         scope:
                           type: string
                           enum:
-                            - "skymatrix:profile"
-                            - "skymatrix:resource"
-                            - "skymatrix:ircserver"
-                            - "skymatrix:license"
+                            - "hotaru:profile"
+                            - "hotaru:resource"
+                            - "hotaru:ircserver"
+                            - "hotaru:license"
                             - "admin:users"
                         grantedAt:
                           type: string
@@ -483,10 +483,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - permissions
@@ -727,10 +727,10 @@ paths:
                       scope:
                         type: string
                         enum:
-                          - "skymatrix:profile"
-                          - "skymatrix:resource"
-                          - "skymatrix:ircserver"
-                          - "skymatrix:license"
+                          - "hotaru:profile"
+                          - "hotaru:resource"
+                          - "hotaru:ircserver"
+                          - "hotaru:license"
                           - "admin:users"
                       expiresAt:
                         anyOf:
@@ -768,10 +768,10 @@ paths:
                         scope:
                           type: string
                           enum:
-                            - "skymatrix:profile"
-                            - "skymatrix:resource"
-                            - "skymatrix:ircserver"
-                            - "skymatrix:license"
+                            - "hotaru:profile"
+                            - "hotaru:resource"
+                            - "hotaru:ircserver"
+                            - "hotaru:license"
                             - "admin:users"
                         grantedAt:
                           type: string
@@ -794,10 +794,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - permissions
@@ -1665,10 +1665,10 @@ paths:
                         scope:
                           type: string
                           enum:
-                            - "skymatrix:profile"
-                            - "skymatrix:resource"
-                            - "skymatrix:ircserver"
-                            - "skymatrix:license"
+                            - "hotaru:profile"
+                            - "hotaru:resource"
+                            - "hotaru:ircserver"
+                            - "hotaru:license"
                             - "admin:users"
                         grantedAt:
                           type: string
@@ -1691,10 +1691,10 @@ paths:
                     items:
                       type: string
                       enum:
-                        - "skymatrix:profile"
-                        - "skymatrix:resource"
-                        - "skymatrix:ircserver"
-                        - "skymatrix:license"
+                        - "hotaru:profile"
+                        - "hotaru:resource"
+                        - "hotaru:ircserver"
+                        - "hotaru:license"
                         - "admin:users"
                 required:
                   - user

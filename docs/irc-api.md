@@ -28,7 +28,7 @@ Authorization: Bearer eyJhbGciOiJFZERTQSIs…
 
 1. Ed25519 signature against the auth server's JWKS (`AUTH_JWKS_URL`);
 2. `iss` = `JWT_ISSUER`, `aud` = `JWT_AUDIENCE`, `exp` enforced;
-3. `scope` contains **`skymatrix:ircserver`** — a profile-only token cannot call
+3. `scope` contains **`hotaru:ircserver`** — a profile-only token cannot call
    this API either;
 4. the session is not revoked: Redis key `auth:session:revoked:{sid}` must be absent.
 
@@ -39,7 +39,7 @@ Failures:
 | missing/non-Bearer header | 401 | `{"error":{"code":"UNAUTHORIZED","message":"Authorization: Bearer <token> is required"}}` |
 | invalid/forged token | 401 | `{"error":{"code":"UNAUTHORIZED",…}}` |
 | expired token | 401 | `{"error":{"code":"TOKEN_EXPIRED",…}}` |
-| missing `skymatrix:ircserver` | 403 | `{"error":{"code":"SCOPE_DENIED",…}}` |
+| missing `hotaru:ircserver` | 403 | `{"error":{"code":"SCOPE_DENIED",…}}` |
 | revoked session | 403 | `{"error":{"code":"SESSION_REVOKED",…}}` |
 | Redis unavailable (revocation uncheckable) | 401 | `{"error":{"code":"UNAUTHORIZED",…}}` — fail closed |
 

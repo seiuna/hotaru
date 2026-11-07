@@ -45,7 +45,7 @@ export const router = createRouter({
 });
 
 router.beforeEach((to) => {
-  document.title = to.meta.title ? `${String(to.meta.title)} · Skymatrix 控制台` : 'Skymatrix 控制台';
+  document.title = to.meta.title ? `${String(to.meta.title)} · Hotaru 控制台` : 'Hotaru 控制台';
 
   const needsAuth = to.meta.public !== true;
   if (!needsAuth) return true;

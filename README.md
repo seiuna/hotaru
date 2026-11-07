@@ -1,6 +1,6 @@
-# Skymatrix — MC Auth Platform
+# Hotaru — MC Auth Platform
 
-Premium Minecraft authentication and authorization for the Skymatrix servers, built as an independent
+Premium Minecraft authentication and authorization for the Hotaru servers, built as an independent
 identity provider.
 
 A Fabric client proves it owns a premium Minecraft account through the vanilla `join` / `hasJoined`
@@ -9,7 +9,7 @@ sees, stores or forwards a Mojang access token: it holds only public proofs, has
 its own signing keys.
 
 ```
-   Fabric client (mod + skymatrix-sdk-java)
+   Fabric client (mod + hotaru-sdk-java)
             │
             │  1. POST /auth/minecraft/challenge   →  { serverId, publicKey, verifyToken }
             │  2. vanilla join with Mojang        →  (client ↔ Mojang, never through us)
@@ -73,7 +73,7 @@ Before real traffic: seed an administrator, and confirm the MongoDB indexes were
 `admin:users` is granted, never self-assigned. With MongoDB reachable on `127.0.0.1:27017`:
 
 ```bash
-pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
+pnpm --filter @hotaru/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
 ```
 
 The script creates the user row if needed, upserts the `admin:users` grant, and is idempotent. In a
@@ -140,15 +140,15 @@ Start the two backing services. **Redis is exposed on host port 16379, not 6379*
 Desktop on this host cannot bind 6379:
 
 ```bash
-docker run -d --name skymatrix-mongo -p 127.0.0.1:27017:27017 mongo:7
-docker run -d --name skymatrix-redis -p 127.0.0.1:16379:6379 redis:7-alpine
+docker run -d --name hotaru-mongo -p 127.0.0.1:27017:27017 mongo:7
+docker run -d --name hotaru-redis -p 127.0.0.1:16379:6379 redis:7-alpine
 ```
 
 `apps/auth-server/.env` (git-ignored) already points at both:
 
 ```
 MONGODB_URI=mongodb://127.0.0.1:27017
-MONGODB_DB=skymatrix_auth
+MONGODB_DB=hotaru_auth
 REDIS_URL=redis://127.0.0.1:16379
 PUBLIC_BASE_URL=http://localhost:3000
 ```
@@ -160,16 +160,16 @@ pnpm dev                                   # tsx watch src/server.ts on http://l
 # Swagger UI: http://localhost:3000/docs    (blocked at the edge in production)
 
 pnpm typecheck                             # tsc --noEmit across the workspace
-pnpm --filter @skymatrix/auth-server test  # unit tests (vitest)
-pnpm --filter @skymatrix/auth-server test:integration   # needs the containers above
+pnpm --filter @hotaru/auth-server test  # unit tests (vitest)
+pnpm --filter @hotaru/auth-server test:integration   # needs the containers above
 
-pnpm --filter @skymatrix/auth-server openapi:export     # regenerate docs/openapi.{json,yaml}
-pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <uuid> --username <name>
+pnpm --filter @hotaru/auth-server openapi:export     # regenerate docs/openapi.{json,yaml}
+pnpm --filter @hotaru/auth-server admin:seed -- --uuid <uuid> --username <name>
 
 node tools/e2e/smoke.mjs                   # full user story against a fake Mojang server
 ```
 
-Integration tests use `MONGODB_DB=skymatrix_auth_test`, `MONGODB_URI=mongodb://127.0.0.1:27017`,
+Integration tests use `MONGODB_DB=hotaru_auth_test`, `MONGODB_URI=mongodb://127.0.0.1:27017`,
 `REDIS_URL=redis://127.0.0.1:16379` and clean up their own data. The e2e smoke test boots its own
 auth-server on port 3100 plus a fake Mojang server on 8787.
 
@@ -180,9 +180,9 @@ auth-server on port 3100 plus a fake Mojang server on 8787.
 ## Project layout
 
 ```
-skymatrix-servers/
+hotaru-servers/
 ├── apps/
-│   ├── auth-server/                  # @skymatrix/auth-server — the platform
+│   ├── auth-server/                  # @hotaru/auth-server — the platform
 │   │   ├── src/
 │   │   │   ├── server.ts             # boot: config → mongo → redis → keys → app → listen
 │   │   │   ├── app.ts                # Fastify wiring, plugins, route registration, /jwks
@@ -195,8 +195,8 @@ skymatrix-servers/
 │   │   │   └── modules/              # health, minecraft-auth, tokens, users, admin, audit
 │   │   ├── scripts/                  # export-openapi.ts, seed-admin.ts
 │   │   └── tests/integration/        # real Mongo + Redis integration tests
-│   └── api/                          # @skymatrix/api — leftover monorepo scaffold, not deployed
-├── clients/skymatrix-sdk-java/          # Java 21 SDK: auth handshake + login bridge + IRC/REST clients
+│   └── api/                          # @hotaru/api — leftover monorepo scaffold, not deployed
+├── clients/hotaru-sdk-java/          # Java 21 SDK: auth handshake + login bridge + IRC/REST clients
 ├── examples/fabric-mod/              # Fabric wiring examples (not compiled by the library)
 ├── packages/
 │   ├── shared-types/                 # SCOPES, ERROR_CODES, token claims, view types
@@ -206,18 +206,44 @@ skymatrix-servers/
 └── tools/e2e/                        # fake Mojang server + end-to-end smoke test
 ```
 
+## Interactive setup
+
+Hotaru includes an interactive CLI to configure local development or production deployment.
+It updates existing git-ignored `.env` files and preserves values, comments and unrelated keys.
+
+```bash
+pnpm run setup
+```
+
+`pnpm run setup` asks whether to configure `apps/auth-server/.env` plus `apps/irc-server/.env` for
+local development, or `deploy/.env` for production. The production path seeds from
+`deploy/.env.example`, generates URL-safe MongoDB and Redis passwords, and never prints them.
+
+`@hotaru/admin-web` needs no runtime environment file; its `VITE_API_BASE_URL` is normally empty and
+resolved at build time. `@hotaru/api` only reads `PORT` and is not part of the deployed stack.
+
+| Command | Description |
+| --- | --- |
+| `pnpm run setup` | Interactive setup for local or production env files |
+| `pnpm test:setup` | Run tests for the setup tool |
+
+`pnpm setup` is pnpm's own built-in command, so the script must be run with `pnpm run setup`.
+Use `pnpm run setup --help` for `--profile`, `--yes`, `--dry-run` and `--rotate-secrets`.
+
 ## Common commands
 
 | Command | Description |
 | --- | --- |
 | `pnpm install` | Install workspace dependencies (frozen lockfile in CI/Docker) |
+| `pnpm run setup` | Interactive setup for local or production env files |
+| `pnpm test:setup` | Run tests for the setup tool |
 | `pnpm dev` | auth-server with hot reload |
 | `pnpm build` | Build every workspace package in dependency order |
 | `pnpm typecheck` | `tsc --noEmit` everywhere |
 | `pnpm test` | Unit tests of every package |
 | `pnpm lint` | ESLint over `src` and `tests` |
 | `pnpm format` | Prettier |
-| `pnpm --filter @skymatrix/auth-server openapi:export` | Regenerate `docs/openapi.{json,yaml}` from the live app |
+| `pnpm --filter @hotaru/auth-server openapi:export` | Regenerate `docs/openapi.{json,yaml}` from the live app |
 | `pnpm infra:up` / `infra:down` | compose `mongo` + `redis` only (no host ports) |
 
 ## Status and roadmap
@@ -234,19 +260,19 @@ Working today:
 
 Not built yet (deliberate scope gaps):
 
-- `licenses` collection has no API surface yet (the `skymatrix:license` scope is reserved).
+- `licenses` collection has no API surface yet (the `hotaru:license` scope is reserved).
 - No admin web UI; administration is the JSON API.
 - No metric endpoint (Prometheus/OpenTelemetry); monitoring is health probes + structured logs.
 - Key rotation has no dual-key overlap window — rotation is an atomic re-login event.
 - No second factor for administrators beyond their Minecraft account security.
-- The `skymatrix:resource` / `skymatrix:ircserver` scopes are issued but their downstream services are
+- The `hotaru:resource` / `hotaru:ircserver` scopes are issued but their downstream services are
   outside this repository.
 
 ## IRC server (SRP v1)
 
-`apps/irc-server` is the real-time relay for the Skymatrix mod: WSS at `GET /v1/connect`, authenticated
-with the **same** Ed25519 JWT as the REST API (scope `skymatrix:ircserver`, session revocation checked
-against the shared Redis key), speaking the **SkyMatrix Relay Protocol v1** (`packages/srp-protocol`).
+`apps/irc-server` is the real-time relay for the Hotaru mod: WSS at `GET /v1/connect`, authenticated
+with the **same** Ed25519 JWT as the REST API (scope `hotaru:ircserver`, session revocation checked
+against the shared Redis key), speaking the **Hotaru Relay Protocol v1** (`packages/srp-protocol`).
 
 ```
 Fabric mod ──WSS /v1/connect (Bearer JWT)──► irc-server ──► Redis (presence, dedupe, cross-node)
@@ -254,7 +280,7 @@ Fabric mod ──WSS /v1/connect (Bearer JWT)──► irc-server ──► Redi
 ```
 
 - **Routes**: DIRECT (player → player), GROUP (membership-checked), BROADCAST (needs
-  `skymatrix:irc:broadcast` or an admin UUID).
+  `hotaru:irc:broadcast` or an admin UUID).
 - **Filters**: deny-first at three levels — global → group → per-recipient user — with only the patterns
   `chat.message`, `chat.*` and `*`.
 - **Reliability**: two-phase ACK (`accepted` then `delivered`/`failed`), server-computed TTL, and
@@ -263,14 +289,14 @@ Fabric mod ──WSS /v1/connect (Bearer JWT)──► irc-server ──► Redi
   3 connections per account, 5 group creations per hour, slow sockets closed on backpressure.
 
 ```bash
-pnpm --filter @skymatrix/irc-server dev          # :3001 (needs mongo + redis + auth-server for tokens)
-pnpm --filter @skymatrix/irc-server test         # 113 unit tests
-pnpm --filter @skymatrix/irc-server test:integration   # 74 integration tests (real Mongo/Redis/WS)
+pnpm --filter @hotaru/irc-server dev          # :3001 (needs mongo + redis + auth-server for tokens)
+pnpm --filter @hotaru/irc-server test         # 113 unit tests
+pnpm --filter @hotaru/irc-server test:integration   # 74 integration tests (real Mongo/Redis/WS)
 node tools/e2e/irc/smoke.mjs                     # 39 protocol checks end to end (fake Mojang, self-contained)
 node tools/e2e/irc/load.mjs                      # 100-client load check with real percentiles
 ```
 
-**Java SDK** — `clients/skymatrix-sdk-java` (JDK 21 only, no Minecraft dependency), one jar with two
+**Java SDK** — `clients/hotaru-sdk-java` (JDK 21 only, no Minecraft dependency), one jar with two
 halves: the auth library (`cn.seiua.mcauth`) plus its loopback login bridge, and the SRP v1 relay client
 (`cn.seiua.irc` / `cn.seiua.irc.rest`): `IrcClient` hides
 the WebSocket, the envelope, ACK correlation, reconnects, de-duplication and token rejection. Wire it with
@@ -286,7 +312,7 @@ irc.sendDirect(targetUuid, "chat.message", Map.of("text", "hello"));
 ```
 
 ```bash
-cd clients/skymatrix-sdk-java
+cd clients/hotaru-sdk-java
 javac --release 21 -Xlint:all -d out "@sources.txt"
 java -cp out cn.seiua.irc.IrcClientSelfTest   # 44 checks, offline
 # real relay: IRC_URL=... IRC_TOKEN=... java -cp out cn.seiua.irc.IrcE2ESelfTest   (14 checks)
@@ -304,9 +330,9 @@ per-user permission editing with live diff, ban/unban, session revocation and th
 only to the documented admin API.
 
 ```bash
-pnpm --filter @skymatrix/admin-web dev     # http://localhost:5173 (proxies /api to :3000)
-pnpm --filter @skymatrix/admin-web build   # vue-tsc + vite build -> dist/
-pnpm --filter @skymatrix/admin-web test    # 20 unit tests
+pnpm --filter @hotaru/admin-web dev     # http://localhost:5173 (proxies /api to :3000)
+pnpm --filter @hotaru/admin-web build   # vue-tsc + vite build -> dist/
+pnpm --filter @hotaru/admin-web test    # 20 unit tests
 ```
 
 **Login goes through the game, not a password.** The console's default path calls a loopback HTTP bridge

@@ -32,10 +32,10 @@ importers:
 
   apps/admin-web:
     dependencies:
-      '@skymatrix/api-contract':
+      '@hotaru/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
-      '@skymatrix/shared-types':
+      '@hotaru/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       naive-ui:
@@ -72,7 +72,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@skymatrix/shared':
+      '@hotaru/shared':
         specifier: workspace:*
         version: link:../../packages/shared
     devDependencies:
@@ -91,10 +91,10 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.0.0
         version: 5.2.6
-      '@skymatrix/api-contract':
+      '@hotaru/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
-      '@skymatrix/shared-types':
+      '@hotaru/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       dotenv:
@@ -137,10 +137,10 @@ importers:
 
   apps/irc-server:
     dependencies:
-      '@skymatrix/shared-types':
+      '@hotaru/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
-      '@skymatrix/srp-protocol':
+      '@hotaru/srp-protocol':
         specifier: workspace:*
         version: link:../../packages/srp-protocol
       dotenv:
@@ -186,7 +186,7 @@ importers:
 
   packages/api-contract:
     dependencies:
-      '@skymatrix/shared-types':
+      '@hotaru/shared-types':
         specifier: workspace:*
         version: link:../shared-types
       zod:

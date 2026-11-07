@@ -14,7 +14,7 @@ const deny = (pattern: string): EvaluableRule => ({ pattern, action: 'DENY', ena
 const allow = (pattern: string): EvaluableRule => ({ pattern, action: 'ALLOW', enabled: true });
 
 /**
- * Pattern matching is delegated to `@skymatrix/srp-protocol`; these cases pin the
+ * Pattern matching is delegated to `@hotaru/srp-protocol`; these cases pin the
  * exact edges the filter engine relies on (namespace wildcard vs a type named like
  * the namespace, case sensitivity, no regex semantics).
  */
@@ -23,7 +23,7 @@ describe('wildcard matching edge cases', () => {
     expect(isDeniedByRules('chat.message', [deny('chat.*')])).toBe(true);
     expect(isDeniedByRules('chat.message.extra', [deny('chat.*')])).toBe(true);
     // Whether `chat.*` also matches the bare `chat` type is defined by
-    // @skymatrix/srp-protocol's matcher, not by this engine; the engine only
+    // @hotaru/srp-protocol's matcher, not by this engine; the engine only
     // consumes it. See packages/srp-protocol/src/index.ts.
   });
 

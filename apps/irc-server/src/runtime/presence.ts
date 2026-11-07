@@ -1,5 +1,5 @@
 import type { Redis } from 'ioredis';
-import { presenceKeys } from '@skymatrix/srp-protocol';
+import { presenceKeys } from '@hotaru/srp-protocol';
 import type { AppContext } from '../context.js';
 import type { ManagedConnection } from './registry.js';
 

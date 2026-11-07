@@ -11,7 +11,7 @@ the exact interfaces to code against. Anything not listed here is someone else's
 | Audit service + health routes | `src/modules/audit`, `src/modules/health` | Lead |
 | Minecraft challenge/verify + token issuance/refresh/logout (`/api/v1/auth/*`) | `src/modules/minecraft-auth/**`, `src/modules/tokens/**` | auth-core |
 | Users + admin API + seed script | `src/modules/users/**`, `src/modules/admin/**`, `scripts/seed-admin.ts` | users-admin |
-| Fabric Java SDK | `clients/skymatrix-sdk-java/**` | java-sdk |
+| Fabric Java SDK | `clients/hotaru-sdk-java/**` | java-sdk |
 | Deploy, docs, OpenAPI export | `deploy/**`, `docs/**`, `.env.example`, `README.md`, `scripts/export-openapi.ts` | deploy-docs |
 
 **Do not edit `package.json` files.** The Lead owns dependencies and installs. If you need one, message
@@ -104,7 +104,7 @@ import { toJsonSchema } from '../../http/zod-schema.js';
 app.post('/path', { schema: { body: toJsonSchema(verifyRequestSchema), response: { 200: toJsonSchema(tokenResponseSchema) }, tags: ['auth'], summary: '...' } }, handler);
 ```
 
-Parse request bodies with the matching Zod schema from `@skymatrix/api-contract` (`schema.parse(request.body)`).
+Parse request bodies with the matching Zod schema from `@hotaru/api-contract` (`schema.parse(request.body)`).
 A thrown `ZodError` is converted to `400 INVALID_REQUEST` by the global handler.
 
 ## Conventions
@@ -142,8 +142,8 @@ Username matching between challenge and verify is case-insensitive; identity alw
 ## Local infrastructure (already running)
 
 ```
-MongoDB   mongodb://127.0.0.1:27017    (container skymatrix-mongo)
-Redis     redis://127.0.0.1:16379      (container skymatrix-redis — NOT 6379)
+MongoDB   mongodb://127.0.0.1:27017    (container hotaru-mongo)
+Redis     redis://127.0.0.1:16379      (container hotaru-redis — NOT 6379)
 ```
 
 Port 6379 is unusable on this host: Docker Desktop's proxy silently fails to bind it, so the
@@ -151,10 +151,10 @@ container publishes 16379 instead. Do not "fix" this by restarting the container
 
 ## Testing
 
-- Unit tests live next to the code: `src/modules/.../x.test.ts`, run with `pnpm --filter @skymatrix/auth-server test`.
+- Unit tests live next to the code: `src/modules/.../x.test.ts`, run with `pnpm --filter @hotaru/auth-server test`.
 - Integration tests live in `tests/integration/*.integration.test.ts`, run with
-  `pnpm --filter @skymatrix/auth-server test:integration` — they use the real containers:
-  `MONGODB_URI=mongodb://127.0.0.1:27017`, `MONGODB_DB=skymatrix_auth_test`, `REDIS_URL=redis://127.0.0.1:16379`.
+  `pnpm --filter @hotaru/auth-server test:integration` — they use the real containers:
+  `MONGODB_URI=mongodb://127.0.0.1:27017`, `MONGODB_DB=hotaru_auth_test`, `REDIS_URL=redis://127.0.0.1:16379`.
   They must clean up their own data (drop collections) and never depend on another test's state.
 - Build the app for tests with `buildApp(ctx)` and drive it with `app.inject(...)` — no real ports.
 - Prove the negative cases: expired challenge, consumed challenge, replayed refresh token,

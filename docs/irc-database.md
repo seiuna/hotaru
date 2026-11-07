@@ -16,17 +16,17 @@ Redis and audit metadata (message id, recipient count), never the payload.
 
 | Store | Purpose | Shared with |
 | --- | --- | --- |
-| MongoDB `skymatrix_irc` (`MONGODB_DB`) | groups, memberships, filter rules, audit log | same MongoDB **server** as the auth server, different database |
+| MongoDB `hotaru_irc` (`MONGODB_DB`) | groups, memberships, filter rules, audit log | same MongoDB **server** as the auth server, different database |
 | Redis db 0 (`REDIS_URL`) | presence records, replay-suppression keys, revocation fast path | **the same Redis instance** as the auth server |
 
 Local development (per [irc-contract.md](./irc-contract.md)): MongoDB
 `mongodb://127.0.0.1:27017`, Redis `redis://127.0.0.1:16379` (container
-`skymatrix-redis`; port 6379 cannot be published on this host).
+`hotaru-redis`; port 6379 cannot be published on this host).
 
 In the compose stack both are reachable only on the internal Docker network
 (`mongo:27017`, `redis:6379`) and are never published to the host.
 
-The IRC database is separate from `skymatrix_auth`. Nothing in the IRC server
+The IRC database is separate from `hotaru_auth`. Nothing in the IRC server
 joins across databases: the only cross-database identifiers are the Mojang UUIDs
 and internal user ids carried in JWTs.
 
@@ -206,7 +206,7 @@ If you prefer to manage indexes out-of-band (`MONGODB_ENSURE_INDEXES=false`), ru
 this once per environment and after every schema change:
 
 ```javascript
-// mongosh "$MONGODB_URI" --eval '...'   (db = skymatrix_irc)
+// mongosh "$MONGODB_URI" --eval '...'   (db = hotaru_irc)
 db.irc_groups.createIndex({ groupId: 1 }, { unique: true })
 db.irc_groups.createIndex({ ownerUuid: 1, status: 1 })
 db.irc_groups.createIndex({ status: 1, visibility: 1, updatedAt: -1 })
@@ -267,7 +267,7 @@ Growth is driven by the audit log (bounded by the TTL, once it exists) and by
 groups/memberships (bounded by player activity). Filter rules are capped at 100
 per scope.
 
-A throwaway database per e2e run is named `skymatrix_irc_e2e_<timestamp>` and is
+A throwaway database per e2e run is named `hotaru_irc_e2e_<timestamp>` and is
 not dropped automatically; drop it manually if you run the harness often.
 
 ---

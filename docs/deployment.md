@@ -76,7 +76,7 @@ admin API.
 **Local / dev database** (Mongo reachable on `127.0.0.1:27017`), from the repository root:
 
 ```bash
-pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
+pnpm --filter @hotaru/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
 ```
 
 - `--uuid` accepts the dashed or undashed Mojang UUID (it is normalised).
@@ -94,15 +94,15 @@ routes:
    # append to deploy/compose.yaml (temporarily, on the mongo service):
    #   ports: ["127.0.0.1:27017:27017"]
    docker compose -f deploy/compose.yaml --env-file deploy/.env up -d mongo
-   MONGODB_URI='mongodb://skymatrix:<password>@127.0.0.1:27017/?authSource=admin' \
-     pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <uuid> --username <name>
+   MONGODB_URI='mongodb://hotaru:<password>@127.0.0.1:27017/?authSource=admin' \
+     pnpm --filter @hotaru/auth-server admin:seed -- --uuid <uuid> --username <name>
    # then remove the port mapping and re-apply
    ```
 
 2. Insert the two documents directly with `mongosh` (no shell-out to Node required):
 
    ```javascript
-   mongosh "mongodb://skymatrix:<password>@127.0.0.1:27017/skymatrix_auth?authSource=admin" --eval '
+   mongosh "mongodb://hotaru:<password>@127.0.0.1:27017/hotaru_auth?authSource=admin" --eval '
      const uuid = "<minecraft-uuid>";
      const name = "<username>";
      const now = new Date();
@@ -140,17 +140,17 @@ stage build   (node:24-alpine)
   COPY the four manifests + the three workspace package.json files   → cached dependency layer
   pnpm install --frozen-lockfile                                     → exact lockfile, no drift
   COPY tsconfig.base.json, packages/, apps/auth-server/
-  pnpm --filter @skymatrix/shared-types build
-  pnpm --filter @skymatrix/api-contract build
-  pnpm --filter @skymatrix/auth-server build                         → tsc → apps/auth-server/dist
+  pnpm --filter @hotaru/shared-types build
+  pnpm --filter @hotaru/api-contract build
+  pnpm --filter @hotaru/auth-server build                         → tsc → apps/auth-server/dist
   pnpm install --prod --frozen-lockfile --ignore-scripts             → production dependency graph only
 
 stage runtime (node:24-alpine)
-  addgroup/adduser skymatrix (unprivileged)
+  addgroup/adduser hotaru (unprivileged)
   COPY /app/node_modules                                             (root dependency graph)
   COPY /app/packages, /app/apps/auth-server                          whole, so each package keeps
                                                                      its own node_modules symlinks
-  USER skymatrix
+  USER hotaru
   EXPOSE 3000
   HEALTHCHECK node -e "fetch('http://127.0.0.1:3000/api/v1/health/live')…"
   CMD ["node", "apps/auth-server/dist/server.js"]
@@ -173,7 +173,7 @@ Notes:
   - it cannot recompile anything at boot;
   - `admin:seed` cannot run inside the container — seed from a workstation or with `mongosh`
     (see [seeding](#seeding-the-first-administrator));
-  - it runs as the unprivileged `skymatrix` user, and `node` never runs as root.
+  - it runs as the unprivileged `hotaru` user, and `node` never runs as root.
 - The build fails loudly on a TypeScript error (`tsc`, no `noEmitOnError` bypass). `pnpm install
   --frozen-lockfile` fails if `pnpm-lock.yaml` is stale — commit lockfile changes with code changes.
 - The image's own `HEALTHCHECK` is for `docker run` outside compose; inside compose, the compose
@@ -309,7 +309,7 @@ Operational rules:
 
    ```bash
    docker compose -f deploy/compose.yaml --env-file deploy/.env exec mongo \
-     mongosh -u "$MONGO_USER" -p --authenticationDatabase admin skymatrix_auth \
+     mongosh -u "$MONGO_USER" -p --authenticationDatabase admin hotaru_auth \
      --eval 'db.users.getIndexes().map(i => i.name)'
    ```
 
@@ -335,13 +335,13 @@ revocation keys are ephemeral by design, and the session document is authoritati
 # Dump (run daily via cron/systemd timer)
 docker compose -f deploy/compose.yaml --env-file deploy/.env exec -T mongo \
   mongodump --uri "mongodb://$MONGO_USER:$MONGO_PASSWORD@127.0.0.1:27017/?authSource=admin" \
-  --archive --gzip > /backup/skymatrix-auth-$(date +%F).gz
+  --archive --gzip > /backup/hotaru-auth-$(date +%F).gz
 
 # Restore (stop the app first so nothing writes during the restore)
 docker compose -f deploy/compose.yaml --env-file deploy/.env stop auth-server
 docker compose -f deploy/compose.yaml --env-file deploy/.env exec -T mongo \
   mongorestore --uri "mongodb://$MONGO_USER:$MONGO_PASSWORD@127.0.0.1:27017/?authSource=admin" \
-  --archive --gzip --drop --nsInclude 'skymatrix_auth.*' < /backup/skymatrix-auth-2026-11-06.gz
+  --archive --gzip --drop --nsInclude 'hotaru_auth.*' < /backup/hotaru-auth-2026-11-06.gz
 docker compose -f deploy/compose.yaml --env-file deploy/.env start auth-server
 ```
 

@@ -7,7 +7,7 @@ contract every other tool uses to decide an instance is worth driving, and it is
 ## Sub-features
 
 - `health-status` answers 200 with `status: "ok"`.
-- `health-service` names the service as `skymatrix-api` (composed in `apps/api/src/index.ts` as
+- `health-service` names the service as `hotaru-api` (composed in `apps/api/src/index.ts` as
   `` `${APP_NAME}-api` ``).
 - `health-uptime` reports whole seconds since process start, so consecutive calls never decrease.
 - `health-timestamp` reports an ISO 8601 UTC timestamp at call time.
@@ -28,7 +28,7 @@ Preconditions:
 
 - **Status and payload.** Request the endpoint. Run
   `Invoke-RestMethod -Uri "http://localhost:3100/health"`. The response has `status` equal to `ok`
-  and `service` equal to `skymatrix-api`.
+  and `service` equal to `hotaru-api`.
 - **Uptime grows.** Call twice two seconds apart. Run the call, `Start-Sleep -Seconds 2`, run it
   again. The second `uptimeSeconds` is `>=` the first, and both are non-negative integers.
 - **Timestamp is current.** Compare the payload `timestamp` to `Get-Date`. The timestamp parses as a
@@ -40,7 +40,7 @@ Preconditions:
   `$d = (Get-Content .verify/run/server-3100.pid -Raw | ConvertFrom-Json).evidenceDir` then
   `Invoke-RestMethod -Uri "http://localhost:3100/health" | ConvertTo-Json | Set-Content "$d/health.json"`.
   After `stop.ps1`, `health.json` and `server-3100.out.log` still exist and the log contains
-  `[skymatrix-api] listening on http://localhost:3100`.
+  `[hotaru-api] listening on http://localhost:3100`.
 
 ## Gotchas
 

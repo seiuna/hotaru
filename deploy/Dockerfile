@@ -23,9 +23,9 @@ COPY tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/auth-server ./apps/auth-server
 
-RUN pnpm --filter @skymatrix/shared-types build \
- && pnpm --filter @skymatrix/api-contract build \
- && pnpm --filter @skymatrix/auth-server build
+RUN pnpm --filter @hotaru/shared-types build \
+ && pnpm --filter @hotaru/api-contract build \
+ && pnpm --filter @hotaru/auth-server build
 
 # Re-install with production dependencies only. `pnpm prune --prod` is NOT usable
 # here: inside a workspace it leaves each package's node_modules without its
@@ -44,7 +44,7 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-RUN addgroup -S skymatrix && adduser -S skymatrix -G skymatrix
+RUN addgroup -S hotaru && adduser -S hotaru -G hotaru
 
 COPY --from=build /app/node_modules ./node_modules
 # Copy each workspace package whole: its dependency symlinks live in its OWN
@@ -53,7 +53,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/auth-server ./apps/auth-server
 
-USER skymatrix
+USER hotaru
 
 EXPOSE 3000
 

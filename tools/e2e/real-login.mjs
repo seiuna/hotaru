@@ -36,7 +36,7 @@ const FAKE = process.argv.includes('--fake');
 const PORT = Number(process.env.REAL_PORT ?? 3105);
 const MOJANG_PORT = 8788;
 const BASE = `http://127.0.0.1:${PORT}`;
-const DB = `skymatrix_real_${Date.now()}`;
+const DB = `hotaru_real_${Date.now()}`;
 
 let failures = 0;
 let checks = 0;
@@ -126,14 +126,14 @@ function serverEnv(mojangBase) {
     MONGODB_DB: DB,
     REDIS_URL: get('REDIS_URL') || 'redis://127.0.0.1:16379',
     PUBLIC_BASE_URL: BASE,
-    JWT_AUDIENCE: 'skymatrix-api',
+    JWT_AUDIENCE: 'hotaru-api',
     CHALLENGE_TTL_SECONDS: '120',
     RATE_LIMIT_CHALLENGE_MAX: '50',
     RATE_LIMIT_VERIFY_MAX: '50',
     MOJANG_SESSION_SERVER: mojangBase,
     MOJANG_HAS_JOINED_ATTEMPTS: '3',
     MOJANG_RETRY_DELAY_MS: '800',
-    DEFAULT_SCOPES: 'skymatrix:profile',
+    DEFAULT_SCOPES: 'hotaru:profile',
   };
 }
 
@@ -320,7 +320,7 @@ async function main() {
       const claims = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
       check('claims carry the Mojang UUID', claims.minecraft_uuid === dashed(uuid), claims.minecraft_uuid);
       check('claims carry a session id', typeof claims.sid === 'string' && claims.sid.length > 0);
-      check('audience is the configured one', JSON.stringify(claims.aud).includes('skymatrix-api'));
+      check('audience is the configured one', JSON.stringify(claims.aud).includes('hotaru-api'));
       console.log(`  info  sub=${claims.sub} scope="${claims.scope}" ttl=${claims.exp - claims.iat}s`);
     }
 

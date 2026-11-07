@@ -50,7 +50,7 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
     openapi: {
       openapi: '3.1.0',
       info: {
-        title: 'Skymatrix MC Auth Platform',
+        title: 'Hotaru MC Auth Platform',
         description:
           'Independent Minecraft premium authentication and authorization service. ' +
           'Verifies Mojang sessions via the join/hasJoined handshake and issues its own Ed25519 JWTs.',

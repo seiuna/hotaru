@@ -9,7 +9,7 @@ import {
   pongFrame,
   readyFrame,
   type ClientMessage,
-} from '@skymatrix/srp-protocol';
+} from '@hotaru/srp-protocol';
 import { AuthError, verifyAccessToken } from '../infrastructure/auth/verify-token.js';
 import { clientIp } from '../http/zod-schema.js';
 import type { InMemoryRegistry, ManagedConnection } from '../runtime/registry.js';
@@ -34,7 +34,7 @@ export interface WebSocketHandle {
  * Attaches the SRP v1 WebSocket endpoint to the Fastify HTTP server.
  *
  * Authentication happens during the HTTP upgrade, before a single frame is read:
- * an invalid/expired/revoked token or a missing `skymatrix:ircserver` scope gets
+ * an invalid/expired/revoked token or a missing `hotaru:ircserver` scope gets
  * a plain HTTP 401/403 with an `error.code`, exactly like the REST API.
  */
 export function attachWebSocket(app: FastifyInstance, deps: WebSocketDeps): WebSocketHandle {

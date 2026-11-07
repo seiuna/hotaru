@@ -47,7 +47,7 @@ describe('users/me + users/me/permissions', () => {
       minecraftUuid: user.minecraftUuid,
       sessionId: user.sessionId,
       // The token claims an admin scope the database does not grant.
-      scopes: ['admin:users', 'skymatrix:profile'],
+      scopes: ['admin:users', 'hotaru:profile'],
     });
 
     const me = await harness.app.inject({
@@ -78,11 +78,11 @@ describe('users/me + users/me/permissions', () => {
   });
 
   it('lists grants (including expired ones) but only effective scopes', async () => {
-    const user = await data.createUser({ scopes: [{ scope: 'skymatrix:profile' }] });
+    const user = await data.createUser({ scopes: [{ scope: 'hotaru:profile' }] });
     const past = new Date(Date.now() - 60 * 60 * 1000);
     const future = new Date(Date.now() + 60 * 60 * 1000);
     await data.grant(user.id, 'admin:users', past);
-    await data.grant(user.id, 'skymatrix:license', future);
+    await data.grant(user.id, 'hotaru:license', future);
 
     const response = await harness.app.inject({
       method: 'GET',
@@ -97,14 +97,14 @@ describe('users/me + users/me/permissions', () => {
     };
     expect(body.permissions.map((permission) => permission.scope).sort()).toEqual([
       'admin:users',
-      'skymatrix:license',
-      'skymatrix:profile',
+      'hotaru:license',
+      'hotaru:profile',
     ]);
     expect(body.permissions.every((permission) => permission.grantedBy === 'test')).toBe(true);
     expect(body.permissions.find((permission) => permission.scope === 'admin:users')?.expiresAt).not.toBeNull();
-    expect(body.permissions.find((permission) => permission.scope === 'skymatrix:profile')?.expiresAt).toBeNull();
+    expect(body.permissions.find((permission) => permission.scope === 'hotaru:profile')?.expiresAt).toBeNull();
     // Only the unexpired grants are effective.
-    expect(body.scopes.sort()).toEqual(['skymatrix:license', 'skymatrix:profile']);
+    expect(body.scopes.sort()).toEqual(['hotaru:license', 'hotaru:profile']);
   });
 
   it('rejects a banned user on the next request even with a valid JWT', async () => {

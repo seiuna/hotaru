@@ -61,7 +61,7 @@ describe('admin API', () => {
   });
 
   it('returns 403 for an authenticated user without admin:users', async () => {
-    const user = await data.createUser({ scopes: [{ scope: 'skymatrix:profile' }] });
+    const user = await data.createUser({ scopes: [{ scope: 'hotaru:profile' }] });
     // Even a token that claims the scope is not enough: authority is the database.
     const token = await data.mintAccessToken({
       userId: user.id,
@@ -120,7 +120,7 @@ describe('admin API', () => {
 
   it('grants a permission that applies immediately to an already-issued JWT, and removes it just as fast', async () => {
     const admin = await createAdmin();
-    const target = await data.createUser({ scopes: [{ scope: 'skymatrix:profile' }] });
+    const target = await data.createUser({ scopes: [{ scope: 'hotaru:profile' }] });
 
     const before = await harness.app.inject({
       method: 'GET',
@@ -135,7 +135,7 @@ describe('admin API', () => {
       headers: bearer(admin.accessToken),
       payload: {
         permissions: [
-          { scope: 'skymatrix:profile' },
+          { scope: 'hotaru:profile' },
           { scope: 'admin:users', expiresAt: new Date(Date.now() + 3_600_000).toISOString() },
         ],
       },
@@ -145,7 +145,7 @@ describe('admin API', () => {
       permissions: Array<{ scope: string; grantedAt: string; expiresAt: string | null; grantedBy: string | null }>;
       scopes: string[];
     };
-    expect(grantedBody.scopes.sort()).toEqual(['admin:users', 'skymatrix:profile']);
+    expect(grantedBody.scopes.sort()).toEqual(['admin:users', 'hotaru:profile']);
     const adminGrant = grantedBody.permissions.find((permission) => permission.scope === 'admin:users');
     expect(adminGrant?.grantedBy).toBe(admin.id);
     expect(adminGrant?.expiresAt).not.toBeNull();
@@ -166,7 +166,7 @@ describe('admin API', () => {
     });
     expect((reflected.json() as { scopes: string[] }).scopes.sort()).toEqual([
       'admin:users',
-      'skymatrix:profile',
+      'hotaru:profile',
     ]);
 
     // Replace the set with only the profile scope => admin access is gone.
@@ -174,10 +174,10 @@ describe('admin API', () => {
       method: 'PUT',
       url: `/api/v1/admin/users/${target.id}/permissions`,
       headers: bearer(admin.accessToken),
-      payload: { permissions: [{ scope: 'skymatrix:profile' }] },
+      payload: { permissions: [{ scope: 'hotaru:profile' }] },
     });
     expect(removed.statusCode).toBe(200);
-    expect((removed.json() as { scopes: string[] }).scopes).toEqual(['skymatrix:profile']);
+    expect((removed.json() as { scopes: string[] }).scopes).toEqual(['hotaru:profile']);
 
     const deniedAgain = await harness.app.inject({
       method: 'GET',
@@ -187,7 +187,7 @@ describe('admin API', () => {
     expect(deniedAgain.statusCode).toBe(403);
 
     const remaining = await PermissionModel.find({ userId: target.id }).lean();
-    expect(remaining.map((permission) => permission.scope)).toEqual(['skymatrix:profile']);
+    expect(remaining.map((permission) => permission.scope)).toEqual(['hotaru:profile']);
   });
 
   it('rejects invalid permission payloads', async () => {
@@ -259,7 +259,7 @@ describe('admin API', () => {
 
   it('bans a user: revokes their sessions, writes Redis keys, and blocks the already-issued JWT', async () => {
     const admin = await createAdmin();
-    const target = await data.createUser({ scopes: [{ scope: 'skymatrix:profile' }] });
+    const target = await data.createUser({ scopes: [{ scope: 'hotaru:profile' }] });
 
     const before = await harness.app.inject({
       method: 'GET',

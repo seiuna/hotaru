@@ -101,7 +101,7 @@ export async function probeLocalBridge(options: BridgeOptions = {}): Promise<boo
     });
     if (!response.ok) return false;
     const payload = (await readJson(response)) as { ok?: boolean; service?: string } | null;
-    return payload?.ok === true && payload?.service === 'skymatrix-local-auth';
+    return payload?.ok === true && payload?.service === 'hotaru-local-auth';
   } catch {
     return false;
   } finally {
@@ -122,7 +122,7 @@ export async function loginViaLocalBridge(options: BridgeOptions = {}): Promise<
     throw new BridgeError(
       'unavailable',
       'BRIDGE_UNREACHABLE',
-      `未检测到本地认证服务（127.0.0.1:${port}）。请确认游戏已启动、已安装 Skymatrix 模组，且未被防火墙拦截。`,
+      `未检测到本地认证服务（127.0.0.1:${port}）。请确认游戏已启动、已安装 Hotaru 模组，且未被防火墙拦截。`,
     );
   }
 

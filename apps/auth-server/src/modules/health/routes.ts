@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { AppContext } from '../../context.js';
-import { healthLiveResponseSchema, healthReadyResponseSchema } from '@skymatrix/api-contract';
+import { healthLiveResponseSchema, healthReadyResponseSchema } from '@hotaru/api-contract';
 import { toJsonSchema } from '../../http/zod-schema.js';
 
 export interface HealthProbes {

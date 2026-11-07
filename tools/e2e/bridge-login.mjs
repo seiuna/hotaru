@@ -7,7 +7,7 @@
  *
  * Run: node tools/e2e/bridge-login.mjs
  * Requires: auth server on :3000 with containers up, TEST_ACCESSTOKEN in apps/auth-server/.env,
- *           clients/skymatrix-sdk-java/out compiled (javac).
+ *           clients/hotaru-sdk-java/out compiled (javac).
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -19,7 +19,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..');
 const AUTH_BASE = process.env.AUTH_BASE ?? 'http://127.0.0.1:3000';
 const ORIGIN = process.env.BRIDGE_ORIGIN ?? 'http://localhost:5173';
-const JAVA_DIR = path.join(repoRoot, 'clients', 'skymatrix-sdk-java');
+const JAVA_DIR = path.join(repoRoot, 'clients', 'hotaru-sdk-java');
 const CLASSES = path.join(JAVA_DIR, 'out');
 
 let failures = 0;
@@ -53,7 +53,7 @@ if (!accessToken) {
   process.exit(2);
 }
 if (!existsSync(CLASSES)) {
-  console.error(`Java classes missing at ${CLASSES}. Run: cd clients/skymatrix-sdk-java && javac -d out "@sources.txt"`);
+  console.error(`Java classes missing at ${CLASSES}. Run: cd clients/hotaru-sdk-java && javac -d out "@sources.txt"`);
   process.exit(2);
 }
 
@@ -106,7 +106,7 @@ async function main() {
     const health = await fetch(`${base}/v1/health`, { headers: { origin: ORIGIN } });
     const healthBody = await health.json();
     check('health returns 200', health.status === 200, String(health.status));
-    check('health identifies the local mod bridge', healthBody?.service === 'skymatrix-local-auth', JSON.stringify(healthBody));
+    check('health identifies the local mod bridge', healthBody?.service === 'hotaru-local-auth', JSON.stringify(healthBody));
     check(
       'health tells the page approval is required',
       healthBody?.requiresApproval === true,

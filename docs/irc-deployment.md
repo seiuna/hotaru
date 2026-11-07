@@ -87,9 +87,9 @@ docker compose -f deploy/compose.yaml --env-file deploy/.env logs -f irc-server 
 ```
 
 The IRC image is built from `deploy/Dockerfile.irc-server` (multi-stage,
-`node:24-alpine`, non-root `skymatrix` user, production dependencies only,
+`node:24-alpine`, non-root `hotaru` user, production dependencies only,
 `CMD ["node", "apps/irc-server/dist/server.js"]`). It builds
-`@skymatrix/shared-types`, `@skymatrix/srp-protocol` and `@skymatrix/irc-server`
+`@hotaru/shared-types`, `@hotaru/srp-protocol` and `@hotaru/irc-server`
 in that order.
 
 ### Startup order enforced by compose
@@ -334,12 +334,12 @@ the client reconnect to whichever replica Caddy picks next.
 | `HOST` / `PORT` | fixed `0.0.0.0` / `3001` | — | never published |
 | `LOG_LEVEL` | `LOG_LEVEL` | `info` | pino level; tokens/payloads never logged |
 | `MONGODB_URI` | built from `MONGO_INITDB_ROOT_*` | — | `?authSource=admin` |
-| `MONGODB_DB` | `MONGODB_IRC_DB` | `skymatrix_irc` | separate DB from the auth server |
+| `MONGODB_DB` | `MONGODB_IRC_DB` | `hotaru_irc` | separate DB from the auth server |
 | `MONGODB_ENSURE_INDEXES` | `MONGODB_IRC_ENSURE_INDEXES` | `true` | additive index creation at boot (unique constraints + audit TTL) |
 | `REDIS_URL` | built from `REDIS_PASSWORD` | — | shared with auth server |
 | `AUTH_JWKS_URL` | `AUTH_JWKS_URL` | `http://auth-server:3000/api/v1/auth/jwks` | internal DNS |
 | `JWT_ISSUER` | `PUBLIC_BASE_URL` | — | **must** equal the auth server's issuer |
-| `JWT_AUDIENCE` | `JWT_AUDIENCE` | `skymatrix-api` | must match the token's `aud` |
+| `JWT_AUDIENCE` | `JWT_AUDIENCE` | `hotaru-api` | must match the token's `aud` |
 | `JWKS_CACHE_TTL_MS` | `JWKS_CACHE_TTL_MS` | `600000` | parsed; `jose` caches for a fixed 10 min |
 | `INSTANCE_ID` | `INSTANCE_ID` | `irc-01` | unique per replica |
 | `HEARTBEAT_INTERVAL_MS` | same | `30000` | RFC 6455 ping interval |
@@ -401,13 +401,13 @@ the harness reports that single check as `SKIP` instead of faking it.
 
 ```bash
 # infrastructure (containers exist, just start them)
-docker start skymatrix-mongo skymatrix-redis
+docker start hotaru-mongo hotaru-redis
 
 # auth server on :3000 (needs Mongo + Redis)
-pnpm --filter @skymatrix/auth-server dev
+pnpm --filter @hotaru/auth-server dev
 
 # IRC server on :3001 (reads apps/irc-server/.env)
-pnpm --filter @skymatrix/irc-server dev
+pnpm --filter @hotaru/irc-server dev
 
 # end-to-end harness (hermetic: boots its own auth+irc on 3200/3201)
 node tools/e2e/irc/smoke.mjs
@@ -426,7 +426,7 @@ Ports: MongoDB `27017`, Redis `16379` (this host cannot publish 6379 — do not
 | Symptom | Likely cause | Check |
 | --- | --- | --- |
 | Upgrade returns `401 UNAUTHORIZED` | token signed by another auth server, `JWT_ISSUER`/`JWT_AUDIENCE` mismatch, or JWKS unreachable | `docker compose logs irc-server`, compare `JWT_ISSUER` with `PUBLIC_BASE_URL` |
-| Upgrade returns `403 SCOPE_DENIED` | token lacks `skymatrix:ircserver` | decode the token's `scope` claim; grant the scope in the auth server |
+| Upgrade returns `403 SCOPE_DENIED` | token lacks `hotaru:ircserver` | decode the token's `scope` claim; grant the scope in the auth server |
 | Upgrade returns `403 SESSION_REVOKED` | logout/ban/refresh-reuse revoked the session | `redis-cli GET auth:session:revoked:<sid>` |
 | Upgrade returns `429` / `503 RATE_LIMITED` | connection caps (`MAX_CONNECTIONS_PER_USER`, `…_PER_IP`, `…_TOTAL`) | `/metrics` with an admin token (`connections`), `MAX_CONNECTIONS_*` |
 | Upgrade returns `404 NOT_FOUND` | wrong path (must be exactly `/v1/connect`) | Caddy `handle` matchers |
@@ -447,7 +447,7 @@ Ports: MongoDB `27017`, Redis `16379` (this host cannot publish 6379 — do not
   not published):
   ```bash
   docker compose -f deploy/compose.yaml exec mongo \
-    mongodump --uri "mongodb://user:pass@127.0.0.1:27017/skymatrix_irc?authSource=admin" --out /tmp/dump
+    mongodump --uri "mongodb://user:pass@127.0.0.1:27017/hotaru_irc?authSource=admin" --out /tmp/dump
   ```
 - **Redis**: presence and dedupe are disposable; `auth:session:revoked:*` is the
   only security-relevant data, and losing it *extends* a revoked session until its

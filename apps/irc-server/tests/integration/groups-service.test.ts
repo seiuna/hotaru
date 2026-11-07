@@ -9,18 +9,18 @@ import { IrcGroupMemberModel, IrcGroupModel } from '../../src/modules/groups/mod
 
 /**
  * Integration coverage for the group service against a real MongoDB
- * (`mongodb://127.0.0.1:27017`, database `skymatrix_irc_test`).
+ * (`mongodb://127.0.0.1:27017`, database `hotaru_irc_test`).
  *
  * These tests exist because the mockable parts of the service are trivial: the
  * interesting behaviour is unique-index idempotency, capability checks across
  * three roles, and hiding a group from non-members. A fake would test the fake.
  *
- * Run with `pnpm --filter @skymatrix/irc-server test:integration` after
- * `docker start skymatrix-mongo skymatrix-redis`.
+ * Run with `pnpm --filter @hotaru/irc-server test:integration` after
+ * `docker start hotaru-mongo hotaru-redis`.
  */
 
 const MONGO_URI = process.env['IRC_TEST_MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017';
-const DB_NAME = 'skymatrix_irc_test';
+const DB_NAME = 'hotaru_irc_test';
 
 const OWNER = '11111111-1111-4111-8111-111111111111';
 const ADMIN = '22222222-2222-4222-8222-222222222222';

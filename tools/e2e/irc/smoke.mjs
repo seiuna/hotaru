@@ -523,7 +523,7 @@ async function main() {
 
     const forged =
       'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.' +
-      Buffer.from(JSON.stringify({ sub: 'forged', sid: 'forged', minecraft_uuid: context.uuidB, scope: 'skymatrix:ircserver' }))
+      Buffer.from(JSON.stringify({ sub: 'forged', sid: 'forged', minecraft_uuid: context.uuidB, scope: 'hotaru:ircserver' }))
         .toString('base64url') +
       '.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
     checkUpgradeRejected('forged signature -> 401 UNAUTHORIZED', await probeUpgrade({ url: WS_URL, token: forged }), 401, 'UNAUTHORIZED');
@@ -541,13 +541,13 @@ async function main() {
 
     if (context.tokenNoScope) {
       checkUpgradeRejected(
-        'token without skymatrix:ircserver -> 403 SCOPE_DENIED',
+        'token without hotaru:ircserver -> 403 SCOPE_DENIED',
         await probeUpgrade({ url: WS_URL, token: context.tokenNoScope }),
         403,
         'SCOPE_DENIED',
       );
     } else {
-      skip('token without skymatrix:ircserver -> 403 SCOPE_DENIED', 'no IRC_TEST_TOKEN_NO_SCOPE supplied');
+      skip('token without hotaru:ircserver -> 403 SCOPE_DENIED', 'no IRC_TEST_TOKEN_NO_SCOPE supplied');
     }
 
     checkUpgradeRejected(

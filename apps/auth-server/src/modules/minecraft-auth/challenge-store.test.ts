@@ -12,14 +12,14 @@ const TTL_SECONDS = 60;
 const NOW = 1_700_000_000_000;
 
 const pendingRecord = (overrides: Partial<ChallengeRecord> = {}): ChallengeRecord => {
-  const record = buildChallenge('SkymatrixPlayer', TTL_SECONDS, NOW);
+  const record = buildChallenge('HotaruPlayer', TTL_SECONDS, NOW);
   return { ...record, ...overrides };
 };
 
 describe('buildChallenge', () => {
   it('produces a unique PENDING challenge bound to the requested username', () => {
-    const first = buildChallenge('SkymatrixPlayer', TTL_SECONDS, NOW);
-    const second = buildChallenge('SkymatrixPlayer', TTL_SECONDS, NOW);
+    const first = buildChallenge('HotaruPlayer', TTL_SECONDS, NOW);
+    const second = buildChallenge('HotaruPlayer', TTL_SECONDS, NOW);
 
     expect(first.challengeId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
@@ -28,14 +28,14 @@ describe('buildChallenge', () => {
     expect(first.serverId).not.toBe(second.serverId);
     expect(first.verifyToken).not.toBe(second.verifyToken);
 
-    expect(first.username).toBe('SkymatrixPlayer');
+    expect(first.username).toBe('HotaruPlayer');
     expect(first.status).toBe('PENDING');
     expect(first.expiresAt).toBe(NOW + TTL_SECONDS * 1000);
     expect(first.createdAt).toBe(new Date(NOW).toISOString());
   });
 
   it('uses a 16-byte base64url server id and a 4-byte base64 verify token', () => {
-    const challenge = buildChallenge('SkymatrixPlayer', TTL_SECONDS, NOW);
+    const challenge = buildChallenge('HotaruPlayer', TTL_SECONDS, NOW);
 
     expect(challenge.serverId).toMatch(/^[A-Za-z0-9_-]{22}$/);
     expect(Buffer.from(challenge.serverId, 'base64url').length).toBe(SERVER_ID_BYTES);

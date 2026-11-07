@@ -9,19 +9,19 @@ import { IrcFilterRuleModel } from '../../src/modules/filters/model.js';
 
 /**
  * Integration coverage for the filter service against a real MongoDB
- * (`mongodb://127.0.0.1:27017`, database `skymatrix_irc_test`).
+ * (`mongodb://127.0.0.1:27017`, database `hotaru_irc_test`).
  *
  * What matters here is not "does a query work" but the security-relevant
  * composition: deny-first precedence across scopes, allow-list mode, cache
  * staleness bounds, and the guarantee that a rejected replacement never leaves the
  * stored ruleset half-written.
  *
- * Run with `pnpm --filter @skymatrix/irc-server test:integration` after
- * `docker start skymatrix-mongo skymatrix-redis`.
+ * Run with `pnpm --filter @hotaru/irc-server test:integration` after
+ * `docker start hotaru-mongo hotaru-redis`.
  */
 
 const MONGO_URI = process.env['IRC_TEST_MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017';
-const DB_NAME = 'skymatrix_irc_test';
+const DB_NAME = 'hotaru_irc_test';
 
 const ALICE = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const ALICE_UNDASHED = ALICE.replace(/-/g, '');

@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import { SCOPES, type Scope } from '@skymatrix/shared-types';
+import { SCOPES, type Scope } from '@hotaru/shared-types';
 import { PermissionModel } from '../../infrastructure/mongo/models/index.js';
 
 const SCOPE_SET: ReadonlySet<string> = new Set<string>(SCOPES);

@@ -34,7 +34,7 @@ two accounts cannot share a UUID but can, over time, share a name; the name is d
 | Field | Type | Notes |
 | --- | --- | --- |
 | `userId` | ObjectId → `users` | Who is allowed. |
-| `scope` | enum(`SCOPES`) | One of the five scopes from `@skymatrix/shared-types`. |
+| `scope` | enum(`SCOPES`) | One of the five scopes from `@hotaru/shared-types`. |
 | `expiresAt` | Date \| null | `null` = permanent grant. |
 | `grantedBy` | string \| null | Acting admin's user id. |
 | `createdAt` / `updatedAt` | Date | `createdAt` is surfaced as `grantedAt`. |
@@ -123,7 +123,7 @@ silent audit gap is possible under a Mongo outage and is only visible in the ser
 
 Index: `{ userId: 1, product: 1 }` **unique**.
 
-No route uses this collection yet; it exists so the licensing scope (`skymatrix:license`) has a home.
+No route uses this collection yet; it exists so the licensing scope (`hotaru:license`) has a home.
 
 ### `service_keys` — long-lived crypto material
 
@@ -188,8 +188,8 @@ maintenance window, a read-only replica), set `MONGODB_ENSURE_INDEXES=false` and
 manually with `mongosh` against the production database:
 
 ```javascript
-// mongosh "mongodb://<user>:<password>@127.0.0.1:27017/skymatrix_auth?authSource=admin"
-const db = db.getSiblingDB('skymatrix_auth');
+// mongosh "mongodb://<user>:<password>@127.0.0.1:27017/hotaru_auth?authSource=admin"
+const db = db.getSiblingDB('hotaru_auth');
 
 db.users.createIndex({ minecraftUuid: 1 }, { unique: true });
 db.users.createIndex({ status: 1 });

@@ -41,7 +41,7 @@ function connection(overrides: Partial<ManagedConnection> = {}): ManagedConnecti
     connectedAt: 0,
     lastHeartbeatAt: 0,
     isOpen: true,
-    scopes: ['skymatrix:ircserver'],
+    scopes: ['hotaru:ircserver'],
     socket: {} as ManagedConnection['socket'],
     pongTimer: null,
     ip: null,

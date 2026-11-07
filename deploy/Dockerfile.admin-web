@@ -17,9 +17,9 @@ COPY packages ./packages
 COPY apps/admin-web ./apps/admin-web
 
 # The SPA imports workspace types from the built contract packages.
-RUN pnpm --filter @skymatrix/shared-types build \
- && pnpm --filter @skymatrix/api-contract build \
- && pnpm --filter @skymatrix/admin-web build
+RUN pnpm --filter @hotaru/shared-types build \
+ && pnpm --filter @hotaru/api-contract build \
+ && pnpm --filter @hotaru/admin-web build
 
 FROM nginx:1.27-alpine AS runtime
 COPY deploy/nginx.admin.conf /etc/nginx/conf.d/default.conf

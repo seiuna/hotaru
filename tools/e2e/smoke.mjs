@@ -23,7 +23,7 @@ const repoRoot = path.resolve(here, '..', '..');
 const AUTH_PORT = Number(process.env.E2E_AUTH_PORT ?? 3100);
 const MOJANG_PORT = Number(process.env.E2E_MOJANG_PORT ?? 8787);
 const RUN_ID = `${Date.now()}`;
-const DB = `skymatrix_e2e_${RUN_ID}`;
+const DB = `hotaru_e2e_${RUN_ID}`;
 const BASE = `http://127.0.0.1:${AUTH_PORT}`;
 /**
  * Each run presents its own client IP through X-Forwarded-For (the app trusts
@@ -138,14 +138,14 @@ function authServerEnv(mojangBase) {
     MONGODB_DB: DB,
     REDIS_URL: process.env.REDIS_URL ?? 'redis://127.0.0.1:16379',
     PUBLIC_BASE_URL: BASE,
-    JWT_AUDIENCE: 'skymatrix-api',
+    JWT_AUDIENCE: 'hotaru-api',
     CHALLENGE_TTL_SECONDS: '60',
     RATE_LIMIT_CHALLENGE_MAX: '100',
     RATE_LIMIT_VERIFY_MAX: '100',
     MOJANG_SESSION_SERVER: mojangBase,
     MOJANG_HAS_JOINED_ATTEMPTS: '1',
     MOJANG_RETRY_DELAY_MS: '50',
-    DEFAULT_SCOPES: 'skymatrix:profile',
+    DEFAULT_SCOPES: 'hotaru:profile',
   };
 }
 
@@ -245,7 +245,7 @@ async function main() {
     check('verify returns 200', login.status === 200, JSON.stringify(login.json));
     check('profile uuid matches Mojang identity', login.json?.profile?.uuid === dashedUuid(aliceUuid), `${login.json?.profile?.uuid} vs ${dashedUuid(aliceUuid)}`);
     check('profile username matches', login.json?.profile?.username === 'Alice', login.json?.profile?.username);
-    check('default scopes granted', Array.isArray(login.json?.scopes) && login.json.scopes.includes('skymatrix:profile'), JSON.stringify(login.json?.scopes));
+    check('default scopes granted', Array.isArray(login.json?.scopes) && login.json.scopes.includes('hotaru:profile'), JSON.stringify(login.json?.scopes));
     check('token type is Bearer', login.json?.tokenType === 'Bearer');
     check('access token is an EdDSA JWT', String(login.json?.accessToken).startsWith('eyJ'));
 
@@ -270,7 +270,7 @@ async function main() {
     const me = await api('GET', '/api/v1/users/me', { token: access });
     check('GET /users/me returns the caller', me.status === 200 && me.json?.user?.minecraftUuid === dashedUuid(aliceUuid), JSON.stringify(me.json));
     const perms = await api('GET', '/api/v1/users/me/permissions', { token: access });
-    check('GET /users/me/permissions lists scopes', perms.status === 200 && perms.json?.scopes?.includes('skymatrix:profile'), JSON.stringify(perms.json));
+    check('GET /users/me/permissions lists scopes', perms.status === 200 && perms.json?.scopes?.includes('hotaru:profile'), JSON.stringify(perms.json));
     const noToken = await api('GET', '/api/v1/users/me');
     check('missing bearer token -> 401', noToken.status === 401 && noToken.json?.error?.code === 'UNAUTHORIZED', JSON.stringify(noToken.json));
     const badToken = await api('GET', '/api/v1/users/me', { token: 'eyJhbGciOiJFZERTQSJ9.eyJzdWIiOiJmYWtlIn0.signature' });
@@ -308,19 +308,19 @@ async function main() {
     const aliceId = (await api('GET', '/api/v1/users/me', { token: access2 })).json.user.id;
     const grant = await api('PUT', `/api/v1/admin/users/${aliceId}/permissions`, {
       token: adminToken,
-      body: { permissions: [{ scope: 'skymatrix:profile' }, { scope: 'skymatrix:resource' }] },
+      body: { permissions: [{ scope: 'hotaru:profile' }, { scope: 'hotaru:resource' }] },
     });
-    check('admin grants skymatrix:resource', grant.status === 200, JSON.stringify(grant.json));
+    check('admin grants hotaru:resource', grant.status === 200, JSON.stringify(grant.json));
     const meAfterGrant = await api('GET', '/api/v1/users/me', { token: access2 });
-    check('grant takes effect for an existing JWT', meAfterGrant.json?.scopes?.includes('skymatrix:resource'), JSON.stringify(meAfterGrant.json?.scopes));
+    check('grant takes effect for an existing JWT', meAfterGrant.json?.scopes?.includes('hotaru:resource'), JSON.stringify(meAfterGrant.json?.scopes));
 
     const revokeGrant = await api('PUT', `/api/v1/admin/users/${aliceId}/permissions`, {
       token: adminToken,
-      body: { permissions: [{ scope: 'skymatrix:profile' }] },
+      body: { permissions: [{ scope: 'hotaru:profile' }] },
     });
-    check('admin revokes skymatrix:resource', revokeGrant.status === 200);
+    check('admin revokes hotaru:resource', revokeGrant.status === 200);
     const meAfterRevoke = await api('GET', '/api/v1/users/me', { token: access2 });
-    check('revocation takes effect immediately', !meAfterRevoke.json?.scopes?.includes('skymatrix:resource'), JSON.stringify(meAfterRevoke.json?.scopes));
+    check('revocation takes effect immediately', !meAfterRevoke.json?.scopes?.includes('hotaru:resource'), JSON.stringify(meAfterRevoke.json?.scopes));
 
     section('ban');
     const banned = await api('POST', `/api/v1/admin/users/${aliceId}/ban`, { token: adminToken, body: { reason: 'e2e' } });

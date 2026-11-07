@@ -17,8 +17,8 @@ import { Types } from 'mongoose';
  */
 
 const ISSUER = 'http://localhost:3000';
-const AUDIENCE = 'skymatrix-api';
-const DB = 'skymatrix_irc_test';
+const AUDIENCE = 'hotaru-api';
+const DB = 'hotaru_irc_test';
 
 let jwksServer: Server;
 let jwksUrl = '';
@@ -62,7 +62,7 @@ async function signToken(options: {
   return new SignJWT({
     minecraft_uuid: options.uuid,
     sid: options.sessionId ?? new Types.ObjectId().toHexString(),
-    scope: (options.scopes ?? ['skymatrix:profile', 'skymatrix:ircserver']).join(' '),
+    scope: (options.scopes ?? ['hotaru:profile', 'hotaru:ircserver']).join(' '),
     jti: new Types.ObjectId().toHexString(),
   })
     .setProtectedHeader({ alg: 'EdDSA', kid: 'test-key' })
@@ -219,8 +219,8 @@ describe('WebSocket upgrade authentication', () => {
     ).rejects.toThrow('401');
   });
 
-  it('rejects a token that lacks skymatrix:ircserver', async () => {
-    const token = await signToken({ ...USER_A, scopes: ['skymatrix:profile'] });
+  it('rejects a token that lacks hotaru:ircserver', async () => {
+    const token = await signToken({ ...USER_A, scopes: ['hotaru:profile'] });
     await expect(connect(token)).rejects.toThrow('403');
   });
 
@@ -231,7 +231,7 @@ describe('WebSocket upgrade authentication', () => {
 
   it('rejects a token signed by an unknown key', async () => {
     const other = await generateKeyPair('EdDSA');
-    const forged = await new SignJWT({ minecraft_uuid: USER_A.uuid, sid: 'x', scope: 'skymatrix:ircserver' })
+    const forged = await new SignJWT({ minecraft_uuid: USER_A.uuid, sid: 'x', scope: 'hotaru:ircserver' })
       .setProtectedHeader({ alg: 'EdDSA' })
       .setIssuer(ISSUER)
       .setAudience(AUDIENCE)

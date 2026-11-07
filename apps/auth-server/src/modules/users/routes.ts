@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { errorResponseSchema, meResponseSchema, permissionsResponseSchema } from '@skymatrix/api-contract';
+import { errorResponseSchema, meResponseSchema, permissionsResponseSchema } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { toJsonSchema } from '../../http/zod-schema.js';

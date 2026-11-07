@@ -1,5 +1,5 @@
 import { Schema, model, type InferSchemaType, type Model } from 'mongoose';
-import { SCOPES } from '@skymatrix/shared-types';
+import { SCOPES } from '@hotaru/shared-types';
 
 const userSchema = new Schema(
   {

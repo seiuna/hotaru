@@ -70,7 +70,7 @@ function signOut(): void {
           </svg>
         </span>
         <span class="brand__text">
-          <strong>Skymatrix</strong>
+          <strong>Hotaru</strong>
           <small>认证控制台</small>
         </span>
       </RouterLink>

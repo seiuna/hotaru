@@ -2,7 +2,7 @@
 import { NButton, NSkeleton, NTag } from 'naive-ui';
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-import type { AdminStatsResponse, AuditLogListResponse } from '@skymatrix/api-contract';
+import type { AdminStatsResponse, AuditLogListResponse } from '@hotaru/api-contract';
 import EmptyState from '../components/EmptyState.vue';
 import StatCard from '../components/StatCard.vue';
 import { ApiError, api } from '../api/client';
@@ -57,7 +57,7 @@ onMounted(load);
     <header class="page-header rise">
       <div>
         <h1>{{ greeting }}，{{ authState.session?.username }}</h1>
-        <p>这里是 Skymatrix 认证服务的运营概览，数据实时来自 MongoDB 与 Redis。</p>
+        <p>这里是 Hotaru 认证服务的运营概览，数据实时来自 MongoDB 与 Redis。</p>
       </div>
       <NButton secondary :loading="loading" @click="load">刷新</NButton>
     </header>

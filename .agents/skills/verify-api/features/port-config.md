@@ -9,7 +9,7 @@ to run side by side, and therefore what makes verification itself possible.
 - `port-default` listens on `3000` when `PORT` is unset.
 - `port-override` listens on the number given in `PORT`.
 - `port-isolation` two instances with different `PORT` values serve independently.
-- `port-startup-log` prints `[skymatrix-api] listening on http://localhost:<port>` on success.
+- `port-startup-log` prints `[hotaru-api] listening on http://localhost:<port>` on success.
 
 ## How to get to it (user POV)
 

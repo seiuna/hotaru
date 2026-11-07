@@ -5,7 +5,7 @@ import type { JwtKeys } from '../../infrastructure/crypto/keys.js';
 import { signAccessToken } from './access-token.js';
 
 const ISSUER = 'https://auth.test.local';
-const AUDIENCE = 'skymatrix-api';
+const AUDIENCE = 'hotaru-api';
 const TTL_SECONDS = 900;
 const NOW_SECONDS = 1_700_000_000;
 /** Verification clock pinned just after issuance so `exp` is in the future. */
@@ -26,7 +26,7 @@ const sign = () =>
     userId: '65f1f3e2a1b2c3d4e5f60718',
     minecraftUuid: '01234567-89ab-cdef-0123-456789abcdef',
     sessionId: '65f1f3e2a1b2c3d4e5f60719',
-    scopes: ['skymatrix:profile', 'skymatrix:resource'],
+    scopes: ['hotaru:profile', 'hotaru:resource'],
     issuer: ISSUER,
     audience: AUDIENCE,
     ttlSeconds: TTL_SECONDS,
@@ -51,7 +51,7 @@ describe('signAccessToken', () => {
     expect(payload.aud).toEqual([AUDIENCE]);
     expect(payload.minecraft_uuid).toBe('01234567-89ab-cdef-0123-456789abcdef');
     expect(payload.sid).toBe('65f1f3e2a1b2c3d4e5f60719');
-    expect(payload.scope).toBe('skymatrix:profile skymatrix:resource');
+    expect(payload.scope).toBe('hotaru:profile hotaru:resource');
     expect(payload.iat).toBe(NOW_SECONDS);
     expect(payload.exp).toBe(NOW_SECONDS + TTL_SECONDS);
     expect(payload.jti).toBe(signed.jti);

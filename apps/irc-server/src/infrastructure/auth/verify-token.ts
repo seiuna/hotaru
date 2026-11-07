@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 import type { AppContext } from '../../context.js';
-import { REQUIRED_SCOPE, sessionRevokedKey } from '@skymatrix/srp-protocol';
-import { SRP_ERROR_CODES, type SrpErrorCode } from '@skymatrix/srp-protocol';
+import { REQUIRED_SCOPE, sessionRevokedKey } from '@hotaru/srp-protocol';
+import { SRP_ERROR_CODES, type SrpErrorCode } from '@hotaru/srp-protocol';
 
 export interface VerifiedIdentity {
   userId: string;
@@ -47,7 +47,7 @@ function keySetFor(url: string): ReturnType<typeof createRemoteJWKSet> {
  * Verifies an access token end to end:
  *
  * 1. Ed25519 signature against the auth server's JWKS (`aud`/`iss`/`exp` enforced);
- * 2. `skymatrix:ircserver` present;
+ * 2. `hotaru:ircserver` present;
  * 3. session not revoked — checked against the Redis key the auth server writes,
  *    which is what makes a logout/ban take effect before the token expires.
  */

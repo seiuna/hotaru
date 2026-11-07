@@ -1,8 +1,8 @@
 import type { Redis } from 'ioredis';
 import type { AnyBulkWriteOperation, FilterQuery, Types } from 'mongoose';
 import { Types as MongooseTypes } from 'mongoose';
-import type { PermissionView, Scope, UserStatus, UserView } from '@skymatrix/shared-types';
-import type { AdminSetPermissionsRequest } from '@skymatrix/api-contract';
+import type { PermissionView, Scope, UserStatus, UserView } from '@hotaru/shared-types';
+import type { AdminSetPermissionsRequest } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { revocationKey } from '../../plugins/auth.js';

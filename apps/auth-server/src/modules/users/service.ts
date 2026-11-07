@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import type { Types } from 'mongoose';
-import type { PermissionView, Scope, UserStatus, UserView } from '@skymatrix/shared-types';
-import { SCOPES } from '@skymatrix/shared-types';
+import type { PermissionView, Scope, UserStatus, UserView } from '@hotaru/shared-types';
+import { SCOPES } from '@hotaru/shared-types';
 import { Errors } from '../../errors.js';
 import type { AuthContext } from '../../plugins/auth.js';
 import { PermissionModel, UserModel } from '../../infrastructure/mongo/models/index.js';

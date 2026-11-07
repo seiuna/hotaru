@@ -1,4 +1,4 @@
-export const APP_NAME = 'skymatrix' as const;
+export const APP_NAME = 'hotaru' as const;
 
 export interface HealthPayload {
   status: 'ok';

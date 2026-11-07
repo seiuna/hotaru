@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { APP_NAME, healthPayload } from '@skymatrix/shared';
+import { APP_NAME, healthPayload } from '@hotaru/shared';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const startedAt = Date.now();

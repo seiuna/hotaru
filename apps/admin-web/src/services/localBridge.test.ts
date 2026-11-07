@@ -7,7 +7,7 @@ const TOKEN_BODY = {
   tokenType: 'Bearer',
   expiresIn: 900,
   profile: { uuid: '4c1099df-e202-4e64-9ea2-9039be420143', username: 'yuuiyi' },
-  scopes: ['skymatrix:profile', 'admin:users'],
+  scopes: ['hotaru:profile', 'admin:users'],
 };
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -30,7 +30,7 @@ afterEach(() => {
 
 describe('probeLocalBridge', () => {
   it('is true when the mod answers /v1/health', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }));
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }));
     await expect(probeLocalBridge()).resolves.toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(
       'http://127.0.0.1:8765/v1/health',
@@ -52,7 +52,7 @@ describe('probeLocalBridge', () => {
 describe('loginViaLocalBridge', () => {
   it('returns the token pair after approval', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }))
       .mockResolvedValueOnce(jsonResponse(200, TOKEN_BODY));
 
     const token = await loginViaLocalBridge();
@@ -75,7 +75,7 @@ describe('loginViaLocalBridge', () => {
 
   it('reports "blocked" when the origin is not allowlisted', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }))
       .mockResolvedValueOnce(jsonResponse(403, { error: { code: 'ORIGIN_NOT_ALLOWED' } }));
 
     const error = await loginViaLocalBridge().catch((caught: unknown) => caught);
@@ -86,7 +86,7 @@ describe('loginViaLocalBridge', () => {
 
   it('reports "denied" when the player refuses in game', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }))
       .mockResolvedValueOnce(jsonResponse(403, { error: { code: 'APPROVAL_DENIED' } }));
 
     await expect(loginViaLocalBridge()).rejects.toMatchObject({ kind: 'denied' });
@@ -94,7 +94,7 @@ describe('loginViaLocalBridge', () => {
 
   it('reports "timeout" when the approval window closes', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }))
       .mockResolvedValueOnce(jsonResponse(408, { error: { code: 'APPROVAL_TIMEOUT' } }));
 
     await expect(loginViaLocalBridge()).rejects.toMatchObject({ kind: 'timeout' });
@@ -102,7 +102,7 @@ describe('loginViaLocalBridge', () => {
 
   it('rejects a malformed token payload instead of storing it', async () => {
     fetchMock
-      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'skymatrix-local-auth' }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, service: 'hotaru-local-auth' }))
       .mockResolvedValueOnce(jsonResponse(200, { accessToken: 'only-access' }));
 
     await expect(loginViaLocalBridge()).rejects.toMatchObject({ kind: 'failed', code: 'INVALID_RESPONSE' });

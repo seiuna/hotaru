@@ -1,6 +1,6 @@
 import { jwtVerify, type JWTPayload } from 'jose';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { Scope } from '@skymatrix/shared-types';
+import type { Scope } from '@hotaru/shared-types';
 import { Errors } from '../errors.js';
 import { SessionModel, UserModel, PermissionModel } from '../infrastructure/mongo/models/index.js';
 

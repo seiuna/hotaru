@@ -118,7 +118,7 @@ describe('normalizeGrants', () => {
     const now = new Date('2026-01-01T00:00:00.000Z');
     const grants = normalizeGrants(
       [
-        { scope: 'skymatrix:profile' },
+        { scope: 'hotaru:profile' },
         { scope: 'admin:users', expiresAt: '2026-06-01T00:00:00.000Z' },
       ],
       now,
@@ -126,13 +126,13 @@ describe('normalizeGrants', () => {
 
     expect(grants).toEqual([
       { scope: 'admin:users', expiresAt: new Date('2026-06-01T00:00:00.000Z') },
-      { scope: 'skymatrix:profile', expiresAt: null },
+      { scope: 'hotaru:profile', expiresAt: null },
     ]);
   });
 
   it('treats an explicit null expiry as permanent', () => {
-    const grants = normalizeGrants([{ scope: 'skymatrix:license', expiresAt: null }]);
-    expect(grants).toEqual([{ scope: 'skymatrix:license', expiresAt: null }]);
+    const grants = normalizeGrants([{ scope: 'hotaru:license', expiresAt: null }]);
+    expect(grants).toEqual([{ scope: 'hotaru:license', expiresAt: null }]);
   });
 
   it('rejects an expiry in the past', async () => {
@@ -151,7 +151,7 @@ describe('normalizeGrants', () => {
 
 describe('replacePermissions', () => {
   const profileGrant = {
-    scope: 'skymatrix:profile',
+    scope: 'hotaru:profile',
     expiresAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
   };
@@ -162,7 +162,7 @@ describe('replacePermissions', () => {
         Promise.resolve([
           profileGrant,
           {
-            scope: 'skymatrix:license',
+            scope: 'hotaru:license',
             expiresAt: null,
             createdAt: new Date('2026-01-01T00:00:00.000Z'),
           },
@@ -170,25 +170,25 @@ describe('replacePermissions', () => {
       sort: () => lean([profileGrant]),
     }));
 
-    const result = await replacePermissions(deps, ACTOR, USER_ID, [{ scope: 'skymatrix:profile' }]);
+    const result = await replacePermissions(deps, ACTOR, USER_ID, [{ scope: 'hotaru:profile' }]);
 
     expect(mocks.permissionBulkWrite).toHaveBeenCalledTimes(1);
     const operations = callArg<Record<string, unknown>[]>(mocks.permissionBulkWrite);
     expect(operations).toHaveLength(2);
 
     const deletion = operations[0]?.deleteMany as { filter: { scope: { $in: string[] } } };
-    expect(deletion.filter.scope.$in).toEqual(['skymatrix:license']);
+    expect(deletion.filter.scope.$in).toEqual(['hotaru:license']);
 
     const update = operations[1]?.updateOne as {
       filter: { scope: string };
       update: { $set: { expiresAt: null; grantedBy: string } };
       upsert: boolean;
     };
-    expect(update.filter.scope).toBe('skymatrix:profile');
+    expect(update.filter.scope).toBe('hotaru:profile');
     expect(update.update.$set).toEqual({ expiresAt: null, grantedBy: ACTOR.userId });
     expect(update.upsert).toBe(true);
 
-    expect(result.scopes).toEqual(['skymatrix:profile']);
+    expect(result.scopes).toEqual(['hotaru:profile']);
 
     const audit = callArg<{
       event: string;
@@ -201,7 +201,7 @@ describe('replacePermissions', () => {
     expect(audit.actorType).toBe('admin');
     expect(audit.actorId).toBe(ACTOR.userId);
     expect(audit.targetId).toBe(USER_ID);
-    expect(audit.metadata.removed).toEqual(['skymatrix:license']);
+    expect(audit.metadata.removed).toEqual(['hotaru:license']);
     expect(audit.metadata.added).toEqual([]);
   });
 

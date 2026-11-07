@@ -1,4 +1,4 @@
-import type { ChallengeResponse, TokenResponse, VerifyRequest } from '@skymatrix/api-contract';
+import type { ChallengeResponse, TokenResponse, VerifyRequest } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { AppError, Errors } from '../../errors.js';
 import { minecraftServerHash } from '../../infrastructure/crypto/server-hash.js';

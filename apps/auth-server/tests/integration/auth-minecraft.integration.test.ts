@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { jwtVerify } from 'jose';
 import { Types } from 'mongoose';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ChallengeResponse, TokenResponse } from '@skymatrix/api-contract';
+import type { ChallengeResponse, TokenResponse } from '@hotaru/api-contract';
 import {
   AuditLogModel,
   PermissionModel,
@@ -326,10 +326,10 @@ describe('POST /api/v1/auth/minecraft/verify', () => {
   it('accepts a case-insensitive username match but stores Mojang casing', async () => {
     stubMojangJoined({ id: PLAYER_UUID_UNDASHED, name: PLAYER_NAME });
 
-    const challenge = await createChallenge(harness.app, 'skymatrixplayer');
+    const challenge = await createChallenge(harness.app, 'hotaruplayer');
     const { body } = await createVerifyBody(harness.app, PLAYER_NAME, {
       challenge,
-      verifyUsername: 'SKYMATRIXPLAYER',
+      verifyUsername: 'HOTARUPLAYER',
     });
 
     const response = await postVerify(harness.app, body);

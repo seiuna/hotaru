@@ -21,7 +21,7 @@ Files: `src/modules/minecraft-auth/**` (handshake), `src/modules/tokens/**` (ses
 ## Sequence
 
 ```
- Fabric client (mod + skymatrix-sdk-java)      auth-server                    Redis        Mojang
+ Fabric client (mod + hotaru-sdk-java)      auth-server                    Redis        Mojang
              │                                   │                          │            │
  (1) start login                              │                          │            │
              │── POST /api/v1/auth/minecraft/challenge ──────────────────►│            │
@@ -208,7 +208,7 @@ The full cross-endpoint error table lives in [api.md](api.md#error-envelope).
 
 ## Why a client-supplied UUID is never trusted
 
-The verify request schema (`verifyRequestSchema` in `@skymatrix/api-contract`) is:
+The verify request schema (`verifyRequestSchema` in `@hotaru/api-contract`) is:
 
 ```ts
 { challengeId, username, encryptedSharedSecret, encryptedVerifyToken }
@@ -243,7 +243,7 @@ is used by the client, against Mojang, and never by the server. We keep exactly 
   (the per-challenge AES secret and the verify token). The plaintext never leaves the process: the
   secret is hashed into `serverId'`, the verify token is compared and discarded.
 
-The benefit is the point of the whole exercise: **a compromised Skymatrix service cannot be replayed
+The benefit is the point of the whole exercise: **a compromised Hotaru service cannot be replayed
 against Mojang or against other Minecraft servers**, because it never holds a Mojang credential. The
 Fabric SDK keeps the Mojang session on the client side (`SessionProvider`).
 
@@ -264,7 +264,7 @@ Two details that matter for correctness of the hash:
 | Claim | Meaning |
 | --- | --- |
 | `iss` | `JWT_ISSUER` (defaults to `PUBLIC_BASE_URL`) |
-| `aud` | `[JWT_AUDIENCE]` (default `skymatrix-api`) |
+| `aud` | `[JWT_AUDIENCE]` (default `hotaru-api`) |
 | `sub` | internal MongoDB user id — **not** the Minecraft UUID |
 | `minecraft_uuid` | Mojang UUID (convenience for clients; the server re-reads it from the DB) |
 | `sid` | session id — what makes revocation possible at all |

@@ -1,5 +1,5 @@
 {
-  "name": "@skymatrix/auth-server",
+  "name": "@hotaru/auth-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -21,8 +21,8 @@
     "@fastify/cors": "^11.0.0",
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
-    "@skymatrix/api-contract": "workspace:*",
-    "@skymatrix/shared-types": "workspace:*",
+    "@hotaru/api-contract": "workspace:*",
+    "@hotaru/shared-types": "workspace:*",
     "dotenv": "^16.4.0",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",

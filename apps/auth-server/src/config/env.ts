@@ -16,7 +16,7 @@ const envSchema = z.object({
     .default('info'),
 
   MONGODB_URI: z.string().min(1),
-  MONGODB_DB: z.string().default('skymatrix_auth'),
+  MONGODB_DB: z.string().default('hotaru_auth'),
   /** Create declared indexes on boot (additive, never drops). Safe to leave on. */
   MONGODB_ENSURE_INDEXES: z
     .enum(['true', 'false'])
@@ -27,7 +27,7 @@ const envSchema = z.object({
 
   PUBLIC_BASE_URL: z.string().url().default('http://localhost:3000'),
   JWT_ISSUER: z.string().url().optional(),
-  JWT_AUDIENCE: z.string().default('skymatrix-api'),
+  JWT_AUDIENCE: z.string().default('hotaru-api'),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
@@ -42,7 +42,7 @@ const envSchema = z.object({
   MOJANG_HAS_JOINED_ATTEMPTS: z.coerce.number().int().min(1).max(5).default(2),
   MOJANG_RETRY_DELAY_MS: z.coerce.number().int().nonnegative().default(500),
 
-  DEFAULT_SCOPES: z.string().default('skymatrix:profile'),
+  DEFAULT_SCOPES: z.string().default('hotaru:profile'),
   CORS_ORIGINS: z.string().default(''),
 
   JWT_PRIVATE_KEY_PEM: z.string().optional(),

@@ -2,7 +2,7 @@
 
 Base URL: `PUBLIC_BASE_URL` (production `https://auth.example.com`). All endpoints are under `/api/v1`.
 The machine-readable contract is [`docs/openapi.json`](openapi.json) / [`docs/openapi.yaml`](openapi.yaml),
-generated from the running app by `pnpm --filter @skymatrix/auth-server openapi:export`.
+generated from the running app by `pnpm --filter @hotaru/auth-server openapi:export`.
 
 - [Conventions](#conventions)
 - [Endpoint summary](#endpoint-summary)
@@ -120,7 +120,7 @@ Response `200`:
   "tokenType": "Bearer",
   "expiresIn": 900,
   "profile": { "uuid": "069a79f4-44e9-4726-a5be-fca90e38aaf5", "username": "Notch" },
-  "scopes": ["skymatrix:profile"]
+  "scopes": ["hotaru:profile"]
 }
 ```
 
@@ -192,7 +192,7 @@ Rotating the JWT key pair changes `kid`; verifiers must select the key by `kid` 
     "createdAt": "2026-11-01T09:12:44.000Z",
     "lastLoginAt": "2026-11-06T13:21:00.000Z"
   },
-  "scopes": ["skymatrix:profile"]
+  "scopes": ["hotaru:profile"]
 }
 ```
 
@@ -206,19 +206,19 @@ Errors: `401 UNAUTHORIZED`, `401 TOKEN_EXPIRED`, `401 SESSION_REVOKED`, `403 USE
 {
   "permissions": [
     {
-      "scope": "skymatrix:profile",
+      "scope": "hotaru:profile",
       "grantedAt": "2026-11-01T09:12:44.000Z",
       "expiresAt": null,
       "grantedBy": null
     },
     {
-      "scope": "skymatrix:resource",
+      "scope": "hotaru:resource",
       "grantedAt": "2026-11-05T18:00:00.000Z",
       "expiresAt": "2026-12-05T18:00:00.000Z",
       "grantedBy": "66f1b0c2a9d3e4f5b6c7d8e9"
     }
   ],
-  "scopes": ["skymatrix:profile", "skymatrix:resource"]
+  "scopes": ["hotaru:profile", "hotaru:resource"]
 }
 ```
 
@@ -269,8 +269,8 @@ Ordering is newest-account-first (`createdAt` desc). Errors: `400 INVALID_REQUES
 ```json
 {
   "permissions": [
-    { "scope": "skymatrix:profile" },
-    { "scope": "skymatrix:resource", "expiresAt": "2026-12-05T18:00:00.000Z" }
+    { "scope": "hotaru:profile" },
+    { "scope": "hotaru:resource", "expiresAt": "2026-12-05T18:00:00.000Z" }
   ]
 }
 ```
@@ -457,10 +457,10 @@ Two rules for clients:
 
 | Scope | Grants |
 | --- | --- |
-| `skymatrix:profile` | Read the authenticated account profile (default for every player) |
-| `skymatrix:resource` | Access the Skymatrix mod resource service |
-| `skymatrix:ircserver` | Connect to the Skymatrix IRC service |
-| `skymatrix:license` | Query software licenses |
+| `hotaru:profile` | Read the authenticated account profile (default for every player) |
+| `hotaru:resource` | Access the Hotaru mod resource service |
+| `hotaru:ircserver` | Connect to the Hotaru IRC service |
+| `hotaru:license` | Query software licenses |
 | `admin:users` | Administer users, permissions, sessions and read the audit log |
 
 Scopes are granted only by an administrator (`PUT /admin/users/{id}/permissions`) or by the seed script,

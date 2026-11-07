@@ -2,7 +2,7 @@
  * Grants the `admin:users` scope to a Minecraft account.
  *
  * Usage (from the repo root):
- *   pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <minecraft-uuid> [--username Name]
+ *   pnpm --filter @hotaru/auth-server admin:seed -- --uuid <minecraft-uuid> [--username Name]
  *
  * Idempotent: running it twice leaves the database in the same state. The
  * account is created (status active) when it does not exist yet; an existing
@@ -17,13 +17,13 @@ import {
   PermissionModel,
   UserModel,
 } from '../src/infrastructure/mongo/models/index.js';
-import { minecraftUuidSchema, usernameSchema } from '@skymatrix/api-contract';
+import { minecraftUuidSchema, usernameSchema } from '@hotaru/api-contract';
 
 const SEED_ACTOR = 'system:seed-admin';
 const ADMIN_SCOPE = 'admin:users';
 
 const USAGE = [
-  'Usage: pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <minecraft-uuid> [--username Name]',
+  'Usage: pnpm --filter @hotaru/auth-server admin:seed -- --uuid <minecraft-uuid> [--username Name]',
   '',
   '  --uuid       Mojang UUID, dashed or undashed (required)',
   '  --username   Minecraft username; required when the account is not known yet',

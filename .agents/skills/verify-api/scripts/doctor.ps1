@@ -58,7 +58,7 @@ try {
 
 if ($first) {
   if ($first.status -ne 'ok') { $problems.Add("/health status is '$($first.status)', expected ok") }
-  if ($first.service -ne 'skymatrix-api') { $problems.Add("/health service is '$($first.service)', expected skymatrix-api") }
+  if ($first.service -ne 'hotaru-api') { $problems.Add("/health service is '$($first.service)', expected hotaru-api") }
   if ($null -eq $first.uptimeSeconds) { $problems.Add('/health has no uptimeSeconds') }
   try {
     [void][datetime]::Parse($first.timestamp)

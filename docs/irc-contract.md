@@ -36,14 +36,14 @@ request.auth = { userId, minecraftUuid, sessionId, scopes }
 ```
 
 Rules: signature via the auth server's JWKS, `iss`/`aud` checked, `exp` enforced, the Redis key
-`auth:session:revoked:{sid}` must be absent, and `skymatrix:ircserver` must be in `scope`.
+`auth:session:revoked:{sid}` must be absent, and `hotaru:ircserver` must be in `scope`.
 
 ## Errors
 
 - REST: `throw new AppError(code, message, status)` from `src/http/app-error.ts`; the global handler
   returns `{ error: { code, message } }`.
 - WebSocket: never throw at the socket; send an `ERROR` frame with a code from
-  `@skymatrix/srp-protocol` and keep the connection open unless the protocol is violated.
+  `@hotaru/srp-protocol` and keep the connection open unless the protocol is violated.
 
 ## Message lifecycle (core)
 
@@ -54,7 +54,7 @@ Rules: signature via the auth server's JWKS, `iss`/`aud` checked, `exp` enforced
      `ACK failed` with `TARGET_OFFLINE`.
    - GROUP: membership + group deny filter → deliver to online members except the sender's own socket →
      `ACK delivered` with `recipients`.
-   - BROADCAST: requires `skymatrix:irc:broadcast` (or an admin UUID) → global + per-recipient deny →
+   - BROADCAST: requires `hotaru:irc:broadcast` (or an admin UUID) → global + per-recipient deny →
      deliver.
 4. TTL: `expireAt = receivedAt + ttlMs` (server clock). If `now > expireAt` at delivery time →
    `MESSAGE_EXPIRED`.
@@ -79,8 +79,8 @@ alive without its connection record (TTL is the safety net, not the source of tr
 ## Local infrastructure
 
 ```
-MongoDB   mongodb://127.0.0.1:27017   (container skymatrix-mongo)  DBs: skymatrix_irc / skymatrix_irc_test
-Redis     redis://127.0.0.1:16379     (container skymatrix-redis)  shared with the auth server
+MongoDB   mongodb://127.0.0.1:27017   (container hotaru-mongo)  DBs: hotaru_irc / hotaru_irc_test
+Redis     redis://127.0.0.1:16379     (container hotaru-redis)  shared with the auth server
 auth      http://127.0.0.1:3000       (JWKS at /api/v1/auth/jwks)
 IRC       http://127.0.0.1:3001       (WS at /v1/connect)
 ```
@@ -95,10 +95,10 @@ Port 6379 cannot be bound on this host (Docker Desktop proxy), hence 16379. Do n
   MongoDB; scopes come from the verified token; time comes from the server.
 - **Never log payloads** or tokens. Audit entries record identifiers and decisions only.
 - Every limit in `config` exists for a reason — enforce it at the boundary, not deep in the fan-out.
-- Tests: unit next to source (`*.test.ts`, run by `pnpm --filter @skymatrix/irc-server test`);
-  integration in `tests/integration/` (`pnpm --filter @skymatrix/irc-server test:integration`).
+- Tests: unit next to source (`*.test.ts`, run by `pnpm --filter @hotaru/irc-server test`);
+  integration in `tests/integration/` (`pnpm --filter @hotaru/irc-server test:integration`).
 
 ## Definition of done
 
-`pnpm --filter @skymatrix/irc-server typecheck`, `lint` and `test` pass for your scope, and the feature
+`pnpm --filter @hotaru/irc-server typecheck`, `lint` and `test` pass for your scope, and the feature
 works through the real transport (WS frame or HTTP request), not just unit-level.

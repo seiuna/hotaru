@@ -10,8 +10,8 @@ import {
 } from 'naive-ui';
 import { computed, h, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
-import type { AdminUserDetailResponse, SessionView } from '@skymatrix/api-contract';
-import type { Scope } from '@skymatrix/shared-types';
+import type { AdminUserDetailResponse, SessionView } from '@hotaru/api-contract';
+import type { Scope } from '@hotaru/shared-types';
 import { ApiError, api } from '../api/client';
 import EmptyState from '../components/EmptyState.vue';
 import { authState, setScopes } from '../stores/auth';

@@ -2,7 +2,7 @@
 import { NButton, NDataTable, NInput, NPagination, NSkeleton, NTag, type DataTableColumns } from 'naive-ui';
 import { h, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
-import type { UserView } from '@skymatrix/api-contract';
+import type { UserView } from '@hotaru/api-contract';
 import { ApiError, api } from '../api/client';
 import EmptyState from '../components/EmptyState.vue';
 import { formatDateTime, formatRelative, initialOf, shortUuid } from '../utils/format';

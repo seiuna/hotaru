@@ -75,13 +75,13 @@ services:
       PORT: 3000
       LOG_LEVEL: ${LOG_LEVEL:-info}
       MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/?authSource=admin
-      MONGODB_DB: ${MONGODB_DB:-skymatrix_auth}
+      MONGODB_DB: ${MONGODB_DB:-hotaru_auth}
       # Additive index creation on boot; unique constraints must exist before traffic.
       MONGODB_ENSURE_INDEXES: ${MONGODB_ENSURE_INDEXES:-true}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set in deploy/.env}
       JWT_ISSUER: ${PUBLIC_BASE_URL:?set in deploy/.env}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-skymatrix-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-hotaru-api}
       ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-900}
       REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-7}
       CHALLENGE_TTL_SECONDS: ${CHALLENGE_TTL_SECONDS:-60}
@@ -92,7 +92,7 @@ services:
       MOJANG_HAS_JOINED_TIMEOUT_MS: ${MOJANG_HAS_JOINED_TIMEOUT_MS:-5000}
       MOJANG_HAS_JOINED_ATTEMPTS: ${MOJANG_HAS_JOINED_ATTEMPTS:-2}
       MOJANG_RETRY_DELAY_MS: ${MOJANG_RETRY_DELAY_MS:-500}
-      DEFAULT_SCOPES: ${DEFAULT_SCOPES:-skymatrix:profile}
+      DEFAULT_SCOPES: ${DEFAULT_SCOPES:-hotaru:profile}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       # Optional: bring-your-own PEMs. Empty means "generate once and persist in
       # MongoDB". Forwarded explicitly so an operator uncommenting them in
@@ -138,7 +138,7 @@ services:
       PORT: 3001
       LOG_LEVEL: ${LOG_LEVEL:-info}
       MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/?authSource=admin
-      MONGODB_DB: ${MONGODB_IRC_DB:-skymatrix_irc}
+      MONGODB_DB: ${MONGODB_IRC_DB:-hotaru_irc}
       # Additive index creation on boot. Unique constraints and the audit-log TTL
       # are correctness requirements, so this stays on unless a migration job
       # owns index management.
@@ -147,7 +147,7 @@ services:
       # Same trust anchor and issuer as the auth server's own tokens.
       AUTH_JWKS_URL: ${AUTH_JWKS_URL:-http://auth-server:3000/api/v1/auth/jwks}
       JWT_ISSUER: ${PUBLIC_BASE_URL:?set in deploy/.env}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-skymatrix-api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-hotaru-api}
       JWKS_CACHE_TTL_MS: ${JWKS_CACHE_TTL_MS:-600000}
       INSTANCE_ID: ${INSTANCE_ID:-irc-01}
       HEARTBEAT_INTERVAL_MS: ${HEARTBEAT_INTERVAL_MS:-30000}

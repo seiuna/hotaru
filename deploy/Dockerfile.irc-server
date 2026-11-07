@@ -4,7 +4,7 @@
 # IRC server (SRP v1) image.
 #
 # Mirrors deploy/Dockerfile (the auth server image) but only carries what the
-# IRC server needs: @skymatrix/srp-protocol, @skymatrix/shared-types and the
+# IRC server needs: @hotaru/srp-protocol, @hotaru/shared-types and the
 # service itself. The WebSocket endpoint, the REST API and the health probes all
 # live in that one process, so there is exactly one binary and one port.
 # ---------------------------------------------------------------------------
@@ -27,9 +27,9 @@ COPY tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/irc-server ./apps/irc-server
 
-RUN pnpm --filter @skymatrix/shared-types build \
- && pnpm --filter @skymatrix/srp-protocol build \
- && pnpm --filter @skymatrix/irc-server build
+RUN pnpm --filter @hotaru/shared-types build \
+ && pnpm --filter @hotaru/srp-protocol build \
+ && pnpm --filter @hotaru/irc-server build
 
 # Re-install with production dependencies only. `pnpm prune --prod` is NOT usable
 # here: inside a workspace it leaves each package's node_modules without its
@@ -47,7 +47,7 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-RUN addgroup -S skymatrix && adduser -S skymatrix -G skymatrix
+RUN addgroup -S hotaru && adduser -S hotaru -G hotaru
 
 COPY --from=build /app/node_modules ./node_modules
 # Copy each workspace package whole: its dependency symlinks live in its OWN
@@ -55,7 +55,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/irc-server ./apps/irc-server
 
-USER skymatrix
+USER hotaru
 
 EXPOSE 3001
 

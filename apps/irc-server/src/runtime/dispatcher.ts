@@ -1,4 +1,4 @@
-import type { DeliveredMessageFrame } from '@skymatrix/srp-protocol';
+import type { DeliveredMessageFrame } from '@hotaru/srp-protocol';
 import type { ConnectionHandle, DeliverableMessage, MessageDispatcher } from './contracts.js';
 import type { ConnectionRegistry } from './contracts.js';
 

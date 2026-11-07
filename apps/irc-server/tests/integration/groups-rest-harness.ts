@@ -23,7 +23,7 @@ import type { FastifyInstance } from 'fastify';
  */
 
 const MONGO_URI = process.env['IRC_TEST_MONGODB_URI'] ?? 'mongodb://127.0.0.1:27017';
-const DB_NAME = 'skymatrix_irc_test';
+const DB_NAME = 'hotaru_irc_test';
 const REDIS_URL = process.env['IRC_TEST_REDIS_URL'] ?? 'redis://127.0.0.1:16379';
 const KID = 'irc-groups-test-key';
 
@@ -118,7 +118,7 @@ export async function startRestHarness(options: RestHarnessOptions = {}): Promis
     const token = await new SignJWT({
       sid: `sess-${userId}`,
       minecraft_uuid: minecraftUuid,
-      scope: 'skymatrix:ircserver',
+      scope: 'hotaru:ircserver',
     })
       .setProtectedHeader({ alg: 'EdDSA', kid: KID })
       .setIssuer(config.jwtIssuer)

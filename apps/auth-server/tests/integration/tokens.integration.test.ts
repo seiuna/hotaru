@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TokenResponse } from '@skymatrix/api-contract';
+import type { TokenResponse } from '@hotaru/api-contract';
 import {
   AuditLogModel,
   RefreshTokenModel,

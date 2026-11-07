@@ -13,7 +13,7 @@
  *   4. boots the real app, calls app.ready() so every route is registered,
  *      then serialises app.swagger() to docs/openapi.json and docs/openapi.yaml.
  *
- * Run with: pnpm --filter @skymatrix/auth-server openapi:export
+ * Run with: pnpm --filter @hotaru/auth-server openapi:export
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -41,13 +41,13 @@ function buildConfig() {
     PORT: '3000',
     LOG_LEVEL: 'silent',
 
-    MONGODB_URI: 'mongodb://127.0.0.1:27017/skymatrix_openapi_export',
-    MONGODB_DB: 'skymatrix_openapi_export',
+    MONGODB_URI: 'mongodb://127.0.0.1:27017/hotaru_openapi_export',
+    MONGODB_DB: 'hotaru_openapi_export',
     REDIS_URL: 'redis://127.0.0.1:16379',
 
     PUBLIC_BASE_URL: 'https://auth.example.com',
     JWT_ISSUER: 'https://auth.example.com',
-    JWT_AUDIENCE: 'skymatrix-api',
+    JWT_AUDIENCE: 'hotaru-api',
 
     ACCESS_TOKEN_TTL_SECONDS: '900',
     REFRESH_TOKEN_TTL_DAYS: '7',
@@ -62,7 +62,7 @@ function buildConfig() {
     MOJANG_HAS_JOINED_ATTEMPTS: '2',
     MOJANG_RETRY_DELAY_MS: '500',
 
-    DEFAULT_SCOPES: 'skymatrix:profile',
+    DEFAULT_SCOPES: 'hotaru:profile',
     CORS_ORIGINS: '',
   });
 }

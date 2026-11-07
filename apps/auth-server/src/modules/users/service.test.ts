@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PermissionView } from '@skymatrix/shared-types';
+import type { PermissionView } from '@hotaru/shared-types';
 import type { FastifyRequest } from 'fastify';
 import {
   effectiveScopes,
@@ -16,7 +16,7 @@ const NOW = new Date('2026-03-01T00:00:00.000Z');
 
 function permission(overrides: Partial<PermissionView> = {}): PermissionView {
   return {
-    scope: 'skymatrix:profile',
+    scope: 'hotaru:profile',
     grantedAt: '2026-01-01T00:00:00.000Z',
     expiresAt: null,
     grantedBy: null,
@@ -102,14 +102,14 @@ describe('effectiveScopes', () => {
   it('returns only unexpired grants', () => {
     const scopes = effectiveScopes(
       [
-        permission({ scope: 'skymatrix:profile' }),
-        permission({ scope: 'skymatrix:license', expiresAt: '2027-01-01T00:00:00.000Z' }),
+        permission({ scope: 'hotaru:profile' }),
+        permission({ scope: 'hotaru:license', expiresAt: '2027-01-01T00:00:00.000Z' }),
         permission({ scope: 'admin:users', expiresAt: '2026-01-01T00:00:00.000Z' }),
       ],
       NOW,
     );
 
-    expect(scopes).toEqual(['skymatrix:profile', 'skymatrix:license']);
+    expect(scopes).toEqual(['hotaru:profile', 'hotaru:license']);
   });
 
   it('is empty when every grant has expired', () => {
@@ -122,7 +122,7 @@ describe('effectiveScopes', () => {
 describe('isScope', () => {
   it('accepts every enum member and rejects anything else', () => {
     expect(isScope('admin:users')).toBe(true);
-    expect(isScope('skymatrix:profile')).toBe(true);
+    expect(isScope('hotaru:profile')).toBe(true);
     expect(isScope('admin:everything')).toBe(false);
   });
 });
@@ -151,7 +151,7 @@ describe('currentAuth', () => {
       username: 'Notch',
       sessionId: '507f1f77bcf86cd799439021',
       jti: 'jti-1',
-      scopes: ['skymatrix:profile'] as const,
+      scopes: ['hotaru:profile'] as const,
     };
     const request = { auth } as unknown as FastifyRequest;
 

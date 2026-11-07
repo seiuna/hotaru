@@ -6,7 +6,7 @@ import {
   validateTypeName,
   type ClientMessage,
   type SrpErrorCode,
-} from '@skymatrix/srp-protocol';
+} from '@hotaru/srp-protocol';
 import type { AppContext } from '../../context.js';
 import type {
   AuditService,

@@ -16,7 +16,7 @@ const envSchema = z.object({
     .default('info'),
 
   MONGODB_URI: z.string().min(1),
-  MONGODB_DB: z.string().default('skymatrix_irc'),
+  MONGODB_DB: z.string().default('hotaru_irc'),
   /** Create declared indexes on boot (additive, never drops). Safe to leave on. */
   MONGODB_ENSURE_INDEXES: z
     .enum(['true', 'false'])
@@ -27,7 +27,7 @@ const envSchema = z.object({
   /** Auth server's public JWKS — the only trust anchor for access tokens. */
   AUTH_JWKS_URL: z.string().url().default('http://127.0.0.1:3000/api/v1/auth/jwks'),
   JWT_ISSUER: z.string().default('http://localhost:3000'),
-  JWT_AUDIENCE: z.string().default('skymatrix-api'),
+  JWT_AUDIENCE: z.string().default('hotaru-api'),
   JWKS_CACHE_TTL_MS: z.coerce.number().int().positive().default(600_000),
 
   /** Identifies this node for presence routing and pub/sub channels. */

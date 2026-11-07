@@ -17,7 +17,7 @@ import {
 describe('validateTypeName', () => {
   it('accepts namespaced types', () => {
     expect(validateTypeName('chat.message').ok).toBe(true);
-    expect(validateTypeName('skymatrix.party.state').ok).toBe(true);
+    expect(validateTypeName('hotaru.party.state').ok).toBe(true);
     expect(validateTypeName('a_b-c.d1').ok).toBe(true);
   });
 

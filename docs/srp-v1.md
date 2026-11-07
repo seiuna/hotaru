@@ -1,6 +1,6 @@
-# SRP v1 — SkyMatrix Relay Protocol
+# SRP v1 — Hotaru Relay Protocol
 
-The wire contract between a Minecraft client (or any SDK) and the SkyMatrix IRC
+The wire contract between a Minecraft client (or any SDK) and the Hotaru IRC
 server. Everything here is implemented by `packages/srp-protocol/src/index.ts`
 (shapes, codes, limits) and `apps/irc-server/src/{ws/attach.ts,modules/routing/index.ts}`
 (runtime behaviour). Where the implementation is narrower than the original
@@ -23,7 +23,7 @@ Related documents:
 | Endpoint | `GET /v1/connect` |
 | Scheme | `wss://` in production (TLS terminated by Caddy), `ws://` on loopback in development |
 | Authentication | `Authorization: Bearer <access token>` on the **upgrade request** |
-| Token | The auth server's Ed25519 access JWT; must contain `skymatrix:ircserver` in `scope` |
+| Token | The auth server's Ed25519 access JWT; must contain `hotaru:ircserver` in `scope` |
 | Payloads | UTF-8 JSON text frames; one frame = one JSON object |
 | Compression | None at the protocol layer (`permessage-deflate` is not negotiated) |
 
@@ -35,7 +35,7 @@ upgrade directly, synchronously, with a JSON error body:
 | no `Authorization` header / not `Bearer` | `401` | `UNAUTHORIZED` |
 | malformed, forged or foreign-signature token | `401` | `UNAUTHORIZED` |
 | expired token | `401` | `TOKEN_EXPIRED` |
-| token lacks `skymatrix:ircserver` | `403` | `SCOPE_DENIED` |
+| token lacks `hotaru:ircserver` | `403` | `SCOPE_DENIED` |
 | session revoked (`auth:session:revoked:{sid}` in Redis) | `403` | `SESSION_REVOKED` |
 | revocation check impossible (Redis down) | `401` | `UNAUTHORIZED` (fail closed) |
 | server at per-user or per-IP connection cap | `429` | `RATE_LIMITED` |
@@ -45,7 +45,7 @@ upgrade directly, synchronously, with a JSON error body:
 Example rejection body:
 
 ```json
-{ "error": { "code": "SCOPE_DENIED", "message": "Missing scope skymatrix:ircserver" } }
+{ "error": { "code": "SCOPE_DENIED", "message": "Missing scope hotaru:ircserver" } }
 ```
 
 The token's claims are the only identity the server trusts: `sub` (internal user
@@ -82,7 +82,7 @@ Every frame — in both directions — is a JSON object with at least `v`, `id` 
 | `PRESENCE` | — | **Reserved in v1, never emitted.** Presence is queried over REST instead. |
 | `GROUP_EVENT` | — | **Reserved in v1, never emitted.** Group changes are made and observed over REST. |
 
-`PRESENCE` and `GROUP_EVENT` exist in `@skymatrix/srp-protocol` as `ServerFrame`
+`PRESENCE` and `GROUP_EVENT` exist in `@hotaru/srp-protocol` as `ServerFrame`
 variants so a future version can add push semantics without a breaking change.
 A client must ignore unknown ops rather than treat them as fatal.
 
@@ -238,7 +238,7 @@ A player may address themselves; the message is then delivered to their own sock
 
 ### BROADCAST
 
-1. Requires `BROADCAST_ENABLED=true` **and** either the `skymatrix:irc:broadcast`
+1. Requires `BROADCAST_ENABLED=true` **and** either the `hotaru:irc:broadcast`
    scope on the token or the sender's UUID in `ADMIN_UUIDS`; otherwise
    `ACK failed { reason: "BROADCAST_DENIED" }`.
 2. Global and per-recipient filters apply.
@@ -332,7 +332,7 @@ Notes:
 ## 7. TTL and expiry
 
 - `expireAt = receivedAt + ttlMs`, both on the **server's** clock
-  (`computeExpireAt` in `@skymatrix/srp-protocol`).
+  (`computeExpireAt` in `@hotaru/srp-protocol`).
 - `ttlMs` defaults to 10 000 ms, minimum 1 000 ms, maximum 60 000 ms. Values
   outside the range fail schema validation (`INVALID_ENVELOPE`).
 - Recipients receive `receivedAt`, `expireAt` and the effective `ttlMs` so they
@@ -385,7 +385,7 @@ authorisation beyond this: the server routes what the filters allow.
 
 ## 9. Limits
 
-Protocol limits (`@skymatrix/srp-protocol` → `LIMITS`):
+Protocol limits (`@hotaru/srp-protocol` → `LIMITS`):
 
 | Limit | Value |
 | --- | --- |
@@ -452,14 +452,14 @@ endpoint. See [irc-api.md](./irc-api.md#presence).
 
 ## 11. Error-code table
 
-Codes are defined once in `@skymatrix/srp-protocol` (`SRP_ERROR_CODES`) and used
+Codes are defined once in `@hotaru/srp-protocol` (`SRP_ERROR_CODES`) and used
 by both transports.
 
 | Code | Delivered as | Meaning | Connection stays open? |
 | --- | --- | --- | --- |
 | `UNAUTHORIZED` | HTTP 401 at upgrade; REST 401 | Missing/invalid token, missing claims, or revocation state unknown (fail closed) | n/a (no socket) |
 | `TOKEN_EXPIRED` | HTTP 401 at upgrade | `exp` in the past | n/a |
-| `SCOPE_DENIED` | HTTP 403 at upgrade | Token lacks `skymatrix:ircserver` | n/a |
+| `SCOPE_DENIED` | HTTP 403 at upgrade | Token lacks `hotaru:ircserver` | n/a |
 | `SESSION_REVOKED` | HTTP 403 at upgrade | `auth:session:revoked:{sid}` present in Redis | n/a (existing sockets are not cut) |
 | `INVALID_ENVELOPE` | `ERROR` frame | Not JSON, schema violation, bad DIRECT/GROUP target | yes |
 | `UNSUPPORTED_VERSION` | `ERROR` frame | `v` ≠ 1 | yes |

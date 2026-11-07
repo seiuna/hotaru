@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { SCOPES, ERROR_CODES } from '@skymatrix/shared-types';
+import { SCOPES, ERROR_CODES } from '@hotaru/shared-types';
 
-export * from '@skymatrix/shared-types';
+export * from '@hotaru/shared-types';
 
 /* ------------------------------------------------------------------ */
 /* Shared primitives                                                   */

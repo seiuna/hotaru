@@ -26,7 +26,7 @@ import { revocationKey } from '../../../src/plugins/auth.js';
  * TEST_REDIS_URL / TEST_MONGODB_* when the containers move.
  */
 export const TEST_MONGODB_URI = process.env.TEST_MONGODB_URI ?? 'mongodb://127.0.0.1:27017';
-export const TEST_MONGODB_DB = process.env.TEST_MONGODB_DB ?? 'skymatrix_auth_test';
+export const TEST_MONGODB_DB = process.env.TEST_MONGODB_DB ?? 'hotaru_auth_test';
 export const TEST_REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://127.0.0.1:16379';
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;

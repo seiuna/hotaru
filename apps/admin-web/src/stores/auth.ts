@@ -1,10 +1,10 @@
 import { computed, reactive } from 'vue';
-import type { Scope } from '@skymatrix/shared-types';
+import type { Scope } from '@hotaru/shared-types';
 import { ApiError, api } from '../api/client';
 import { setApiToken } from '../api/token';
 import { decodeToken, isTokenExpired } from '../utils/jwt';
 
-const STORAGE_KEY = 'skymatrix.admin.session';
+const STORAGE_KEY = 'hotaru.admin.session';
 const ADMIN_SCOPE: Scope = 'admin:users';
 
 export interface AdminSession {
@@ -78,7 +78,7 @@ export async function loginWithToken(rawToken: string): Promise<AdminSession> {
     if (!scopes.includes(ADMIN_SCOPE)) {
       throw new Error(
         `账号 ${me.user.username}（${me.user.minecraftUuid}）没有 ${ADMIN_SCOPE} 权限。` +
-          '请先由已有管理员授权，或在服务器上执行：pnpm --filter @skymatrix/auth-server admin:seed -- --uuid ' +
+          '请先由已有管理员授权，或在服务器上执行：pnpm --filter @hotaru/auth-server admin:seed -- --uuid ' +
           me.user.minecraftUuid,
       );
     }

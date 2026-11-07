@@ -4,7 +4,7 @@ import {
   challengeResponseSchema,
   tokenResponseSchema,
   verifyRequestSchema,
-} from '@skymatrix/api-contract';
+} from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { clientIp, toJsonSchema, userAgentOf } from '../../http/zod-schema.js';
 import { createChallenge, verifyChallenge, type AuthRequestMeta } from './service.js';

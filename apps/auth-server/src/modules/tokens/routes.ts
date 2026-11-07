@@ -1,7 +1,7 @@
 import { decodeJwt } from 'jose';
 import { Types } from 'mongoose';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import { refreshRequestSchema, tokenResponseSchema } from '@skymatrix/api-contract';
+import { refreshRequestSchema, tokenResponseSchema } from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { clientIp, toJsonSchema, userAgentOf } from '../../http/zod-schema.js';

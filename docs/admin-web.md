@@ -63,7 +63,7 @@ Everything is server-backed; there are no mocked rows or decorative-only control
 ## Develop
 
 ```bash
-pnpm --filter @skymatrix/admin-web dev     # http://localhost:5173
+pnpm --filter @hotaru/admin-web dev     # http://localhost:5173
 ```
 
 Vite proxies `/api` to `http://127.0.0.1:3000`, so the SPA is always same-origin and needs no CORS
@@ -71,21 +71,21 @@ grant. Start the API first:
 
 ```bash
 docker compose -f deploy/compose.yaml --env-file deploy/.env up -d mongo redis   # or reuse local containers
-pnpm --filter @skymatrix/auth-server dev
+pnpm --filter @hotaru/auth-server dev
 ```
 
 Grant the first admin (once per account):
 
 ```bash
-pnpm --filter @skymatrix/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
+pnpm --filter @hotaru/auth-server admin:seed -- --uuid <minecraft-uuid> --username <name>
 ```
 
 ## Build and test
 
 ```bash
-pnpm --filter @skymatrix/admin-web build       # vue-tsc + vite build -> dist/
-pnpm --filter @skymatrix/admin-web test        # vitest (token decoding, permission diffing, formatting)
-pnpm --filter @skymatrix/admin-web lint
+pnpm --filter @hotaru/admin-web build       # vue-tsc + vite build -> dist/
+pnpm --filter @hotaru/admin-web test        # vitest (token decoding, permission diffing, formatting)
+pnpm --filter @hotaru/admin-web lint
 ```
 
 ## Deploy

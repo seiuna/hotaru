@@ -5,20 +5,20 @@ describe('computeGrantDiff', () => {
   it('reports additions, removals and expiry changes', () => {
     const diff = computeGrantDiff(
       [
-        { scope: 'skymatrix:profile', expiresAt: null },
-        { scope: 'skymatrix:resource', expiresAt: '2027-01-01T00:00:00.000Z' },
+        { scope: 'hotaru:profile', expiresAt: null },
+        { scope: 'hotaru:resource', expiresAt: '2027-01-01T00:00:00.000Z' },
       ],
       [
-        { scope: 'skymatrix:profile', expiresAt: null },
-        { scope: 'skymatrix:ircserver', expiresAt: null },
-        { scope: 'skymatrix:resource', expiresAt: '2027-06-01T00:00:00.000Z' },
+        { scope: 'hotaru:profile', expiresAt: null },
+        { scope: 'hotaru:ircserver', expiresAt: null },
+        { scope: 'hotaru:resource', expiresAt: '2027-06-01T00:00:00.000Z' },
       ],
     );
 
-    expect(diff.added).toEqual(['skymatrix:ircserver']);
+    expect(diff.added).toEqual(['hotaru:ircserver']);
     expect(diff.removed).toEqual([]);
-    expect(diff.updated).toEqual(['skymatrix:resource']);
-    expect(diff.unchanged).toEqual(['skymatrix:profile']);
+    expect(diff.updated).toEqual(['hotaru:resource']);
+    expect(diff.unchanged).toEqual(['hotaru:profile']);
     expect(isDiffEmpty(diff)).toBe(false);
   });
 
@@ -29,16 +29,16 @@ describe('computeGrantDiff', () => {
   });
 
   it('is empty when nothing changed', () => {
-    const current = [{ scope: 'skymatrix:profile' as const, expiresAt: null }];
+    const current = [{ scope: 'hotaru:profile' as const, expiresAt: null }];
     expect(isDiffEmpty(computeGrantDiff(current, [...current]))).toBe(true);
   });
 
   it('treats a null/undefined expiry difference as a change', () => {
     const diff = computeGrantDiff(
-      [{ scope: 'skymatrix:resource', expiresAt: null }],
-      [{ scope: 'skymatrix:resource', expiresAt: '2030-01-01T00:00:00.000Z' }],
+      [{ scope: 'hotaru:resource', expiresAt: null }],
+      [{ scope: 'hotaru:resource', expiresAt: '2030-01-01T00:00:00.000Z' }],
     );
-    expect(diff.updated).toEqual(['skymatrix:resource']);
+    expect(diff.updated).toEqual(['hotaru:resource']);
   });
 });
 

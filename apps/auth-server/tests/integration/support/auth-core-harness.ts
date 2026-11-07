@@ -8,7 +8,7 @@ import {
 import { vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type { Redis } from 'ioredis';
-import type { ChallengeResponse, TokenResponse } from '@skymatrix/api-contract';
+import type { ChallengeResponse, TokenResponse } from '@hotaru/api-contract';
 import { buildApp } from '../../../src/app.js';
 import { loadConfig, type AppConfig } from '../../../src/config/env.js';
 import type { AppContext } from '../../../src/context.js';
@@ -32,13 +32,13 @@ import {
  * bound by the Docker Desktop proxy here); override with TEST_REDIS_URL.
  */
 export const TEST_MONGODB_URI = process.env.TEST_MONGODB_URI ?? 'mongodb://127.0.0.1:27017';
-export const TEST_MONGODB_DB = process.env.TEST_MONGODB_DB ?? 'skymatrix_auth_test';
+export const TEST_MONGODB_DB = process.env.TEST_MONGODB_DB ?? 'hotaru_auth_test';
 export const TEST_REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://127.0.0.1:16379';
 
 export const PLAYER_UUID = '01234567-89ab-cdef-0123-456789abcdef';
 export const PLAYER_UUID_UNDASHED = PLAYER_UUID.replace(/-/g, '');
-export const PLAYER_NAME = 'SkymatrixPlayer';
-export const DEFAULT_SCOPES = ['skymatrix:profile', 'skymatrix:resource'];
+export const PLAYER_NAME = 'HotaruPlayer';
+export const DEFAULT_SCOPES = ['hotaru:profile', 'hotaru:resource'];
 
 export interface AuthCoreHarness {
   app: FastifyInstance;
@@ -53,7 +53,7 @@ const BASE_ENV: Record<string, string> = {
   NODE_ENV: 'test',
   LOG_LEVEL: 'silent',
   PUBLIC_BASE_URL: 'http://localhost:3000',
-  JWT_AUDIENCE: 'skymatrix-api',
+  JWT_AUDIENCE: 'hotaru-api',
   ACCESS_TOKEN_TTL_SECONDS: '900',
   REFRESH_TOKEN_TTL_DAYS: '7',
   CHALLENGE_TTL_SECONDS: '10',

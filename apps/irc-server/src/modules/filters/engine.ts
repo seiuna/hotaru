@@ -1,4 +1,4 @@
-import { LIMITS, matchTypePattern, validatePattern, validateTypeName } from '@skymatrix/srp-protocol';
+import { LIMITS, matchTypePattern, validatePattern, validateTypeName } from '@hotaru/srp-protocol';
 import type { FilterAction, FilterScope } from '../../runtime/contracts.js';
 import { toCanonicalUuid } from '../groups/ids.js';
 

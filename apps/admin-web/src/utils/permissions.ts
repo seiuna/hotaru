@@ -1,5 +1,5 @@
-import type { Scope } from '@skymatrix/shared-types';
-import type { PermissionView } from '@skymatrix/api-contract';
+import type { Scope } from '@hotaru/shared-types';
+import type { PermissionView } from '@hotaru/api-contract';
 
 export interface ScopeMeta {
   scope: Scope;
@@ -12,28 +12,28 @@ export interface ScopeMeta {
 /** Human copy for every scope the backend knows about (mirrors SCOPES). */
 export const SCOPE_META: ScopeMeta[] = [
   {
-    scope: 'skymatrix:profile',
+    scope: 'hotaru:profile',
     label: '账户资料',
     description: '读取自己的账户资料，所有玩家默认拥有',
     group: '平台',
     tone: 'sky',
   },
   {
-    scope: 'skymatrix:resource',
+    scope: 'hotaru:resource',
     label: '资源服务',
     description: '访问 Mod 资源下载服务',
     group: '平台',
     tone: 'mint',
   },
   {
-    scope: 'skymatrix:ircserver',
+    scope: 'hotaru:ircserver',
     label: 'IRC 服务',
     description: '连接内部 IRC 通讯服务',
     group: '平台',
     tone: 'mint',
   },
   {
-    scope: 'skymatrix:license',
+    scope: 'hotaru:license',
     label: '许可证',
     description: '查询软件许可证（保留能力）',
     group: '平台',

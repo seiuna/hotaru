@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * SkyMatrix Relay Protocol v1 — wire contract.
+ * Hotaru Relay Protocol v1 — wire contract.
  *
  * This package is the single source of truth for the IRC server, its REST API and
  * any client SDK: envelope shapes, operation names, error codes, limits and the
@@ -349,5 +349,5 @@ export function sessionRevokedKey(sessionId: string): string {
   return `auth:session:revoked:${sessionId}`;
 }
 
-export const REQUIRED_SCOPE = 'skymatrix:ircserver' as const;
-export const BROADCAST_SCOPE = 'skymatrix:irc:broadcast' as const;
+export const REQUIRED_SCOPE = 'hotaru:ircserver' as const;
+export const BROADCAST_SCOPE = 'hotaru:irc:broadcast' as const;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NDataTable, NInput, NPagination, NSelect, NSkeleton, type DataTableColumns } from 'naive-ui';
 import { h, onMounted, ref, watch } from 'vue';
-import type { AuditLogView } from '@skymatrix/api-contract';
+import type { AuditLogView } from '@hotaru/api-contract';
 import { ApiError, api } from '../api/client';
 import EmptyState from '../components/EmptyState.vue';
 import { formatDateTime, formatRelative } from '../utils/format';

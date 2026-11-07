@@ -1,23 +1,23 @@
 /**
- * Domain types shared by every Skymatrix service.
+ * Domain types shared by every Hotaru service.
  * Pure types only — no runtime dependencies, no vendor lock-in.
  */
 
 export const SCOPES = [
-  'skymatrix:profile',
-  'skymatrix:resource',
-  'skymatrix:ircserver',
-  'skymatrix:license',
+  'hotaru:profile',
+  'hotaru:resource',
+  'hotaru:ircserver',
+  'hotaru:license',
   'admin:users',
 ] as const;
 
 export type Scope = (typeof SCOPES)[number];
 
 export const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
-  'skymatrix:profile': 'Read the authenticated account profile',
-  'skymatrix:resource': 'Access the Skymatrix mod resource service',
-  'skymatrix:ircserver': 'Connect to the Skymatrix IRC service',
-  'skymatrix:license': 'Query software licenses',
+  'hotaru:profile': 'Read the authenticated account profile',
+  'hotaru:resource': 'Access the Hotaru mod resource service',
+  'hotaru:ircserver': 'Connect to the Hotaru IRC service',
+  'hotaru:license': 'Query software licenses',
   'admin:users': 'Administer users, permissions and sessions',
 };
 

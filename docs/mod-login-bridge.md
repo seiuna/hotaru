@@ -14,7 +14,7 @@ Mojang access token never leaves the game process except to Mojang.
 
 ## Why a loopback server and not a custom URL scheme
 
-A registered URL scheme (`skymatrix://`) can also hand data to a page, but it cannot answer "is the mod
+A registered URL scheme (`hotaru://`) can also hand data to a page, but it cannot answer "is the mod
 running?", cannot report *why* a login failed, and on several platforms pops an OS dialog every time.
 A loopback endpoint is the pattern desktop OAuth clients use: explicit origin allowlist, explicit user
 consent, immediate error reporting.
@@ -28,7 +28,7 @@ Base: `http://127.0.0.1:8765` (`DEFAULT_BRIDGE_PORT`; configurable on both sides
 No token, no side effects. Used by the login page to decide whether to show the button as available.
 
 ```json
-{ "ok": true, "service": "skymatrix-local-auth", "version": "0.1.0", "port": 8765, "requiresApproval": true }
+{ "ok": true, "service": "hotaru-local-auth", "version": "0.1.0", "port": 8765, "requiresApproval": true }
 ```
 
 ### `POST /v1/login`
@@ -42,7 +42,7 @@ Requires an `Origin` header on the allowlist. Blocks while the player answers th
   "tokenType": "Bearer",
   "expiresIn": 900,
   "profile": { "uuid": "4c1099df-e202-4e64-9ea2-9039be420143", "username": "yuuiyi" },
-  "scopes": ["skymatrix:profile", "admin:users"]
+  "scopes": ["hotaru:profile", "admin:users"]
 }
 ```
 
@@ -80,7 +80,7 @@ state and stores nothing on disk.
 
 ## Wiring it into a Fabric mod
 
-`examples/fabric-mod/SkymatrixAuthBridgeExample.java.example` shows the full
+`examples/fabric-mod/HotaruAuthBridgeExample.java.example` shows the full
 `ClientModInitializer` wiring. Two rules:
 
 The library is Minecraft-independent: it only needs something that answers `accessToken()`. A Fabric mod
@@ -116,7 +116,7 @@ console says so instead of pretending the mod is missing.
 ## Local end-to-end check (no Minecraft needed)
 
 ```bash
-cd clients/skymatrix-sdk-java && javac -d out "@sources.txt"
+cd clients/hotaru-sdk-java && javac -d out "@sources.txt"
 node tools/e2e/bridge-login.mjs
 ```
 

@@ -1,9 +1,9 @@
 ---
 name: verify-api
-description: "Drive the @skymatrix/api HTTP service the way a caller does — launch it on an isolated port, hit real routes with HTTP, capture evidence, tear down. Use to prove a change to apps/api or packages/shared actually works end to end, not just that it compiles."
+description: "Drive the @hotaru/api HTTP service the way a caller does — launch it on an isolated port, hit real routes with HTTP, capture evidence, tear down. Use to prove a change to apps/api or packages/shared actually works end to end, not just that it compiles."
 ---
 
-# Verify @skymatrix/api
+# Verify @hotaru/api
 
 `apps/api` is a Node HTTP service (`node:http`, no framework) that imports shared helpers from
 `packages/shared`. The user-facing surface is the HTTP API on `$PORT` (default `3000`). There is no
@@ -13,7 +13,8 @@ Use this skill when a change touches request handling in `apps/api/src/index.ts`
 helpers in `packages/shared/src/index.ts`, or the port/shutdown wiring. Passing `pnpm typecheck`
 proves nothing about behavior; drive the HTTP surface instead.
 
-All commands are PowerShell from the repo root `D:\project\skymatrix-servers`. Windows PowerShell
+All commands are PowerShell from the repo root (the directory containing `pnpm-workspace.yaml`; the
+snippets use `$PWD`). Windows PowerShell
 5.1 is what is installed here (`powershell.exe`; `pwsh` 7 is not on PATH), so the snippets below avoid
 PowerShell 7-only syntax and pass `-UseBasicParsing` to web cmdlets.
 
@@ -25,7 +26,7 @@ runtime error.
 
 ```powershell
 # 1. build once (fails loudly on a broken base)
-pnpm --filter @skymatrix/api build
+pnpm --filter @hotaru/api build
 
 # 2. start on an isolated port, capturing logs into a fresh evidence folder
 $port  = 3100
@@ -75,7 +76,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .agents\skills\verify-api\sc
 ```
 
 Checks, in order: PID file exists → recorded PID is running and is `node` → the listener on the port
-is owned by **that** PID → `/health` returns `status: ok`, `service: skymatrix-api`, a parseable
+is owned by **that** PID → `/health` returns `status: ok`, `service: hotaru-api`, a parseable
 `timestamp`, and `uptimeSeconds` that does not decrease across two calls one second apart. Exit `0`
 with a one-line summary, or exit `1` with each problem listed. It starts nothing and stops nothing.
 
@@ -89,11 +90,11 @@ feature map asserts:
 ```powershell
 # 1. health check
 $h = Invoke-RestMethod "http://localhost:3100/health" -UseBasicParsing
-#    -> { status: 'ok', service: 'skymatrix-api', uptimeSeconds: <int>, timestamp: <ISO> }
+#    -> { status: 'ok', service: 'hotaru-api', uptimeSeconds: <int>, timestamp: <ISO> }
 
 # 2. default/catch-all route echoes the request path
 $r = Invoke-RestMethod "http://localhost:3100/hello" -UseBasicParsing
-#    -> { message: 'Hello from skymatrix-api', path: '/hello' }
+#    -> { message: 'Hello from hotaru-api', path: '/hello' }
 
 # 3. status code + headers, when the proof needs them
 $resp = Invoke-WebRequest "http://localhost:3100/health" -UseBasicParsing
@@ -130,7 +131,7 @@ A proof is not a snapshot of a happy path. Standards for this repo:
 - Capture the **request and the resulting state**, not just the last response: the URL called, the
   status, and the body for every step in the journey.
 - Verify side effects you claim. If a change is supposed to write something (a log line, a file), show
-  it — `/health`'s `uptimeSeconds` growth and the `[skymatrix-api] listening on …` stdout line are
+  it — `/health`'s `uptimeSeconds` growth and the `[hotaru-api] listening on …` stdout line are
   the two observable side effects this service has today.
 - A journey from the feature map that cannot pass reports a failure with the reason. Never soften the
   assertion to make it pass; record the reason in that feature's **Gotchas**.

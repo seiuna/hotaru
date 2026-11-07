@@ -1,4 +1,4 @@
-import type { ErrorCode } from '@skymatrix/shared-types';
+import type { ErrorCode } from '@hotaru/shared-types';
 
 /**
  * Every failure the API reports deliberately is an AppError: it carries the

@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
-import type { TokenResponse } from '@skymatrix/api-contract';
-import type { Scope } from '@skymatrix/shared-types';
+import type { TokenResponse } from '@hotaru/api-contract';
+import type { Scope } from '@hotaru/shared-types';
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import {

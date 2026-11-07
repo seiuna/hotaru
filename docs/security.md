@@ -43,12 +43,12 @@ Files that implement the controls: `src/plugins/auth.ts`, `src/plugins/errors.ts
 | 15 | **Service key disclosure (JWT signing key)** | Env PEMs take precedence over `service_keys`, so production can keep the private key outside the database. The key pair is generated once (never per request/restart) so clients can cache JWKS and the Minecraft public key. | If the key is in `service_keys` and MongoDB is compromised, the attacker can sign tokens — but the guard still requires a live session and a real user row, and scopes still come from the DB. Rotate keys if exposure is suspected; prefer KMS-injected env PEMs. |
 | 16 | **Error-message information leak** | `plugins/errors.ts` is the only response builder for failures; unknown errors become `500 INTERNAL` with no message. Validation details name fields, never values. Admin routes return `404` for malformed ids, so "bad id" and "no such id" are indistinguishable. | Validation details reveal the schema — which is public anyway. |
 | 17 | **Credential leakage through logs** | Pino redacts `req.headers.authorization` and `req.headers.cookie`. Bodies are never logged. Audit metadata carries identifiers, scopes, reasons and counts only. Caddy's access log redacts `Authorization`/`Cookie` by default (verified: header value appears as `REDACTED`). | **Caddy logs the full request URI including query strings.** Never put a token, code or secret in a query string. The API does not accept credentials that way. |
-| 18 | **Supply-chain compromise of build dependencies** | `pnpm install --frozen-lockfile` in both CI and the Docker build, `onlyBuiltDependencies` restricted to `esbuild`, production image contains no toolchain and runs as an unprivileged user (`skymatrix`). | The npm registry itself is trusted; pin image digests if that is not acceptable. |
+| 18 | **Supply-chain compromise of build dependencies** | `pnpm install --frozen-lockfile` in both CI and the Docker build, `onlyBuiltDependencies` restricted to `esbuild`, production image contains no toolchain and runs as an unprivileged user (`hotaru`). | The npm registry itself is trusted; pin image digests if that is not acceptable. |
 | 19 | **Unauthorised administrative surface exposure** | Only Caddy publishes ports; MongoDB, Redis and the auth server are on the internal Docker network. `/docs` (Swagger UI) is blocked at the edge (`respond @docs 404`). | Anyone on the host's Docker network can reach the app directly. Treat host access as root-equivalent. |
 
 ## Local verification by other services
 
-`GET /api/v1/auth/jwks` exists so other Skymatrix services can verify access tokens **offline**
+`GET /api/v1/auth/jwks` exists so other Hotaru services can verify access tokens **offline**
 (`jose`, `jsonwebtoken`, etc.) without a network call per request. What that buys and what it costs:
 
 | | Pros | Cons |

@@ -1,5 +1,5 @@
 {
-  "name": "@skymatrix/api-contract",
+  "name": "@hotaru/api-contract",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -18,7 +18,7 @@
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@skymatrix/shared-types": "workspace:*",
+    "@hotaru/shared-types": "workspace:*",
     "zod": "^3.25.0"
   }
 }

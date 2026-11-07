@@ -5,7 +5,7 @@
  * databases, exactly the way tools/e2e/smoke.mjs boots the auth server:
  *
  *   fake Mojang :ephemeral   (tools/e2e/fake-mojang.mjs, strict hasJoined)
- *   auth #1      :3200      DEFAULT_SCOPES = profile + skymatrix:ircserver
+ *   auth #1      :3200      DEFAULT_SCOPES = profile + hotaru:ircserver
  *   auth #2      :3202      DEFAULT_SCOPES = profile only   (scope test)
  *   auth #3      :3203      ACCESS_TOKEN_TTL_SECONDS = 1    (expiry test)
  *   irc-server   :3201      SRP v1 WebSocket + REST
@@ -68,7 +68,7 @@ export async function requireLocalInfra(mongoUri, redisUrl) {
   if (missing.length > 0) {
     throw new Error(
       `local infrastructure is not running: ${missing.join(', ')}. ` +
-        'Start it with: docker start skymatrix-mongo skymatrix-redis',
+        'Start it with: docker start hotaru-mongo hotaru-redis',
     );
   }
 }
@@ -212,7 +212,7 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
   const config = { ...DEFAULTS, ...overrides };
   await requireLocalInfra(config.mongoUri, config.redisUrl);
 
-  const mongoDb = `skymatrix_irc_e2e_${runId}`;
+  const mongoDb = `hotaru_irc_e2e_${runId}`;
   const logs = [];
   const services = [];
   const mojang = startFakeMojang({ port: 0 });
@@ -232,7 +232,7 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
     // Every instance must claim the SAME issuer: the IRC server verifies `iss`.
     PUBLIC_BASE_URL: issuer,
     JWT_ISSUER: issuer,
-    JWT_AUDIENCE: 'skymatrix-api',
+    JWT_AUDIENCE: 'hotaru-api',
     CHALLENGE_TTL_SECONDS: '60',
     RATE_LIMIT_CHALLENGE_MAX: '500',
     RATE_LIMIT_VERIFY_MAX: '500',
@@ -245,20 +245,20 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
   const authMain = spawnService({
     label: 'auth#1',
     cwd: path.join(repoRoot, 'apps', 'auth-server'),
-    env: authEnv(config.authPort, { DEFAULT_SCOPES: 'skymatrix:profile,skymatrix:ircserver' }),
+    env: authEnv(config.authPort, { DEFAULT_SCOPES: 'hotaru:profile,hotaru:ircserver' }),
     logs,
   });
   const authRestricted = spawnService({
     label: 'auth#2',
     cwd: path.join(repoRoot, 'apps', 'auth-server'),
-    env: authEnv(config.restrictedAuthPort, { DEFAULT_SCOPES: 'skymatrix:profile' }),
+    env: authEnv(config.restrictedAuthPort, { DEFAULT_SCOPES: 'hotaru:profile' }),
     logs,
   });
   const authExpired = spawnService({
     label: 'auth#3',
     cwd: path.join(repoRoot, 'apps', 'auth-server'),
     env: authEnv(config.expiredAuthPort, {
-      DEFAULT_SCOPES: 'skymatrix:profile,skymatrix:ircserver',
+      DEFAULT_SCOPES: 'hotaru:profile,hotaru:ircserver',
       ACCESS_TOKEN_TTL_SECONDS: '1',
     }),
     logs,
@@ -279,7 +279,7 @@ export async function startManagedStack({ log = () => {}, runId = `${Date.now()}
       REDIS_URL: config.redisUrl,
       AUTH_JWKS_URL: `${issuer}/api/v1/auth/jwks`,
       JWT_ISSUER: issuer,
-      JWT_AUDIENCE: 'skymatrix-api',
+      JWT_AUDIENCE: 'hotaru-api',
       INSTANCE_ID: `e2e-${runId}`,
       ADMIN_UUIDS: '',
       CORS_ORIGINS: '',

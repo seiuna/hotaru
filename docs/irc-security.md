@@ -44,10 +44,10 @@ verified token or MongoDB, never from a frame, path, query or header.**
 1. **Unauthenticated internet client** — can only reach the IRC edge through
    Caddy, cannot produce a valid token.
 2. **Authenticated but unprivileged player** — has a valid
-   `skymatrix:ircserver` token; may attempt to spoof identity, abuse fan-out,
+   `hotaru:ircserver` token; may attempt to spoof identity, abuse fan-out,
    enumerate groups, or exhaust resources.
 3. **Privileged insider** — an `ADMIN_UUIDS` identity or a token holding
-   `skymatrix:irc:broadcast`.
+   `hotaru:irc:broadcast`.
 4. **Compromised dependency** — Redis or MongoDB unavailable or tampered with.
 5. **Network attacker** — can drop/inject traffic on the internal Docker network
    (assumed partially hostile; the app itself never listens on the host).
@@ -78,10 +78,10 @@ no relay can fix; clients must attribute content to `sender`, not to payload tex
 
 ### T2 — Scope-less token
 
-**Attack:** a token issued for another Skymatrix service (e.g. only
-`skymatrix:profile`) is replayed against the IRC endpoint.
+**Attack:** a token issued for another Hotaru service (e.g. only
+`hotaru:profile`) is replayed against the IRC endpoint.
 
-**Mitigation:** `verifyAccessToken` requires `skymatrix:ircserver` in the
+**Mitigation:** `verifyAccessToken` requires `hotaru:ircserver` in the
 space-separated `scope` claim and answers `403 SCOPE_DENIED` at the upgrade,
 before a socket exists. The same check protects every REST route because
 `requireAuth` uses the identical function.
@@ -173,7 +173,7 @@ group) repeatedly to amplify work by a factor of the online population.
 
 **Mitigation:**
 - BROADCAST requires `BROADCAST_ENABLED=true` **and** the
-  `skymatrix:irc:broadcast` scope or an `ADMIN_UUIDS` identity; every broadcast
+  `hotaru:irc:broadcast` scope or an `ADMIN_UUIDS` identity; every broadcast
   is audited (`irc.broadcast.sent` with recipient count).
 - GROUP messages use a stricter bucket (`GROUP_MESSAGE_RATE_PER_SEC = 10`,
   burst = 2×), and group size is capped (`MAX_GROUP_MEMBERS = 100`).

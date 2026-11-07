@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import { ZodError } from 'zod';
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { AppError } from '../errors.js';
-import type { ApiErrorBody } from '@skymatrix/shared-types';
+import type { ApiErrorBody } from '@hotaru/shared-types';
 
 function body(code: string, message: string, retryable: boolean, details?: unknown): ApiErrorBody {
   const error: ApiErrorBody['error'] = {

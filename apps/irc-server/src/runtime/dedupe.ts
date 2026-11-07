@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Redis } from 'ioredis';
-import { dedupeKey } from '@skymatrix/srp-protocol';
+import { dedupeKey } from '@hotaru/srp-protocol';
 
 export interface DedupeResult {
   status: 'new' | 'duplicate-same' | 'duplicate-different';

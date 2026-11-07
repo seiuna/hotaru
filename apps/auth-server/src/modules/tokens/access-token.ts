@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { SignJWT, type JWTPayload } from 'jose';
-import type { Scope } from '@skymatrix/shared-types';
+import type { Scope } from '@hotaru/shared-types';
 import type { JwtKeys } from '../../infrastructure/crypto/keys.js';
 
 export interface AccessTokenInput {
@@ -23,7 +23,7 @@ export interface SignedAccessToken {
   expiresIn: number;
 }
 
-/** Custom claims, mirrored from `AccessTokenClaims` in @skymatrix/shared-types. */
+/** Custom claims, mirrored from `AccessTokenClaims` in @hotaru/shared-types. */
 type AccessTokenPayload = JWTPayload & {
   minecraft_uuid: string;
   sid: string;

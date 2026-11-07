@@ -156,7 +156,7 @@ onMounted(async () => {
               已检测到本地认证服务（127.0.0.1:{{ BRIDGE_PORT }}）。点击后请在游戏内确认。
             </template>
             <template v-else-if="bridgeAvailable === false">
-              未检测到本地认证服务（127.0.0.1:{{ BRIDGE_PORT }}）。请先启动游戏与 Skymatrix 模组，或使用下方令牌。
+              未检测到本地认证服务（127.0.0.1:{{ BRIDGE_PORT }}）。请先启动游戏与 Hotaru 模组，或使用下方令牌。
             </template>
             <template v-else>正在检测本地认证服务…</template>
           </p>
@@ -206,7 +206,7 @@ onMounted(async () => {
             <li>从返回结果中取出 <code>accessToken</code>（不要用 refreshToken）。</li>
             <li>首次使用前，需要该账号具备 <code>admin:users</code>：</li>
           </ol>
-          <pre><code>pnpm --filter @skymatrix/auth-server admin:seed -- --uuid &lt;你的UUID&gt;</code></pre>
+          <pre><code>pnpm --filter @hotaru/auth-server admin:seed -- --uuid &lt;你的UUID&gt;</code></pre>
           <p class="help__note">令牌等同于账号访问凭证，不要粘贴到不受信任的页面。</p>
         </div>
 
@@ -218,7 +218,7 @@ onMounted(async () => {
     </div>
 
     <footer class="login__foot">
-      <span>Skymatrix 认证服务</span>
+      <span>Hotaru 认证服务</span>
       <span class="login__foot-dot" aria-hidden="true">·</span>
       <span>状态：{{ authState.session ? '已登录' : '未登录' }}</span>
     </footer>

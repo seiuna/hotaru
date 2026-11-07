@@ -8,7 +8,7 @@ import type {
   AuditLogListResponse,
   MeResponse,
   PermissionsResponse,
-} from '@skymatrix/api-contract';
+} from '@hotaru/api-contract';
 import { getApiToken } from './token';
 
 const BASE: string = import.meta.env.VITE_API_BASE_URL ?? '';

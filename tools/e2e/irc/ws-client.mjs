@@ -148,7 +148,7 @@ export class SrpClient {
   static async connect({ url, token, headers = {}, timeoutMs = 8000, WebSocketImpl, label = 'client' }) {
     const WS = WebSocketImpl ?? (await loadWebSocket()).C;
     const upgradeHeaders = {
-      'user-agent': 'skymatrix-srp-e2e/1',
+      'user-agent': 'hotaru-srp-e2e/1',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...headers,
     };

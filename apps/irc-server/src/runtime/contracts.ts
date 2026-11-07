@@ -1,4 +1,4 @@
-import type { RouteMode } from '@skymatrix/srp-protocol';
+import type { RouteMode } from '@hotaru/srp-protocol';
 
 /**
  * Interfaces the IRC core exposes to feature modules (groups, filters, REST).
