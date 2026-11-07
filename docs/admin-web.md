@@ -8,51 +8,36 @@ browser ──HTTPS──► Caddy ──/api/*──► auth-server ──► M
                      └────/*──────► nginx (SPA)
 ```
 
-## Why login goes through the game
+## Login
 
-The platform has no password store, by design: the only credential that proves a premium Minecraft
-account is the Mojang handshake, and that handshake needs the player's Minecraft access token — which
-only the game client holds. A browser cannot obtain it, and adding a web password would create a second
-authentication system with weaker properties than the one we just built.
+The console uses a platform account and password. The account must have `admin:users`; the server checks
+the live permission list on every admin API request, so revoking the scope takes effect on the next call.
 
-So `/login` offers two paths, in this order:
+```text
+POST /api/v1/portal/login          username + password (+ optional TOTP)
+GET  /api/v1/portal/admin-session  account identity + live scopes
+POST /api/v1/portal/refresh        rotate the refresh token
+```
 
-### 1. Default: the local mod bridge
+The access token is stored in **`sessionStorage`** only; closing the tab signs you out. The refresh token
+is stored beside it and used silently on a 401. The password itself is never stored by the browser.
 
-The Fabric mod runs a loopback HTTP server (`apps`-independent, see `docs/mod-login-bridge.md`). Clicking
-**通过本地游戏登录**:
+### Seed a password administrator
 
-1. probes `http://127.0.0.1:8765/v1/health` so the button reflects whether the game is actually running;
-2. `POST /v1/login` — the mod shows an in-game confirmation prompt;
-3. after the player confirms, the mod performs the Mojang handshake and returns the token pair;
-4. the console validates the token against `/users/me` + `/users/me/permissions` and refuses accounts
-   without `admin:users`.
+```bash
+pnpm --filter @hotaru/auth-server admin:seed -- \
+  --uuid <minecraft-uuid> \
+  --username LocalAdmin --login-name admin --password admin123456
+```
 
-Nothing is copied by hand. Failures are explicit: mod not running, origin not on the mod's allowlist,
-player denied, prompt timed out, or the game's session expired.
-
-### 2. Fallback: paste an access token
-
-For machines without the mod (or when the bridge port is blocked), paste the `accessToken` minted by the
-Fabric client. The console validates it the same way.
-
-The console immediately validates it against `GET /users/me` and `GET /users/me/permissions`, refuses
-any account without `admin:users`, and keeps the token in **`sessionStorage`** only — closing the tab
-signs you out. The token is never written to `localStorage`, never put in a URL by the app itself, and
-every screen's data is re-read from the server, so a revoked scope or ban takes effect on the next
-request rather than at token expiry.
-
-### One-time bootstrap (ops convenience)
-
-`/login#token=<jwt>[&next=/path]` signs in without retyping a 1000-character token. The fragment is
-never sent to a server and is stripped from history with `replaceState` before any request. `next` is
-restricted to same-app absolute paths.
+`--login-name` and `--password` are optional; without them the account can still be used through the
+Minecraft handshake and the account API, but it cannot use the console's password form.
 
 ## Screens
 
 | Route | What it does |
 | --- | --- |
-| `/login` | Paste/validate a token, explains how to obtain one, links the `admin:seed` command |
+| `/login` | Username/password form, optional TOTP field, `admin:users` enforcement |
 | `/` | Bento dashboard: user totals, active sessions, 24h audit events, grant count, dependency health, recent audit feed, current identity |
 | `/users` | Search by username substring or UUID prefix, filter by status, paginated table |
 | `/users/:id` | Profile, permission editor (5 scopes, optional expiry, live diff, save), ban/unban with reason, linked UUID list with per-UUID ban/unban, session list with per-session revoke |
@@ -113,9 +98,8 @@ wrong.
 ## Known limits
 
 - Light theme only (no dark mode).
-- The access token is short-lived (15 min by default); the console does not use the refresh token, so a
-  long admin session ends with a re-paste. Deliberate: a refresh token in browser storage is a bigger
-  prize than a 15-minute access token.
+- The access token is short-lived (1 hour by default). The console keeps a rotating refresh token in
+  `sessionStorage` and renews on a 401; closing the tab clears both.
 - No user-facing pagination for sessions beyond the first 20 (API supports `limit`/`offset`).
 - Visual verification in this environment was limited: `vite build`, `vue-tsc`, the unit tests and the
   dev server/proxy were verified, but screenshots were not captured because desktop automation is not

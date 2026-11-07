@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { NButton, NInput, useMessage } from 'naive-ui';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { ApiError } from '../api/client';
 import { authState, loginWithPassword } from '../stores/auth';
 
-const router = useRouter();
 const message = useMessage();
 const username = ref('');
 const password = ref('');
@@ -31,13 +29,14 @@ async function submit(): Promise<void> {
     });
     message.success(`欢迎，${session.username}`);
     const next = safeNext(new URLSearchParams(window.location.search).get('next'));
-    await router.push(next ?? { name: 'dashboard' });
+    window.location.assign(next ?? '/');
   } catch (error) {
+    console.error('[admin-login]', error);
     if (error instanceof ApiError && error.code === 'TOTP_REQUIRED') {
       needsTotp.value = true;
       errorText.value = '请输入验证器中的 6 位两步验证码。';
     } else {
-      errorText.value = error instanceof ApiError ? error.message : (error as Error).message;
+      errorText.value = error instanceof ApiError ? error.message : (error as Error).message || String(error);
     }
   } finally {
     submitting.value = false;
@@ -127,9 +126,10 @@ async function submit(): Promise<void> {
             type="primary"
             size="large"
             block
-            native-type="submit"
+            native-type="button"
             :loading="submitting"
             :disabled="!username.trim() || !password"
+            @click="submit"
           >
             进入控制台
           </NButton>

@@ -340,14 +340,22 @@ pnpm --filter @hotaru/admin-web build   # vue-tsc + vite build -> dist/
 pnpm --filter @hotaru/admin-web test    # 20 unit tests
 ```
 
-**Login goes through the game, not a password.** The console's default path calls a loopback HTTP bridge
-that the Fabric mod runs on `127.0.0.1:8765`: the page asks the mod for a token, the player confirms an
-in-game prompt, and the mod performs the real Mojang handshake. No token is ever copied by hand, and the
-mod refuses origins that are not on its explicit allowlist (see
-[docs/mod-login-bridge.md](docs/mod-login-bridge.md)). Pasting an `accessToken` manually still works as
-a fallback, and the token lives in `sessionStorage` only — closing the tab signs you out.
-A `/login#token=…&next=/path` fragment bootstrap exists for handing a token over from a terminal (the
-fragment never reaches a server and is stripped from history).
+**The console uses account/password login.** The account must have `admin:users`; the server checks the
+live permission list on every admin API request. The login response also carries a rotating portal refresh
+token, so a long session renews silently instead of asking for the password again. Tokens live in
+`sessionStorage` only; closing the tab signs you out. There is no token-paste form and no in-game bridge
+button.
+
+Local demo account after seeding:
+
+```bash
+pnpm --filter @hotaru/auth-server admin:seed -- \
+  --uuid aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee \
+  --username LocalAdmin --login-name admin --password admin123456
+```
+
+The demo credentials are `admin` / `admin123456`. Change the password or seed a real operator account
+before exposing the console.
 
 Visual language follows the `cozy-breeze-ui` skill: sky-blue/mint palette, faint dot texture, bento
 grid, soft 16px cards, pill tags, restrained motion, keyboard-visible focus, and real empty/loading/
