@@ -5,6 +5,7 @@ import type { PortalTokenResponse } from '@hotaru/api-contract';
 import {
   MinecraftLinkModel,
   PasswordResetTokenModel,
+  PermissionModel,
 } from '../../src/infrastructure/mongo/models/index.js';
 import { signActivationCode } from '../../src/infrastructure/activation/code.js';
 import { generateTotp } from '../../src/infrastructure/crypto/totp.js';
@@ -333,6 +334,21 @@ describe('user portal account flow', () => {
       totp: generateTotp(secret),
     });
     expect(withCode.statusCode).toBe(200);
+  });
+
+  it('lets a portal token use admin routes when the account has admin:users', async () => {
+    await activate(accountCode());
+    const portal = await login();
+    await PermissionModel.create({
+      userId: portal.account.id,
+      scope: 'admin:users',
+      expiresAt: null,
+      grantedBy: 'test',
+    });
+
+    const stats = await portalCall('GET', '/api/v1/admin/stats', undefined, portal.accessToken);
+    expect(stats.statusCode).toBe(200);
+    expect(stats.json().users.total).toBeGreaterThanOrEqual(1);
   });
 
   it('changes the account email with the current password', async () => {

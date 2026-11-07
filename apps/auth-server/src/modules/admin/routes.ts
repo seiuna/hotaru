@@ -22,7 +22,7 @@ import {
 import type { AppContext } from '../../context.js';
 import { Errors } from '../../errors.js';
 import { clientIp, toJsonSchema } from '../../http/zod-schema.js';
-import { authenticate } from '../../plugins/auth.js';
+import { authenticateAdmin } from '../../plugins/admin-auth.js';
 import { currentAuth } from '../users/service.js';
 import {
   auditLogListResponseSchema,
@@ -87,7 +87,7 @@ function actorOf(request: FastifyRequest): AdminActor {
  */
 export async function registerAdminRoutes(app: FastifyInstance, ctx: AppContext): Promise<void> {
   const deps: AdminDeps = { ctx, store: redisRevocationStore(ctx.redis) };
-  const guard = authenticate({ scopes: ['admin:users'] });
+  const guard = authenticateAdmin({ scopes: ['admin:users'] });
 
   app.post(
     '/api/v1/admin/activation-codes',
