@@ -1,6 +1,6 @@
 {
   "name": "hotaru-servers",
-  "version": "0.2.1",
+  "version": "0.3.0-beta.1",
   "private": true,
   "description": "Hotaru servers monorepo — MC Auth Platform (Minecraft premium authentication & authorization)",
   "type": "module",
