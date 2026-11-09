@@ -7,6 +7,8 @@ export interface PresenceRecord {
   connectionId: string;
   userId: string;
   minecraftUuid: string;
+  nickname: string;
+  tags: string[];
   instanceId: string;
   connectedAt: number;
   lastHeartbeat: number;
@@ -35,6 +37,8 @@ export class PresenceStore {
       connectionId: connection.connectionId,
       userId: connection.userId,
       minecraftUuid: connection.minecraftUuid,
+      nickname: connection.nickname,
+      tags: connection.tags,
       instanceId: this.instanceId,
       connectedAt: connection.connectedAt,
       lastHeartbeat: connection.lastHeartbeatAt,
@@ -53,6 +57,8 @@ export class PresenceStore {
       connectionId: connection.connectionId,
       userId: connection.userId,
       minecraftUuid: connection.minecraftUuid,
+      nickname: connection.nickname,
+      tags: connection.tags,
       instanceId: this.instanceId,
       connectedAt: connection.connectedAt,
       lastHeartbeat: connection.lastHeartbeatAt,

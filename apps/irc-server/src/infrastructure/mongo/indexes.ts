@@ -1,6 +1,7 @@
 import { IrcGroupMemberModel, IrcGroupModel } from '../../modules/groups/model.js';
 import { IrcFilterRuleModel } from '../../modules/filters/model.js';
 import { IrcAuditLogModel } from '../../modules/audit/model.js';
+import { IrcPlayerProfileModel } from '../../modules/profiles/model.js';
 
 /**
  * Creates the declared indexes if they are missing.
@@ -16,4 +17,5 @@ export async function ensureIndexes(): Promise<void> {
   await IrcGroupMemberModel.createIndexes();
   await IrcFilterRuleModel.createIndexes();
   await IrcAuditLogModel.createIndexes();
+  await IrcPlayerProfileModel.createIndexes();
 }

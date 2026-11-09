@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Domain types shared by every Hotaru service.
- * Pure types only — no runtime dependencies, no vendor lock-in.
+ * Pure types only 鈥?no runtime dependencies, no vendor lock-in.
  */
 
 export const SCOPES = [
@@ -194,6 +194,7 @@ export interface AccessTokenClaims {
   sub: string;
   aud: string[];
   minecraft_uuid: string;
+ username?: string;
   sid: string;
   jti: string;
   scope: string;

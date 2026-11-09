@@ -12,12 +12,16 @@ const meSchema = z.object({
   online: z.boolean(),
   connections: z.number().int().nonnegative(),
   instanceId: z.string(),
+  nickname: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 const userPresenceSchema = z.object({
   minecraftUuid: z.string(),
   online: z.boolean(),
   connections: z.number().int().nonnegative(),
+  nickname: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export interface PresenceDeps {
@@ -52,10 +56,12 @@ export async function registerPresenceRoutes(
     async (request) => {
       const identity = currentAuth(request);
       const records = await deps.presence.listRecords(identity.minecraftUuid);
+      const profile = records[0];
       return {
         online: records.length > 0,
         connections: records.length,
         instanceId: ctx.instanceId,
+        ...(profile ? { nickname: profile.nickname, tags: profile.tags } : {}),
       };
     },
   );
@@ -97,10 +103,12 @@ export async function registerPresenceRoutes(
       }
 
       const records = await deps.presence.listRecords(target);
+      const profile = records[0];
       return {
         minecraftUuid: target,
         online: records.length > 0,
         connections: records.length,
+        ...(profile ? { nickname: profile.nickname, tags: profile.tags } : {}),
       };
     },
   );

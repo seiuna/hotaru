@@ -16,6 +16,8 @@ export function toDeliveredFrame(message: DeliverableMessage): DeliveredMessageF
     sender: {
       userId: message.sender.userId,
       minecraftUuid: message.sender.minecraftUuid,
+      nickname: message.sender.nickname,
+      tags: message.sender.tags,
     },
     receivedAt: message.receivedAt,
     expireAt: message.expireAt,

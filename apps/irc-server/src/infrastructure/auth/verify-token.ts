@@ -6,6 +6,7 @@ import { SRP_ERROR_CODES, type SrpErrorCode } from '@hotaru/srp-protocol';
 export interface VerifiedIdentity {
   userId: string;
   minecraftUuid: string;
+  username: string;
   sessionId: string;
   scopes: string[];
   expiresAt: number;
@@ -93,6 +94,7 @@ export async function verifyAccessToken(ctx: AppContext, token: string): Promise
   return {
     userId,
     minecraftUuid: minecraftUuid.toLowerCase(),
+    username: typeof payload.username === 'string' ? payload.username : minecraftUuid,
     sessionId,
     scopes,
     expiresAt: typeof payload.exp === 'number' ? payload.exp : 0,

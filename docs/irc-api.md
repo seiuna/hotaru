@@ -138,7 +138,7 @@ curl -sS https://irc.example.com/v1/presence/me -H "Authorization: Bearer $TOKEN
 ```
 
 ```json
-{ "online": true, "connections": 1, "instanceId": "irc-01" }
+{ "online": true, "connections": 1, "instanceId": "irc-01", "nickname": "Suki", "tags": ["admin"] }
 ```
 
 `connections` counts this player's presence records, which is the number of live
@@ -155,6 +155,8 @@ curl -sS https://irc.example.com/v1/presence/069a79f4-44e9-4726-a5be-fca90e38aaf
 { "minecraftUuid": "069a79f4-44e9-4726-a5be-fca90e38aaf5", "online": false, "connections": 0 }
 ```
 
+When online, the response also includes `nickname` and `tags`.
+
 | Case | Result |
 | --- | --- |
 | the caller's own UUID | always allowed |
@@ -162,6 +164,26 @@ curl -sS https://irc.example.com/v1/presence/069a79f4-44e9-4726-a5be-fca90e38aaf
 | administrator UUID (`ADMIN_UUIDS`) | allowed |
 | otherwise | `403 FORBIDDEN` |
 | malformed UUID | `400 INVALID_REQUEST` |
+
+### Profile and tags
+
+`READY`, `MESSAGE.sender` and `PRESENCE` carry the server-attested `nickname` and
+`tags`. Tags are display-only, never permissions. `admin:users` derives `admin`;
+other connected players derive `user`; administrators may add `dev`, `vip` or
+`tester`.
+
+```http
+GET /v1/me/profile
+PUT /v1/me/profile          { "nickname": "Suki" }
+PUT /v1/admin/users/:uuid/profile
+                            { "nickname": "Suki", "tags": ["dev", "vip"] }
+```
+
+`PUT /v1/me/profile` changes only the caller's nickname. `PUT /v1/admin/...`
+requires `admin:users` or an `ADMIN_UUIDS` identity and can change the target's
+nickname and manual tags. Nicknames are globally unique, 3-24 characters, and
+cannot use reserved names. The server broadcasts `protocol.profile.updated` to
+online clients after a change.
 
 ---
 

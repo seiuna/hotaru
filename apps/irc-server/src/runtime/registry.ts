@@ -1,4 +1,5 @@
 import type { WebSocket } from 'ws';
+import type { IrcTagKey } from '@hotaru/srp-protocol';
 import type { ConnectionHandle, ConnectionRegistry } from './contracts.js';
 
 /** A live connection plus the mutable state the core needs. */
@@ -8,6 +9,9 @@ export interface ManagedConnection extends ConnectionHandle {
   socket: WebSocket;
   /** Scopes from the verified JWT (never from the client). */
   scopes: string[];
+  username: string;
+  nickname: string;
+  tags: IrcTagKey[];
   lastHeartbeatAt: number;
   /** Pending pong timer id, cleared when the client answers. */
   pongTimer: ReturnType<typeof setTimeout> | null;

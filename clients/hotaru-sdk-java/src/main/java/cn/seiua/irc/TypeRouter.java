@@ -103,6 +103,16 @@ public final class TypeRouter {
                 String.valueOf(sender.getOrDefault("minecraftUuid", "")),
                 String.valueOf(sender.getOrDefault("userId", "")),
                 receivedAt,
-                expireAt);
+                expireAt,
+                String.valueOf(sender.getOrDefault("nickname", "")),
+                stringList(sender.get("tags")));
+    }
+
+    public static List<String> stringList(Object value) {
+        if (!(value instanceof List<?> list)) return List.of();
+        return list.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .toList();
     }
 }

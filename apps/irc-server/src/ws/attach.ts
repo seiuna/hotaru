@@ -7,6 +7,7 @@ import {
   clientFrameSchema,
   errorFrame,
   pongFrame,
+  profileTags,
   readyFrame,
   type ClientMessage,
 } from '@hotaru/srp-protocol';
@@ -16,6 +17,7 @@ import type { InMemoryRegistry, ManagedConnection } from '../runtime/registry.js
 import type { PresenceStore } from '../runtime/presence.js';
 import { TokenBucket } from '../runtime/rate-limit.js';
 import { handleMessageFrame, type RoutingDeps } from '../modules/routing/index.js';
+import { getPlayerProfile } from '../modules/profiles/service.js';
 
 export const CONNECT_PATH = '/v1/connect';
 
@@ -124,17 +126,29 @@ export function attachWebSocket(app: FastifyInstance, deps: WebSocketDeps): WebS
 
   wss.on(
     'connection',
-    (
+    async (
       socket: WebSocket,
       request: IncomingMessage,
       identity: Awaited<ReturnType<typeof verifyAccessToken>>,
       ip: string | null,
     ) => {
       const connectionId = randomUUID();
+      let profile = {
+        nickname: identity.username,
+        tags: profileTags(identity.scopes),
+      };
+      try {
+        profile = await getPlayerProfile(identity.minecraftUuid, identity.username, identity.scopes);
+      } catch {
+        /* A profile read is best-effort; the game identity is still valid. */
+      }
       const connection: ManagedConnection = {
         connectionId,
         userId: identity.userId,
         minecraftUuid: identity.minecraftUuid,
+        username: identity.username,
+        nickname: profile.nickname,
+        tags: profile.tags,
         instanceId: ctx.instanceId,
         connectedAt: ctx.now(),
         lastHeartbeatAt: ctx.now(),
@@ -191,6 +205,9 @@ export function attachWebSocket(app: FastifyInstance, deps: WebSocketDeps): WebS
           connectionId,
           userId: connection.userId,
           minecraftUuid: connection.minecraftUuid,
+          username: connection.username,
+          nickname: connection.nickname,
+          tags: connection.tags,
           instanceId: ctx.instanceId,
           heartbeatIntervalMs: ctx.config.heartbeatIntervalMs,
           serverTime: ctx.now(),

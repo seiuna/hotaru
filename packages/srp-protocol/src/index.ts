@@ -27,6 +27,42 @@ export const OPS = [
 export type Op = (typeof OPS)[number];
 
 /* ------------------------------------------------------------------ */
+/* Player profile tags                                                 */
+/* ------------------------------------------------------------------ */
+
+export const IRC_TAGS = {
+  user: { label: '用户', color: '#8aa6b8', priority: 10, reserved: true },
+  admin: { label: '管理员', color: '#c45a67', priority: 100, reserved: true },
+  dev: { label: '开发', color: '#4d9de0', priority: 80, reserved: false },
+  vip: { label: 'VIP', color: '#e0b25f', priority: 50, reserved: false },
+  tester: { label: '测试', color: '#77cdba', priority: 30, reserved: false },
+} as const;
+
+export type IrcTagKey = keyof typeof IRC_TAGS;
+export const IRC_TAG_KEYS = Object.keys(IRC_TAGS) as IrcTagKey[];
+export const IRC_RESERVED_TAGS: IrcTagKey[] = ['user', 'admin'];
+
+/** `admin` supersedes `user`; manual tags are merged and sorted by priority. */
+export function profileTags(
+  scopes: readonly string[],
+  manualTags: readonly string[] = [],
+): IrcTagKey[] {
+  const tags = new Set<IrcTagKey>();
+  tags.add(scopes.includes('admin:users') ? 'admin' : 'user');
+  for (const tag of manualTags) {
+    if (IRC_TAG_KEYS.includes(tag as IrcTagKey) && !IRC_RESERVED_TAGS.includes(tag as IrcTagKey)) {
+      tags.add(tag as IrcTagKey);
+    }
+  }
+  return [...tags].sort((a, b) => IRC_TAGS[b].priority - IRC_TAGS[a].priority).slice(0, 3);
+}
+
+export interface PlayerProfile {
+  nickname: string;
+  tags: IrcTagKey[];
+}
+
+/* ------------------------------------------------------------------ */
 /* Error codes (design §14)                                            */
 /* ------------------------------------------------------------------ */
 
@@ -192,6 +228,9 @@ export interface ReadyFrame {
     connectionId: string;
     userId: string;
     minecraftUuid: string;
+    username: string;
+    nickname: string;
+    tags: IrcTagKey[];
     instanceId: string;
     heartbeatIntervalMs: number;
     serverTime: number;
@@ -228,7 +267,7 @@ export interface PresenceFrame {
   id: string;
   op: 'PRESENCE';
   type: 'protocol.presence';
-  payload: { userId: string; online: boolean };
+  payload: { userId: string; online: boolean; nickname?: string; tags?: IrcTagKey[] };
 }
 
 export interface GroupEventFrame {
@@ -259,7 +298,7 @@ export interface DeliveredMessageFrame {
   ttlMs: number;
   replyTo?: string | null;
   /** Added by the server; a client may never set these. */
-  sender: { userId: string; minecraftUuid: string };
+  sender: { userId: string; minecraftUuid: string; nickname: string; tags: IrcTagKey[] };
   receivedAt: number;
   expireAt: number;
 }
@@ -310,13 +349,32 @@ export function errorFrame(
   };
 }
 
-export function presenceFrame(userId: string, online: boolean): PresenceFrame {
+export function presenceFrame(
+  userId: string,
+  online: boolean,
+  profile?: { nickname: string; tags: IrcTagKey[] },
+): PresenceFrame {
   return {
     v: 1,
     id: randomId(),
     op: 'PRESENCE',
     type: 'protocol.presence',
-    payload: { userId, online },
+    payload: { userId, online, ...(profile ?? {}) },
+  };
+}
+
+export function profileUpdatedFrame(payload: {
+  minecraftUuid: string;
+  nickname: string;
+  tags: IrcTagKey[];
+}): GroupEventFrame {
+  return {
+    v: 1,
+    id: randomId(),
+    op: 'GROUP_EVENT',
+    type: 'protocol.profile.updated',
+    route: { mode: 'BROADCAST', target: null },
+    payload,
   };
 }
 

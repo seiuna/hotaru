@@ -8,6 +8,7 @@ export interface AuthContext {
   userId: string;
   /** Mojang UUID, dashed lowercase — the identity used by groups/presence. */
   minecraftUuid: string;
+  username: string;
   sessionId: string;
   scopes: string[];
 }
@@ -40,6 +41,7 @@ export function requireAuth(ctx: AppContext) {
     request.auth = {
       userId: identity.userId,
       minecraftUuid: identity.minecraftUuid,
+      username: identity.username,
       sessionId: identity.sessionId,
       scopes: identity.scopes,
     };
@@ -56,6 +58,7 @@ export function optionalAuth(ctx: AppContext) {
       request.auth = {
         userId: identity.userId,
         minecraftUuid: identity.minecraftUuid,
+        username: identity.username,
         sessionId: identity.sessionId,
         scopes: identity.scopes,
       };

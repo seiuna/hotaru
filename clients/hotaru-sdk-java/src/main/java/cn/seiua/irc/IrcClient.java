@@ -354,7 +354,10 @@ public final class IrcClient implements AutoCloseable {
                 String.valueOf(payload.getOrDefault("minecraftUuid", "")),
                 String.valueOf(payload.getOrDefault("instanceId", "")),
                 ((Number) payload.getOrDefault("heartbeatIntervalMs", 30_000L)).longValue(),
-                ((Number) payload.getOrDefault("serverTime", 0L)).longValue());
+                ((Number) payload.getOrDefault("serverTime", 0L)).longValue(),
+                String.valueOf(payload.getOrDefault("username", "")),
+                String.valueOf(payload.getOrDefault("nickname", "")),
+                TypeRouter.stringList(payload.get("tags")));
         this.ready = readyFrame;
         this.attempt = 1;
         this.retriedTokenOnce = false;

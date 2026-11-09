@@ -100,7 +100,12 @@ export async function handleMessageFrame(
     type: frame.type,
     route: frame.route,
     payload: frame.payload,
-    sender: { userId: connection.userId, minecraftUuid: connection.minecraftUuid },
+    sender: {
+      userId: connection.userId,
+      minecraftUuid: connection.minecraftUuid,
+      nickname: connection.nickname,
+      tags: connection.tags,
+    },
     receivedAt,
     expireAt,
     replyTo: frame.replyTo ?? null,

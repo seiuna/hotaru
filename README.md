@@ -318,6 +318,10 @@ Fabric mod ──WSS /v1/connect (Bearer JWT)──► irc-server ──► Redi
   short-window dedupe keyed by *sender + message id* (replays are acknowledged but never re-fanned-out).
 - **Limits**: 20 msg/s (+40 burst) per connection, 10 msg/s for groups, 64 KiB payload, 128 KiB frame,
   3 connections per account, 5 group creations per hour, slow sockets closed on backpressure.
+- **Profiles**: READY, MESSAGE and PRESENCE carry the player's IRC nickname and server-attested tags.
+  `admin:users` derives `admin`, other connected players derive `user`; admins can add `dev` / `vip` /
+  `tester`. `PUT /v1/me/profile` changes your nickname, `PUT /v1/admin/users/:uuid/profile` changes
+  nickname and manual tags. Tags are display-only and never grant permissions.
 
 ```bash
 pnpm --filter @hotaru/irc-server dev          # :3001 (needs mongo + redis + auth-server for tokens)

@@ -1,4 +1,4 @@
-import type { RouteMode } from '@hotaru/srp-protocol';
+import type { IrcTagKey, RouteMode } from '@hotaru/srp-protocol';
 
 /**
  * Interfaces the IRC core exposes to feature modules (groups, filters, REST).
@@ -12,6 +12,10 @@ export interface ConnectionHandle {
   readonly userId: string;
   /** Mojang UUID, lower-case dashed — the identity used for groups and presence. */
   readonly minecraftUuid: string;
+  readonly username: string;
+  nickname: string;
+  tags: IrcTagKey[];
+  scopes: string[];
   readonly instanceId: string;
   readonly connectedAt: number;
   readonly isOpen: boolean;
@@ -36,7 +40,7 @@ export interface DeliverableMessage {
   route: { mode: RouteMode; target: string | null };
   payload: unknown;
   /** Server-attested sender (never taken from the payload). */
-  sender: { userId: string; minecraftUuid: string };
+  sender: { userId: string; minecraftUuid: string; nickname: string; tags: IrcTagKey[] };
   receivedAt: number;
   expireAt: number;
   replyTo?: string | null;

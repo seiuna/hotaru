@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+﻿import { randomUUID } from 'node:crypto';
 import { SignJWT, type JWTPayload } from 'jose';
 import type { Scope } from '@hotaru/shared-types';
 import type { JwtKeys } from '../../infrastructure/crypto/keys.js';
@@ -7,6 +7,7 @@ export interface AccessTokenInput {
   /** Internal user id (Mongo `_id`). Never the Mojang UUID. */
   userId: string;
   minecraftUuid: string;
+ username?: string;
   sessionId: string;
   scopes: readonly Scope[];
   issuer: string;
@@ -29,6 +30,7 @@ export interface SignedAccessToken {
 /** Custom claims, mirrored from `AccessTokenClaims` in @hotaru/shared-types. */
 type AccessTokenPayload = JWTPayload & {
   minecraft_uuid: string;
+ username?: string;
   sid: string;
   scope: string;
   client_id?: string;
@@ -55,6 +57,7 @@ export async function signAccessToken(
 
   const payload: AccessTokenPayload = {
     minecraft_uuid: input.minecraftUuid,
+   ...(input.username ? { username: input.username } : {}),
     sid: input.sessionId,
     scope: input.scopes.join(' '),
     ...(input.clientId ? { client_id: input.clientId } : {}),

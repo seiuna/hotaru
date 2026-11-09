@@ -1,4 +1,4 @@
-import type { Types } from 'mongoose';
+﻿import type { Types } from 'mongoose';
 import type { TokenResponse } from '@hotaru/api-contract';
 import type { Scope } from '@hotaru/shared-types';
 import type { AppContext } from '../../context.js';
@@ -81,6 +81,7 @@ export async function startSession(
   const access = await signAccessToken(ctx.keys.jwt, {
     userId: String(identity.userId),
     minecraftUuid: identity.minecraftUuid,
+   username: identity.username,
     sessionId: String(session._id),
     scopes: identity.scopes,
     clientId: identity.clientId ?? null,
@@ -248,6 +249,7 @@ export async function rotateRefreshToken(
   const access = await signAccessToken(ctx.keys.jwt, {
     userId: String(user._id),
     minecraftUuid,
+   username: user.username,
     sessionId: String(session._id),
     scopes,
     clientId: session.clientId ?? null,

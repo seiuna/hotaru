@@ -5,6 +5,7 @@ import { registerFilterRoutes } from './modules/filters/routes.js';
 import { registerGroupRoutes } from './modules/groups/routes.js';
 import { registerHealthRoutes } from './modules/health/routes.js';
 import { registerPresenceRoutes } from './modules/presence/routes.js';
+import { registerProfileRoutes } from './modules/profiles/routes.js';
 import type { Runtime } from './runtime/index.js';
 import { attachWebSocket, type WebSocketHandle } from './ws/attach.js';
 
@@ -83,6 +84,7 @@ export async function buildApp(ctx: AppContext, runtime: Runtime): Promise<Built
     registry: runtime.registry,
     groups: runtime.groups,
   });
+  await registerProfileRoutes(app, ctx, { registry: runtime.registry });
 
   return { app, ws };
 }
