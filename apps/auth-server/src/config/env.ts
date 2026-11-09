@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import 'dotenv/config';
+import { parseClientKeys, type ClientKeyConfig } from '../infrastructure/crypto/client-key.js';
 
 const csv = (value: string): string[] =>
   value
@@ -36,6 +37,8 @@ const envSchema = z.object({
     z.string().url().default('http://localhost:3000'),
   ),
   IRC_HEALTH_URL: z.string().url().default('http://127.0.0.1:3001/health/ready'),
+  /** JSON map: {"official-mod":"<public key PEM or base64 SPKI>", ...}. */
+  CLIENT_KEYS: z.string().optional(),
   TOTP_ISSUER: z.string().default('Hotaru'),
 
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
@@ -94,6 +97,7 @@ export interface AppConfig {
   portalRefreshTokenTtlDays: number;
   portalBaseUrl: string;
   ircHealthUrl: string;
+  clientKeys: Record<string, ClientKeyConfig>;
   totpIssuer: string;
 
   accessTokenTtlSeconds: number;
@@ -157,6 +161,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     portalRefreshTokenTtlDays: v.PORTAL_REFRESH_TOKEN_TTL_DAYS,
     portalBaseUrl: v.PORTAL_BASE_URL,
     ircHealthUrl: v.IRC_HEALTH_URL,
+    clientKeys: parseClientKeys(v.CLIENT_KEYS),
     totpIssuer: v.TOTP_ISSUER,
     accessTokenTtlSeconds: v.ACCESS_TOKEN_TTL_SECONDS,
     refreshTokenTtlDays: v.REFRESH_TOKEN_TTL_DAYS,

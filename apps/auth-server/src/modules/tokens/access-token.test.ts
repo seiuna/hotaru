@@ -89,6 +89,30 @@ describe('signAccessToken', () => {
     expect(payload.scope).toBe('');
   });
 
+  it('adds the client identity claims when supplied', async () => {
+    const signed = await signAccessToken(jwtKeys, {
+      userId: '65f1f3e2a1b2c3d4e5f60718',
+      minecraftUuid: '01234567-89ab-cdef-0123-456789abcdef',
+      sessionId: '65f1f3e2a1b2c3d4e5f60719',
+      scopes: ['hotaru:profile'],
+      issuer: ISSUER,
+      audience: AUDIENCE,
+      ttlSeconds: TTL_SECONDS,
+      nowSeconds: NOW_SECONDS,
+      clientId: 'official-mod',
+      clientVersion: '1.4.0',
+      clientKeyId: 'a'.repeat(64),
+    });
+    const { payload } = await jwtVerify(signed.token, jwtKeys.publicKey, {
+      issuer: ISSUER,
+      audience: AUDIENCE,
+      currentDate: VERIFY_NOW,
+    });
+    expect(payload.client_id).toBe('official-mod');
+    expect(payload.client_version).toBe('1.4.0');
+    expect(payload.client_key_id).toBe('a'.repeat(64));
+  });
+
   it('cannot be verified with a different key, audience or issuer', async () => {
     const signed = await sign();
 

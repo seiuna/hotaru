@@ -65,11 +65,30 @@ Request:
 { "username": "Notch" }
 ```
 
-`client` is optional and currently only accepts `"fabric"` (the default):
+`client` is optional when `CLIENT_KEYS` is empty:
 
 ```json
 { "username": "Notch", "client": "fabric" }
 ```
+
+When `CLIENT_KEYS` is configured, send the registered identity instead. The public key may be base64
+SPKI DER or PEM; the server checks its SHA-256 fingerprint and records the identity in the session and
+access token.
+
+```json
+{
+  "username": "Notch",
+  "client": {
+    "id": "official-mod",
+    "version": "1.4.0",
+    "publicKey": "MCowBQYDK2VwAyEA..."
+  }
+}
+```
+
+Missing or mismatched identities fail with `CLIENT_REQUIRED`, `CLIENT_UNKNOWN` or
+`CLIENT_KEY_MISMATCH`. This identifies a client build; it is not a signature proof and must not be used
+as authorization.
 
 Response `200`:
 

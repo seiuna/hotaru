@@ -181,6 +181,15 @@ const sessionColumns: DataTableColumns<SessionView> = [
       ]),
   },
   {
+    title: '客户端',
+    key: 'client',
+    width: 130,
+    render: (row) =>
+      row.clientId
+        ? h('span', { class: 'client' }, `${row.clientId}${row.clientVersion ? ` ${row.clientVersion}` : ''}`)
+        : h('span', { class: 'muted' }, '未标识'),
+  },
+  {
     title: '创建',
     key: 'createdAt',
     width: 160,
@@ -743,5 +752,10 @@ onMounted(load);
 
 .sess__ip {
   font-size: 11.5px;
+}
+
+.client {
+  color: var(--muted);
+  font-size: 12px;
 }
 </style>

@@ -1,4 +1,9 @@
-import type { ChallengeResponse, TokenResponse, VerifyRequest } from '@hotaru/api-contract';
+import type {
+  ChallengeRequest,
+  ChallengeResponse,
+  TokenResponse,
+  VerifyRequest,
+} from '@hotaru/api-contract';
 import type { AppContext } from '../../context.js';
 import { AppError, Errors } from '../../errors.js';
 import {
@@ -19,6 +24,7 @@ import {
 import { decodeBase64, decryptRsaPkcs1, safeEqual } from './crypto.js';
 import { consumeRateLimit, rateLimitIpKey, rateLimitUsernameKey } from './rate-limit.js';
 import { issueBindingCode } from './binding-code.js';
+import { resolveClientIdentity } from './client-identity.js';
 import {
   assertAccountNotBanned,
   findLinkedAccount,
@@ -73,9 +79,10 @@ async function enforceRateLimits(
  */
 export async function createChallenge(
   ctx: AppContext,
-  input: { username: string; ip: string | null },
+  input: { username: string; client: ChallengeRequest['client']; ip: string | null },
 ): Promise<ChallengeResponse> {
   const meta: AuthRequestMeta = { ip: input.ip, userAgent: null };
+  const client = resolveClientIdentity(ctx.config, input.client);
 
   try {
     const keys = [rateLimitUsernameKey(input.username)];
@@ -91,7 +98,7 @@ export async function createChallenge(
     throw error;
   }
 
-  const challenge = buildChallenge(input.username, ctx.config.challengeTtlSeconds);
+  const challenge = buildChallenge(input.username, client, ctx.config.challengeTtlSeconds);
   await storeChallenge(ctx.redis, challenge, ctx.config.challengeTtlSeconds);
 
   await recordAudit(ctx, {
@@ -100,7 +107,12 @@ export async function createChallenge(
     targetType: 'challenge',
     targetId: challenge.challengeId,
     ip: input.ip,
-    metadata: { username: challenge.username },
+    metadata: {
+      username: challenge.username,
+      clientId: challenge.clientId,
+      clientVersion: challenge.clientVersion,
+      clientKeyId: challenge.clientKeyId,
+    },
   });
 
   return {
@@ -257,6 +269,9 @@ export async function verifyChallenge(
       minecraftUuid: profile.uuid,
       username,
       scopes,
+      clientId: challenge.clientId,
+      clientVersion: challenge.clientVersion,
+      clientKeyId: challenge.clientKeyId,
     },
     { ip: meta.ip, userAgent: meta.userAgent },
     { kind: 'mc', minecraftUuid: profile.uuid },

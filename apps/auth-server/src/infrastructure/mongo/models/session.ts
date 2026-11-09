@@ -5,8 +5,12 @@ const sessionSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     /** Distinguishes a game session from a user-portal session. */
     kind: { type: String, enum: ['mc', 'portal'], default: 'mc', index: true },
-    /** The Minecraft UUID used for an MC session; null for a portal session. */
+    /** Minecraft UUID used for an MC session; null for a portal session. */
     minecraftUuid: { type: String, default: null, index: true },
+    /** Client identity attached to the challenge (never trusted for authz). */
+    clientId: { type: String, default: null, index: true },
+    clientVersion: { type: String, default: null },
+    clientKeyId: { type: String, default: null },
     expiresAt: { type: Date, required: true },
     revokedAt: { type: Date, default: null },
     revokedReason: { type: String, default: null },

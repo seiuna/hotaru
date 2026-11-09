@@ -101,6 +101,9 @@ public final class McAuthClient {
     private final String refreshPath;
     private final String logoutPath;
     private final MinecraftProfileResolver profileResolver;
+    private final String clientId;
+    private final String clientVersion;
+    private final String clientPublicKey;
 
     private McAuthClient(Builder builder) {
         this.baseUri = normalizeBaseUri(builder.baseUrl);
@@ -109,6 +112,9 @@ public final class McAuthClient {
         this.verifyPath = requirePath(builder.verifyPath, "verifyPath");
         this.refreshPath = requirePath(builder.refreshPath, "refreshPath");
         this.logoutPath = requirePath(builder.logoutPath, "logoutPath");
+        this.clientId = builder.clientId;
+        this.clientVersion = builder.clientVersion;
+        this.clientPublicKey = builder.clientPublicKey;
         this.mojangJoinUri = normalizeMojangJoinUri(builder.mojangSessionServer);
         this.profileResolver = builder.profileResolver != null
                 ? builder.profileResolver
@@ -142,7 +148,15 @@ public final class McAuthClient {
      */
     public ChallengeResponse requestChallenge(String username) throws McAuthException, InterruptedException {
         requireValidUsername(username);
-        Map<String, Object> payload = Json.object("username", username, "client", "fabric");
+        Object client;
+        if (clientId == null) {
+            client = "fabric";
+        } else {
+            Map<String, Object> identity = Json.object("id", clientId, "publicKey", clientPublicKey);
+            if (clientVersion != null && !clientVersion.isBlank()) identity.put("version", clientVersion);
+            client = identity;
+        }
+        Map<String, Object> payload = Json.object("username", username, "client", client);
         HttpResponse<String> response = post(url(challengePath), payload, null, "challenge");
         Map<String, Object> body = requireJsonObject(response, "challenge", 200, 201);
         return ChallengeResponse.fromJson(body, response.statusCode());
@@ -500,6 +514,9 @@ public final class McAuthClient {
         private HttpClient httpClient;
         private SecureRandom random = new SecureRandom();
         private MinecraftProfileResolver profileResolver;
+        private String clientId;
+        private String clientVersion;
+        private String clientPublicKey;
 
         private Builder(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -574,8 +591,32 @@ public final class McAuthClient {
             return this;
         }
 
+        /**
+         * Identifies this client build to the auth server. When the server has
+         * CLIENT_KEYS configured, both id and public key are required.
+         */
+        public Builder clientIdentity(String id, String version, String publicKey) {
+            if (id == null || id.isBlank()) throw new IllegalArgumentException("clientId is required");
+            if (publicKey == null || publicKey.isBlank()) {
+                throw new IllegalArgumentException("clientPublicKey is required");
+            }
+            this.clientId = id.trim();
+            this.clientVersion = version;
+            this.clientPublicKey = publicKey.trim();
+            return this;
+        }
+
+        /** Client id only; useful when CLIENT_KEYS is empty or for tests. */
+        public Builder clientId(String id) {
+            this.clientId = id;
+            return this;
+        }
+
         /** Validates the configuration and builds the client. */
         public McAuthClient build() {
+            if (clientId != null && (clientPublicKey == null || clientPublicKey.isBlank())) {
+                throw new IllegalArgumentException("clientIdentity requires a public key");
+            }
             return new McAuthClient(this);
         }
     }

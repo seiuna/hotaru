@@ -103,8 +103,34 @@ Base path `/api/v1`. Full details and examples: [docs/api.md](docs/api.md).
 | GET | `/health/live` | public | `200` liveness (no dependencies) |
 | GET | `/health/ready` | public | `200` / `503` MongoDB + Redis |
 
-Errors are uniform: `{ "error": { "code", "message", "retryable", "details"? } }` with 15 stable codes
+Errors are uniform: `{ "error": { "code", "message", "retryable", "details"? } }` with stable codes
 (`INVALID_REQUEST`, `CHALLENGE_EXPIRED`, `REFRESH_REUSED`, `MOJANG_UNAVAILABLE`, …).
+
+### Client identity
+
+`CLIENT_KEYS` is an optional JSON map of approved clients:
+
+```dotenv
+CLIENT_KEYS={"official-mod":"<public key PEM or base64 SPKI>","test-mod":"<...>"}
+```
+
+When the map is non-empty, the challenge body must identify the client:
+
+```json
+{
+  "username": "yuuiyi",
+  "client": {
+    "id": "official-mod",
+    "version": "1.4.0",
+    "publicKey": "<base64 SPKI DER or PEM>"
+  }
+}
+```
+
+The server derives a SHA-256 key fingerprint, checks it against the registered key, and stores
+`clientId`, `clientVersion` and `clientKeyId` in the session and access token. This is a **classification
+and misconfiguration guard**, not a possession proof: a copied public key can still be replayed. Use a
+challenge signature or mTLS if you need resistance to impersonation.
 
 ## Security guarantees
 

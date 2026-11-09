@@ -20,6 +20,9 @@ export interface SessionIdentity {
   minecraftUuid: string;
   username: string;
   scopes: readonly Scope[];
+  clientId?: string | null;
+  clientVersion?: string | null;
+  clientKeyId?: string | null;
 }
 
 export interface SessionRequestMeta {
@@ -58,6 +61,9 @@ export async function startSession(
     userId: identity.userId,
     kind: options.kind ?? 'mc',
     minecraftUuid: options.minecraftUuid ?? identity.minecraftUuid,
+    clientId: identity.clientId ?? null,
+    clientVersion: identity.clientVersion ?? null,
+    clientKeyId: identity.clientKeyId ?? null,
     expiresAt: sessionExpiresAt,
     revokedAt: null,
     ip: meta.ip,
@@ -77,6 +83,9 @@ export async function startSession(
     minecraftUuid: identity.minecraftUuid,
     sessionId: String(session._id),
     scopes: identity.scopes,
+    clientId: identity.clientId ?? null,
+    clientVersion: identity.clientVersion ?? null,
+    clientKeyId: identity.clientKeyId ?? null,
     issuer: ctx.config.jwtIssuer,
     audience: ctx.config.jwtAudience,
     ttlSeconds: ctx.config.accessTokenTtlSeconds,
@@ -241,6 +250,9 @@ export async function rotateRefreshToken(
     minecraftUuid,
     sessionId: String(session._id),
     scopes,
+    clientId: session.clientId ?? null,
+    clientVersion: session.clientVersion ?? null,
+    clientKeyId: session.clientKeyId ?? null,
     issuer: ctx.config.jwtIssuer,
     audience: ctx.config.jwtAudience,
     ttlSeconds: ctx.config.accessTokenTtlSeconds,

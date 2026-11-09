@@ -40,9 +40,16 @@ export const errorResponseSchema = z.object({
 /* Minecraft authentication                                            */
 /* ------------------------------------------------------------------ */
 
+export const clientIdentitySchema = z.object({
+  id: z.string().min(1).max(64),
+  version: z.string().min(1).max(64).optional(),
+  publicKey: z.string().min(32).max(4096),
+});
+export type ClientIdentity = z.infer<typeof clientIdentitySchema>;
+
 export const challengeRequestSchema = z.object({
   username: usernameSchema,
-  client: z.literal('fabric').default('fabric'),
+  client: z.union([z.literal('fabric'), clientIdentitySchema]).default('fabric'),
 });
 export type ChallengeRequest = z.infer<typeof challengeRequestSchema>;
 
@@ -327,6 +334,9 @@ export const sessionViewSchema = z.object({
   revokedAt: z.string().nullable(),
   ip: z.string().nullable(),
   userAgent: z.string().nullable(),
+  clientId: z.string().nullable(),
+  clientVersion: z.string().nullable(),
+  clientKeyId: z.string().nullable(),
 });
 export type SessionView = z.infer<typeof sessionViewSchema>;
 

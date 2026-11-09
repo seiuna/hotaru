@@ -12,6 +12,9 @@ export interface AccessTokenInput {
   issuer: string;
   audience: string;
   ttlSeconds: number;
+  clientId?: string | null;
+  clientVersion?: string | null;
+  clientKeyId?: string | null;
   /** Injectable clock (epoch seconds) so tests can pin `iat`/`exp`. */
   nowSeconds?: number;
 }
@@ -28,6 +31,9 @@ type AccessTokenPayload = JWTPayload & {
   minecraft_uuid: string;
   sid: string;
   scope: string;
+  client_id?: string;
+  client_version?: string;
+  client_key_id?: string;
 };
 
 /**
@@ -51,6 +57,9 @@ export async function signAccessToken(
     minecraft_uuid: input.minecraftUuid,
     sid: input.sessionId,
     scope: input.scopes.join(' '),
+    ...(input.clientId ? { client_id: input.clientId } : {}),
+    ...(input.clientVersion ? { client_version: input.clientVersion } : {}),
+    ...(input.clientKeyId ? { client_key_id: input.clientKeyId } : {}),
   };
 
   const token = await new SignJWT(payload)

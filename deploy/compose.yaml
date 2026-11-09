@@ -95,6 +95,8 @@ services:
       DEFAULT_SCOPES: ${DEFAULT_SCOPES:-hotaru:profile}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       IRC_HEALTH_URL: http://irc-server:3001/health/ready
+      # JSON map of approved client identities: {"official-mod":"<public key>"}.
+      CLIENT_KEYS: ${CLIENT_KEYS:-}
       PORTAL_BASE_URL: ${PORTAL_BASE_URL:-}
       PORTAL_REFRESH_TOKEN_TTL_DAYS: ${PORTAL_REFRESH_TOKEN_TTL_DAYS:-7}
       EMAIL_DELIVERY_URL: ${EMAIL_DELIVERY_URL:-}

@@ -41,7 +41,7 @@ export async function registerMinecraftAuthRoutes(
       const ctx = request.server.ctx;
       const body = challengeRequestSchema.parse(request.body);
       const meta = requestMeta(request);
-      return createChallenge(ctx, { username: body.username, ip: meta.ip });
+      return createChallenge(ctx, { username: body.username, client: body.client, ip: meta.ip });
     },
   );
 

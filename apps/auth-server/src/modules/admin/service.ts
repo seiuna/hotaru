@@ -121,6 +121,9 @@ export interface SessionViewSource {
   revokedAt?: Date | string | null;
   ip?: string | null;
   userAgent?: string | null;
+  clientId?: string | null;
+  clientVersion?: string | null;
+  clientKeyId?: string | null;
 }
 
 export interface AuditLogView {
@@ -168,6 +171,9 @@ export function toSessionView(session: SessionViewSource): SessionView {
     revokedAt: toIso(session.revokedAt),
     ip: session.ip ?? null,
     userAgent: session.userAgent ?? null,
+    clientId: session.clientId ?? null,
+    clientVersion: session.clientVersion ?? null,
+    clientKeyId: session.clientKeyId ?? null,
   };
 }
 

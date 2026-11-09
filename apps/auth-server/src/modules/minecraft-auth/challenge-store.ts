@@ -20,6 +20,10 @@ export interface ChallengeRecord {
   challengeId: string;
   /** Username the challenge was issued to, exactly as requested (display only). */
   username: string;
+  /** Client identity and registered key fingerprint (null for legacy clients). */
+  clientId: string;
+  clientVersion: string | null;
+  clientKeyId: string | null;
   /** Random salt for the Mojang server hash; never reused across challenges. */
   serverId: string;
   /** base64 of 4 raw random bytes the client must RSA-encrypt back. */
@@ -73,12 +77,16 @@ return {0, ''}
 
 export function buildChallenge(
   username: string,
+  client: { id: string; version: string | null; keyId: string | null },
   ttlSeconds: number,
   nowMs: number = Date.now(),
 ): ChallengeRecord {
   return {
     challengeId: randomUUID(),
     username,
+    clientId: client.id,
+    clientVersion: client.version,
+    clientKeyId: client.keyId,
     serverId: randomBytes(SERVER_ID_BYTES).toString('base64url'),
     verifyToken: randomBytes(VERIFY_TOKEN_BYTES).toString('base64'),
     status: 'PENDING',
@@ -100,6 +108,9 @@ export function parseChallenge(raw: string): ChallengeRecord | null {
 
   if (typeof candidate.challengeId !== 'string' || candidate.challengeId.length === 0) return null;
   if (typeof candidate.username !== 'string' || candidate.username.length === 0) return null;
+  if (typeof candidate.clientId !== 'string' || candidate.clientId.length === 0) return null;
+  if (candidate.clientVersion !== null && typeof candidate.clientVersion !== 'string') return null;
+  if (candidate.clientKeyId !== null && typeof candidate.clientKeyId !== 'string') return null;
   if (typeof candidate.serverId !== 'string' || candidate.serverId.length === 0) return null;
   if (typeof candidate.verifyToken !== 'string' || candidate.verifyToken.length === 0) return null;
   if (typeof candidate.createdAt !== 'string') return null;
@@ -109,6 +120,9 @@ export function parseChallenge(raw: string): ChallengeRecord | null {
   return {
     challengeId: candidate.challengeId,
     username: candidate.username,
+    clientId: candidate.clientId,
+    clientVersion: candidate.clientVersion ?? null,
+    clientKeyId: candidate.clientKeyId ?? null,
     serverId: candidate.serverId,
     verifyToken: candidate.verifyToken,
     status: 'PENDING',

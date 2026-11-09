@@ -78,6 +78,9 @@ export interface SessionView {
   revokedAt: string | null;
   ip: string | null;
   userAgent: string | null;
+  clientId: string | null;
+  clientVersion: string | null;
+  clientKeyId: string | null;
 }
 
 export interface TokenPair {
@@ -158,6 +161,10 @@ export const ERROR_CODES = [
   'CLAIM_REQUIRED',
   'CLAIM_INVALID',
   'ACCOUNT_ALREADY_CLAIMED',
+  'CLIENT_REQUIRED',
+  'CLIENT_UNKNOWN',
+  'CLIENT_KEY_MISMATCH',
+  'CLIENT_KEY_REVOKED',
   'EMAIL_INVALID',
   'EMAIL_EXISTS',
   'RESET_TOKEN_INVALID',
@@ -190,6 +197,9 @@ export interface AccessTokenClaims {
   sid: string;
   jti: string;
   scope: string;
+  client_id?: string;
+  client_version?: string;
+  client_key_id?: string;
   iat: number;
   exp: number;
 }

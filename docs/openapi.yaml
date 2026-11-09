@@ -186,10 +186,29 @@ paths:
                   maxLength: 16
                   pattern: "^[A-Za-z0-9_]+$"
                 client:
-                  type: string
+                  anyOf:
+                    - type: string
+                      enum:
+                        - fabric
+                    - type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                        version:
+                          type: string
+                          minLength: 1
+                          maxLength: 64
+                        publicKey:
+                          type: string
+                          minLength: 32
+                          maxLength: 4096
+                      required:
+                        - id
+                        - publicKey
+                      additionalProperties: false
                   default: fabric
-                  enum:
-                    - fabric
               required:
                 - username
               additionalProperties: false
@@ -1578,6 +1597,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -1698,6 +1721,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -1818,6 +1845,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -1880,6 +1911,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -1942,6 +1977,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2103,6 +2142,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2165,6 +2208,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2323,6 +2370,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2385,6 +2436,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2447,6 +2502,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2509,6 +2568,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2647,6 +2710,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2709,6 +2776,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2771,6 +2842,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2833,6 +2908,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -2956,6 +3035,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3018,6 +3101,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3080,6 +3167,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3207,6 +3298,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3269,6 +3364,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3331,6 +3430,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3447,6 +3550,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3509,6 +3616,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3571,6 +3682,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3648,6 +3763,18 @@ paths:
                         type:
                           - "null"
                           - string
+                      clientId:
+                        type:
+                          - "null"
+                          - string
+                      clientVersion:
+                        type:
+                          - "null"
+                          - string
+                      clientKeyId:
+                        type:
+                          - "null"
+                          - string
                     required:
                       - id
                       - createdAt
@@ -3655,6 +3782,9 @@ paths:
                       - revokedAt
                       - ip
                       - userAgent
+                      - clientId
+                      - clientVersion
+                      - clientKeyId
                     additionalProperties: false
                 required:
                   - session
@@ -3698,6 +3828,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3760,6 +3894,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3822,6 +3960,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -3884,6 +4026,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4072,6 +4218,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4134,6 +4284,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4196,6 +4350,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4326,6 +4484,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4388,6 +4550,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4480,6 +4646,18 @@ paths:
                           type:
                             - "null"
                             - string
+                        clientId:
+                          type:
+                            - "null"
+                            - string
+                        clientVersion:
+                          type:
+                            - "null"
+                            - string
+                        clientKeyId:
+                          type:
+                            - "null"
+                            - string
                       required:
                         - id
                         - createdAt
@@ -4487,6 +4665,9 @@ paths:
                         - revokedAt
                         - ip
                         - userAgent
+                        - clientId
+                        - clientVersion
+                        - clientKeyId
                       additionalProperties: false
                   total:
                     type: integer
@@ -4542,6 +4723,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4604,6 +4789,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4666,6 +4855,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4728,6 +4921,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4898,6 +5095,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -4960,6 +5161,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID
@@ -5022,6 +5227,10 @@ paths:
                           - CLAIM_REQUIRED
                           - CLAIM_INVALID
                           - ACCOUNT_ALREADY_CLAIMED
+                          - CLIENT_REQUIRED
+                          - CLIENT_UNKNOWN
+                          - CLIENT_KEY_MISMATCH
+                          - CLIENT_KEY_REVOKED
                           - EMAIL_INVALID
                           - EMAIL_EXISTS
                           - RESET_TOKEN_INVALID

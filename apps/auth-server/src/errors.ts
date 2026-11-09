@@ -116,6 +116,18 @@ export const Errors = {
   claimInvalid: () =>
     new AppError('CLAIM_INVALID', 'Claim code is invalid', 400),
 
+  clientRequired: () =>
+    new AppError('CLIENT_REQUIRED', 'This client must identify itself with its public key', 400),
+
+  clientUnknown: () =>
+    new AppError('CLIENT_UNKNOWN', 'Client identity is not registered', 403),
+
+  clientKeyMismatch: () =>
+    new AppError('CLIENT_KEY_MISMATCH', 'Client public key does not match the registered key', 403),
+
+  clientKeyRevoked: () =>
+    new AppError('CLIENT_KEY_REVOKED', 'Client key has been revoked', 403),
+
   accountAlreadyClaimed: () =>
     new AppError('ACCOUNT_ALREADY_CLAIMED', 'This account already has login credentials', 409),
 
