@@ -1,0 +1,3 @@
+# Build the standalone Java SDK with Maven; no registry credentials are needed.
+jdk:
+  - openjdk21
