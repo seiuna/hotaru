@@ -461,3 +461,37 @@ IRC_HTTP_URL=http://127.0.0.1:3001 IRC_TOKEN=<jwt> java -cp out cn.seiua.irc.res
 dispatch), runs the self-tests, then attaches `hotaru-sdk-java-<version>.jar`, the sources jar and
 `SHA256SUMS.txt` to that release. A red build cannot publish a jar: the upload step only runs after the
 tests pass.
+
+---
+
+## 在 JitPack 上使用 SDK
+
+本仓库包含 Maven 聚合工程（根目录 `pom.xml`），只发布 Java SDK 子模块，不打包服务器或 Fabric 示例。SDK 原有的 `build.sh` 及 GitHub Release JAR 流程保持不变。
+
+在 Gradle 项目的 `repositories` 中追加：
+
+```gradle
+maven {
+    url = uri("https://jitpack.io")
+    content { includeGroup "com.github.seiuna.hotaru" }
+}
+```
+
+添加依赖（`VERSION` 改为**新增的** Git 标签，例如合并此改动后创建的 `v0.3.0-beta.2`）：
+
+```gradle
+implementation "com.github.seiuna.hotaru:hotaru-sdk-java:VERSION"
+```
+
+也可以先用 `PR<编号>-SNAPSHOT` 或提交 SHA 验证未合并的改动。不要依赖旧的 `v0.2.1` 标签：那个提交还没有 Maven 发布配置，JitPack 不会自动继承后续添加的 `pom.xml`。
+
+本地验证（需 Maven 3 与 JDK 21）：
+
+```bash
+mvn -B -ntp -DskipTests verify
+bash clients/hotaru-sdk-java/build.sh ci
+```
+
+JitPack 使用仓库的 `jitpack.yml` 指定 JDK 21，按 Maven 默认 `install` 阶段将模块 JAR 和 sources JAR 发布为可解析依赖。公开仓库不需要 Maven Central 账号或发布 Token。
+
+> **注意：** Git 标签创建前，无法请求对应版本的 JitPack 产物；新的 JitPack 配置不会修改或补发历史标签产物。

@@ -1,0 +1,32 @@
+name: Verify Java SDK Maven build
+
+on:
+  push:
+    paths:
+      - 'pom.xml'
+      - 'jitpack.yml'
+      - 'clients/hotaru-sdk-java/**'
+      - '.github/workflows/verify-java-sdk-maven.yml'
+  pull_request:
+    paths:
+      - 'pom.xml'
+      - 'jitpack.yml'
+      - 'clients/hotaru-sdk-java/**'
+      - '.github/workflows/verify-java-sdk-maven.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile and package the Maven SDK
+        run: mvn -B -ntp -DskipTests verify
+      - name: Run the existing SDK self-tests
+        run: bash clients/hotaru-sdk-java/build.sh ci
